@@ -1,0 +1,32 @@
+[project]
+name = "gevva0"
+version = "0.1.0"
+description = "Project Gevva0: local calibrated decision engine on Gemma 4 26B-A4B MoE (GGUF) via llama.cpp"
+readme = "README.md"
+authors = [
+    { name = "Steve", email = "solvingSteve@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "llama-cpp-python @ https://github.com/abetlen/llama-cpp-python/releases/download/v0.3.35-cu132/llama_cpp_python-0.3.35-py3-none-win_amd64.whl",
+    "numpy>=1.26",
+    "scipy>=1.13",
+    "scikit-learn>=1.4",
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "pydantic>=2.7",
+    "huggingface-hub>=0.24",
+    "pillow>=12.3.0",
+]
+
+[project.scripts]
+gevva0 = "gevva0.cli:main"
+
+[build-system]
+requires = ["uv_build>=0.12.9,<0.13.0"]
+build-backend = "uv_build"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+

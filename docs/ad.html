@@ -1,0 +1,2111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gevva0: System 0 Local Decision Gateway</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-base: #06090e;
+            --bg-card: rgba(13, 20, 31, 0.88);
+            --bg-card-hover: rgba(18, 28, 43, 0.95);
+            --border-dim: rgba(255, 255, 255, 0.08);
+            --border-glow: rgba(0, 242, 254, 0.35);
+            --cyan-primary: #00f2fe;
+            --cyan-dim: rgba(0, 242, 254, 0.12);
+            --emerald-primary: #10b981;
+            --emerald-dim: rgba(16, 185, 129, 0.12);
+            --red-primary: #f43f5e;
+            --red-dim: rgba(244, 63, 94, 0.12);
+            --purple-primary: #a855f7;
+            --purple-dim: rgba(168, 85, 247, 0.12);
+            --amber-primary: #f59e0b;
+            --amber-dim: rgba(245, 158, 11, 0.12);
+            --text-title: #f8fafc;
+            --text-body: #94a3b8;
+            --text-muted: #64748b;
+            --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            --font-mono: 'Fira Code', 'Courier New', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        html, body {
+            background-color: var(--bg-base);
+            color: var(--text-title);
+            font-family: var(--font-sans);
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* Ambient Lighting & Grid */
+        .ambient-glow-1 {
+            position: absolute;
+            top: -20%;
+            left: 20%;
+            width: 60vw;
+            height: 60vh;
+            background: radial-gradient(circle, rgba(0, 242, 254, 0.08) 0%, rgba(0, 0, 0, 0) 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .ambient-glow-2 {
+            position: absolute;
+            bottom: -20%;
+            right: 15%;
+            width: 50vw;
+            height: 50vh;
+            background: radial-gradient(circle, rgba(168, 85, 247, 0.07) 0%, rgba(0, 0, 0, 0) 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .cyber-grid {
+            position: absolute;
+            inset: 0;
+            background-size: 40px 40px;
+            background-image: 
+                linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Master Stage */
+        #viewport {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            z-index: 1;
+        }
+
+        /* Top Header */
+        header.top-header {
+            height: 56px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 32px;
+            border-bottom: 1px solid var(--border-dim);
+            background: rgba(6, 9, 14, 0.88);
+            backdrop-filter: blur(12px);
+            z-index: 10;
+        }
+
+        .brand-badge {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-family: var(--font-mono);
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            color: var(--cyan-primary);
+            font-size: 0.92rem;
+        }
+
+        .brand-pill {
+            background: linear-gradient(135deg, #00f2fe, #4facfe);
+            color: #040810;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 0.78rem;
+            font-weight: 800;
+        }
+
+        .top-status {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+        }
+
+        .status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: var(--emerald-primary);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--emerald-primary);
+            animation: pulse-dot 2s infinite ease-in-out;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.85); }
+        }
+
+        /* Main Scene Canvas */
+        #scene-canvas {
+            position: relative;
+            flex: 1;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px 36px;
+            perspective: 1000px;
+            overflow: hidden;
+        }
+
+        .scene {
+            position: absolute;
+            inset: 0;
+            padding: 18px 44px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            transform: scale(0.98) translateY(10px);
+            transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.45s;
+            pointer-events: none;
+        }
+
+        .scene.active {
+            opacity: 1;
+            visibility: visible;
+            transform: scale(1) translateY(0);
+            pointer-events: auto;
+        }
+
+        /* Typography */
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px 14px;
+            border-radius: 100px;
+            font-size: 0.8rem;
+            font-family: var(--font-mono);
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            border: 1px solid;
+        }
+
+        .chip-cyan {
+            background: var(--cyan-dim);
+            border-color: rgba(0, 242, 254, 0.4);
+            color: var(--cyan-primary);
+            box-shadow: 0 0 20px rgba(0, 242, 254, 0.15);
+        }
+
+        .chip-purple {
+            background: var(--purple-dim);
+            border-color: rgba(168, 85, 247, 0.4);
+            color: #c084fc;
+        }
+
+        .chip-amber {
+            background: var(--amber-dim);
+            border-color: rgba(245, 158, 11, 0.4);
+            color: #fbbf24;
+        }
+
+        .chip-emerald {
+            background: var(--emerald-dim);
+            border-color: rgba(16, 185, 129, 0.4);
+            color: #34d399;
+        }
+
+        .scene-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            line-height: 1.15;
+            letter-spacing: -0.03em;
+            text-align: center;
+            margin-bottom: 8px;
+            background: linear-gradient(180deg, #ffffff 30%, #cbd5e1 100%);
+            -webkit-background-clip: text;
+            background-clip:text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .scene-desc {
+            font-size: 1.08rem;
+            color: var(--text-body);
+            max-width: 860px;
+            text-align: center;
+            line-height: 1.45;
+            margin-bottom: 18px;
+        }
+
+        /* Quotation Hero Banner */
+        .hook-quote-banner {
+            background: linear-gradient(90deg, rgba(0, 242, 254, 0.08), rgba(168, 85, 247, 0.08));
+            border-left: 3px solid var(--cyan-primary);
+            border-right: 1px solid var(--border-dim);
+            border-top: 1px solid var(--border-dim);
+            border-bottom: 1px solid var(--border-dim);
+            padding: 10px 20px;
+            border-radius: 8px;
+            margin-bottom: 18px;
+            max-width: 1140px;
+            font-size: 0.92rem;
+            color: #e2e8f0;
+            line-height: 1.45;
+            text-align: center;
+        }
+
+        .hook-quote-banner strong {
+            color: var(--cyan-primary);
+        }
+
+        /* ========================================================
+           SCENE 1: HERO DECISION FAST-PATH
+           ======================================================== */
+        .decision-showcase {
+            display: grid;
+            grid-template-columns: 1.15fr 1fr;
+            gap: 24px;
+            width: 100%;
+            max-width: 1200px;
+            align-items: stretch;
+        }
+
+        .glass-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-radius: 14px;
+            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(16px);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-head {
+            padding: 12px 18px;
+            background: rgba(0, 0, 0, 0.35);
+            border-bottom: 1px solid var(--border-dim);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: var(--font-mono);
+            font-size: 0.82rem;
+        }
+
+        .panel-head-code {
+            color: var(--cyan-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+        }
+
+        .panel-body {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            flex: 1;
+            justify-content: center;
+        }
+
+        .prob-bar-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .prob-item {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.02);
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .prob-item.winner {
+            background: rgba(0, 242, 254, 0.07);
+            border-color: rgba(0, 242, 254, 0.3);
+            box-shadow: 0 0 25px rgba(0, 242, 254, 0.12);
+        }
+
+        .prob-row-text {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.92rem;
+            font-weight: 600;
+        }
+
+        .prob-tag {
+            font-family: var(--font-mono);
+            color: var(--cyan-primary);
+            margin-right: 6px;
+        }
+
+        .prob-val {
+            font-family: var(--font-mono);
+            font-weight: 700;
+            font-size: 1.05rem;
+        }
+
+        .winner .prob-val {
+            color: var(--cyan-primary);
+            text-shadow: 0 0 10px rgba(0, 242, 254, 0.5);
+        }
+
+        .prob-track {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .prob-fill {
+            height: 100%;
+            border-radius: 10px;
+            width: 0%;
+            transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .fill-winner {
+            background: linear-gradient(90deg, #00f2fe, #10b981);
+            box-shadow: 0 0 10px var(--cyan-primary);
+        }
+
+        .fill-loser {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .verdict-box {
+            background: linear-gradient(135deg, rgba(0, 242, 254, 0.1), rgba(16, 185, 129, 0.05));
+            border: 2px solid rgba(0, 242, 254, 0.4);
+            border-radius: 12px;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            box-shadow: 0 0 35px rgba(0, 242, 254, 0.15);
+        }
+
+        .verdict-badge-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .verdict-label {
+            font-family: var(--font-mono);
+            font-size: 0.82rem;
+            color: var(--cyan-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-weight: 700;
+        }
+
+        .latency-capsule {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #042f2e;
+            border: 1px solid var(--emerald-primary);
+            color: #34d399;
+            font-family: var(--font-mono);
+            font-weight: 800;
+            padding: 5px 12px;
+            border-radius: 100px;
+            font-size: 1.1rem;
+            box-shadow: 0 0 16px rgba(16, 185, 129, 0.3);
+            animation: pulse-emerald 2s infinite ease-in-out;
+        }
+
+        @keyframes pulse-emerald {
+            0%, 100% { box-shadow: 0 0 16px rgba(16, 185, 129, 0.3); }
+            50% { box-shadow: 0 0 28px rgba(16, 185, 129, 0.6); }
+        }
+
+        .verdict-main-text {
+            font-size: 1.45rem;
+            font-weight: 800;
+            color: #ffffff;
+            margin: 14px 0;
+            line-height: 1.25;
+        }
+
+        .verdict-stats-footer {
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            padding-top: 10px;
+            font-family: var(--font-mono);
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* Live Browser Screenshot Frame */
+        .screenshot-frame {
+            border: 1px solid var(--border-dim);
+            border-radius: 14px;
+            overflow: hidden;
+            background: #080d14;
+            position: relative;
+            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .browser-chrome {
+            background: #0e1622;
+            padding: 8px 14px;
+            border-bottom: 1px solid var(--border-dim);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .window-dots {
+            display: flex;
+            gap: 5px;
+        }
+
+        .w-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+        }
+        .w-red { background: #ef4444; }
+        .w-yellow { background: #f59e0b; }
+        .w-green { background: #10b981; }
+
+        .address-bar {
+            background: #070b10;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 6px;
+            padding: 3px 10px;
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            color: var(--text-body);
+            flex: 1;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .preview-img-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            max-height: 275px;
+        }
+
+        .preview-img-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: top;
+            display: block;
+            filter: contrast(1.05) brightness(0.95);
+        }
+
+        .scanner-beam {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--cyan-primary), transparent);
+            box-shadow: 0 0 15px var(--cyan-primary);
+            animation: scan-vertical 3s infinite ease-in-out;
+            pointer-events: none;
+        }
+
+        @keyframes scan-vertical {
+            0% { top: 0%; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { top: 100%; opacity: 0; }
+        }
+
+        .live-tag-overlay {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(4, 8, 14, 0.88);
+            border: 1px solid var(--border-glow);
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--cyan-primary);
+            backdrop-filter: blur(8px);
+        }
+
+        /* ========================================================
+           SCENE 2: THE 6 PILLARS OF "SYSTEM 0"
+           ======================================================== */
+        .six-zeros-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+            width: 100%;
+            max-width: 1180px;
+        }
+
+        .zero-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            position: relative;
+            backdrop-filter: blur(14px);
+            transition: transform 0.3s, border-color 0.3s;
+        }
+
+        .zero-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(0, 242, 254, 0.3);
+        }
+
+        .zero-num-badge {
+            font-family: var(--font-mono);
+            font-size: 1.45rem;
+            font-weight: 800;
+            color: var(--cyan-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .zero-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .zero-text {
+            font-size: 0.86rem;
+            color: var(--text-body);
+            line-height: 1.45;
+        }
+
+        .zero-text code {
+            font-family: var(--font-mono);
+            color: var(--cyan-primary);
+            background: rgba(0, 242, 254, 0.08);
+            padding: 1px 4px;
+            border-radius: 4px;
+        }
+
+        /* ========================================================
+           SCENE 3: MULTIMODAL VISION GATEWAY (ZERO-CHUNKING OCR)
+           ======================================================== */
+        .vision-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            width: 100%;
+            max-width: 1180px;
+            margin-bottom: 16px;
+        }
+
+        .vision-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-radius: 14px;
+            padding: 22px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            position: relative;
+            backdrop-filter: blur(16px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+            border-top: 3px solid var(--emerald-primary);
+        }
+
+        .vision-icon-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .vision-icon {
+            font-size: 1.8rem;
+        }
+
+        .vision-badge {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--emerald-primary);
+            background: var(--emerald-dim);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            padding: 3px 8px;
+            border-radius: 100px;
+            font-weight: 700;
+        }
+
+        .vision-card-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #ffffff;
+            line-height: 1.3;
+        }
+
+        .vision-stressor {
+            font-size: 0.85rem;
+            color: var(--text-body);
+            line-height: 1.45;
+        }
+
+        .vision-stressor strong {
+            color: #e2e8f0;
+        }
+
+        .vision-outcome {
+            background: rgba(16, 185, 129, 0.06);
+            border-left: 2px solid var(--emerald-primary);
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-family: var(--font-mono);
+            font-size: 0.78rem;
+            color: #34d399;
+        }
+
+        .vision-banner-bottom {
+            background: rgba(13, 20, 31, 0.9);
+            border: 1px solid rgba(0, 242, 254, 0.25);
+            border-radius: 12px;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 1180px;
+            font-size: 0.88rem;
+            color: #e2e8f0;
+        }
+
+        .vision-banner-bottom span.accent {
+            color: var(--cyan-primary);
+            font-weight: 700;
+        }
+
+        /* ========================================================
+           SCENE 4: ARCHITECTURAL BREAKDOWN & MOE ADVANTAGE
+           ======================================================== */
+        .scene4-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            width: 100%;
+            max-width: 1180px;
+        }
+
+        .battle-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 22px;
+            width: 100%;
+        }
+
+        .battle-card {
+            background: var(--bg-card);
+            border-radius: 14px;
+            padding: 22px 24px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid var(--border-dim);
+            backdrop-filter: blur(16px);
+        }
+
+        .battle-card.bad {
+            border-top: 4px solid var(--red-primary);
+            background: linear-gradient(180deg, rgba(244, 63, 94, 0.05) 0%, rgba(13, 20, 31, 0.88) 40%);
+        }
+
+        .battle-card.good {
+            border-top: 4px solid var(--cyan-primary);
+            background: linear-gradient(180deg, rgba(0, 242, 254, 0.08) 0%, rgba(13, 20, 31, 0.88) 40%);
+            box-shadow: 0 0 30px rgba(0, 242, 254, 0.08);
+        }
+
+        .card-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .card-title {
+            font-size: 1.35rem;
+            font-weight: 800;
+        }
+
+        .card-pill-bad {
+            background: var(--red-dim);
+            color: #fb7185;
+            border: 1px solid rgba(244, 63, 94, 0.3);
+            font-family: var(--font-mono);
+            padding: 3px 10px;
+            border-radius: 100px;
+            font-size: 0.82rem;
+            font-weight: 700;
+        }
+
+        .card-pill-good {
+            background: var(--cyan-dim);
+            color: var(--cyan-primary);
+            border: 1px solid rgba(0, 242, 254, 0.3);
+            font-family: var(--font-mono);
+            padding: 3px 10px;
+            border-radius: 100px;
+            font-size: 0.82rem;
+            font-weight: 700;
+        }
+
+        .bullet-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 11px;
+        }
+
+        .bullet-item {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            font-size: 0.92rem;
+            line-height: 1.45;
+            color: #e2e8f0;
+        }
+
+        .bullet-icon-bad {
+            color: var(--red-primary);
+            font-weight: 800;
+            font-size: 1.05rem;
+            line-height: 1.2;
+        }
+
+        .bullet-icon-good {
+            color: var(--emerald-primary);
+            font-weight: 800;
+            font-size: 1.05rem;
+            line-height: 1.2;
+        }
+
+        .moe-rationale-box {
+            background: rgba(13, 20, 31, 0.9);
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            border-radius: 12px;
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 0.88rem;
+            line-height: 1.45;
+            color: #e2e8f0;
+        }
+
+        .moe-rationale-box strong {
+            color: #c084fc;
+        }
+
+        /* ========================================================
+           SCENE 5: JEVBENCH BATTERY GLOBAL RANK #1
+           ======================================================== */
+        .bench-container {
+            width: 100%;
+            max-width: 1180px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .table-wrapper {
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(16px);
+        }
+
+        .bench-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            text-align: left;
+        }
+
+        .bench-table th {
+            background: #090e16;
+            color: var(--text-muted);
+            padding: 14px 18px;
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            border-bottom: 1px solid var(--border-dim);
+        }
+
+        .bench-table td {
+            padding: 13px 18px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            color: #cbd5e1;
+        }
+
+        .bench-table tr.winner-row {
+            background: linear-gradient(90deg, rgba(0, 242, 254, 0.12), rgba(16, 185, 129, 0.06));
+            border-left: 4px solid var(--cyan-primary);
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .bench-table tr.winner-row td {
+            color: #ffffff;
+            border-bottom: 1px solid rgba(0, 242, 254, 0.2);
+        }
+
+        .gold-star {
+            color: #f59e0b;
+            font-size: 1.05rem;
+            margin-right: 4px;
+        }
+
+        .score-pill {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 6px;
+            background: rgba(0, 242, 254, 0.15);
+            color: var(--cyan-primary);
+            font-weight: 700;
+        }
+
+        .bench-callouts {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+        }
+
+        .callout-pill {
+            background: rgba(13, 20, 31, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 12px 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: var(--font-mono);
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #e2e8f0;
+        }
+
+        .callout-check {
+            color: var(--emerald-primary);
+            font-size: 1.1rem;
+            font-weight: 800;
+        }
+
+        /* ========================================================
+           SCENE 6: ASYMMETRIC AUDIT TRAIL & HYBRID BOUNDED-COT
+           ======================================================== */
+        .audit-showcase {
+            width: 100%;
+            max-width: 1180px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .audit-pipeline {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
+        }
+
+        .audit-step-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-radius: 14px;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            position: relative;
+            transition: all 0.4s ease;
+        }
+
+        .audit-step-card.step-active {
+            border-color: var(--purple-primary);
+            box-shadow: 0 0 25px rgba(168, 85, 247, 0.2);
+            transform: translateY(-3px);
+        }
+
+        .step-index-badge {
+            font-family: var(--font-mono);
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--purple-primary);
+            line-height: 1;
+        }
+
+        .step-heading {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .step-detail {
+            font-size: 0.88rem;
+            color: var(--text-body);
+            line-height: 1.45;
+        }
+
+        .audit-citation-grid {
+            display: grid;
+            grid-template-columns: 1.25fr 1fr;
+            gap: 16px;
+            align-items: stretch;
+        }
+
+        .terminal-block {
+            background: #070b10;
+            border: 1px solid var(--border-dim);
+            border-radius: 12px;
+            padding: 16px;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            overflow: hidden;
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .terminal-comment {
+            color: #64748b;
+        }
+
+        .json-key {
+            color: var(--cyan-primary);
+        }
+
+        .json-str {
+            color: #34d399;
+        }
+
+        .audit-values-banner {
+            background: linear-gradient(90deg, rgba(0, 242, 254, 0.08), rgba(168, 85, 247, 0.08));
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 14px 20px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            font-family: var(--font-mono);
+            font-size: 0.88rem;
+            font-weight: 600;
+        }
+
+        .banner-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #e2e8f0;
+        }
+
+        .banner-item span.accent {
+            color: var(--cyan-primary);
+            font-weight: 700;
+        }
+
+        /* ========================================================
+           SCREEN-RECORDING / TIMELINE CONTROLS BAR
+           ======================================================== */
+        footer.bottom-bar {
+            height: 60px;
+            border-top: 1px solid var(--border-dim);
+            background: rgba(6, 9, 14, 0.88);
+            backdrop-filter: blur(12px);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            z-index: 10;
+        }
+
+        .shortcuts-guide {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.76rem;
+            font-family: var(--font-mono);
+            color: var(--text-muted);
+        }
+
+        .key-cap {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #e2e8f0;
+            font-weight: 600;
+        }
+
+        .timeline-controls {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .play-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-dim);
+            color: #ffffff;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .play-btn:hover {
+            background: rgba(0, 242, 254, 0.15);
+            border-color: var(--cyan-primary);
+            color: var(--cyan-primary);
+        }
+
+        .scene-pills {
+            display: flex;
+            gap: 7px;
+        }
+
+        .pill-dot {
+            width: 26px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.12);
+            border-radius: 4px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: background 0.3s, transform 0.2s;
+        }
+
+        .pill-dot.active {
+            background: rgba(0, 242, 254, 0.25);
+            transform: scaleY(1.3);
+        }
+
+        .pill-progress {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 0%;
+            background: var(--cyan-primary);
+            box-shadow: 0 0 8px var(--cyan-primary);
+        }
+
+        .time-badge {
+            font-family: var(--font-mono);
+            font-size: 0.76rem;
+            color: var(--text-muted);
+        }
+
+        .right-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-family: var(--font-mono);
+            font-size: 0.76rem;
+            color: var(--text-muted);
+        }
+
+        /* Screen recording HUD indicator (PAUSE / PLAY toast) */
+        #hud-toast {
+            position: absolute;
+            top: 70px;
+            right: 32px;
+            background: rgba(13, 20, 31, 0.95);
+            border: 1px solid var(--border-glow);
+            padding: 6px 16px;
+            border-radius: 8px;
+            font-family: var(--font-mono);
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--cyan-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            opacity: 0;
+            transform: translateY(-8px);
+            transition: opacity 0.3s, transform 0.3s;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        #hud-toast.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Lightbox modal for UI full view */
+        #ui-modal {
+            position: absolute;
+            inset: 0;
+            background: rgba(4, 7, 12, 0.92);
+            backdrop-filter: blur(14px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            padding: 40px;
+        }
+
+        #ui-modal.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-inner {
+            max-width: 90vw;
+            max-height: 85vh;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border-glow);
+            box-shadow: 0 0 50px rgba(0, 242, 254, 0.25);
+            position: relative;
+        }
+
+        .modal-inner img {
+            width: 100%;
+            height: auto;
+            max-height: 80vh;
+            display: block;
+            object-fit: contain;
+        }
+
+        .modal-close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            font-family: var(--font-mono);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .modal-close-btn:hover {
+            background: var(--red-primary);
+        }
+
+        /* Audio Cue Visual Ripple */
+        .audio-cue-ripple {
+            position: absolute;
+            inset: -4px;
+            border-radius: 14px;
+            border: 2px solid var(--cyan-primary);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .ripple-anim {
+            animation: hit-ripple 0.8s ease-out;
+        }
+
+        @keyframes hit-ripple {
+            0% { transform: scale(1); opacity: 0.9; }
+            100% { transform: scale(1.06); opacity: 0; }
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="ambient-glow-1"></div>
+<div class="ambient-glow-2"></div>
+<div class="cyber-grid"></div>
+
+<!-- Video Recording HUD Toast -->
+<div id="hud-toast">
+    <span id="hud-icon">⏸</span>
+    <span id="hud-message">PAUSE</span>
+</div>
+
+<!-- Modal for full UI screenshot inspection -->
+<div id="ui-modal" onclick="closeUiModal(event)">
+    <button class="modal-close-btn" onclick="toggleUiModal()">✕ CLOSE [ESC]</button>
+    <div class="modal-inner" onclick="event.stopPropagation()">
+        <img src="gevva0_ui_inference.png" alt="Gevva0 Live Decision Playground UI" />
+    </div>
+</div>
+
+<div id="viewport">
+
+    <!-- Top Header Bar -->
+    <header class="top-header">
+        <div class="brand-badge">
+            <span class="brand-pill">G0</span>
+            <span>GEVVA0 // SYSTEM 0 GATEWAY</span>
+        </div>
+        <div class="top-status">
+            <span><span class="status-dot"></span> MODEL: GEMMA 4 26B-A4B MoE</span>
+            <span style="color:var(--emerald-primary)">MMPROJ: VISION ACTIVE</span>
+            <span>LLAMA.CPP AIR-GAPPED</span>
+            <span>CUDA 13</span>
+            <span>PORT: 8000</span>
+        </div>
+    </header>
+
+    <!-- Main Dynamic Scene Canvas -->
+    <main id="scene-canvas">
+
+        <!-- ==========================================================
+             SCENE 1: SUB-30MS CALIBRATED DECISIONS (THE HOOK & UI)
+             ========================================================== -->
+        <section class="scene active" id="scene-1">
+            <div class="chip chip-cyan">
+                ⚡ Gemma 4 26B-A4B MoE • Direct Logit Inference • CUDA 13
+            </div>
+            <h1 class="scene-title">Sub-30ms Calibrated Decisions</h1>
+            <p class="scene-desc">
+                Replacing slow autoregressive JSON streaming with zero-generation direct logit scoring on llama.cpp.
+            </p>
+
+            <!-- Killer Quote Banner -->
+            <div class="hook-quote-banner">
+                “For years, enterprise AI forced a compromise: wait 2 seconds for a massive cloud model, or use a tiny model and hope it understands your business. With <strong>Gemma 4 26B MoE running on System 0</strong>, that compromise is dead: <strong>25 billion parameters of world knowledge, evaluated in 22 milliseconds</strong>.”
+            </div>
+
+            <div class="decision-showcase">
+                <!-- Left: Fast-Path Probabilities & Verdict -->
+                <div class="glass-panel" id="panel-verdict">
+                    <div class="panel-head">
+                        <span class="panel-head-code">
+                            <span style="display:inline-block; width:8px; height:8px; background:var(--cyan-primary); border-radius:50%;"></span>
+                            POST /v1/decide (Fast-Path CUDA 13)
+                        </span>
+                        <span style="color: var(--emerald-primary); font-weight:600;">● Model Ready</span>
+                    </div>
+
+                    <div class="panel-body">
+                        <!-- Probability Bars -->
+                        <div class="prob-bar-group">
+                            <div class="prob-item winner" id="prob-c">
+                                <div class="audio-cue-ripple" id="ripple-c"></div>
+                                <div class="prob-row-text">
+                                    <span><strong class="prob-tag">[C]</strong> Addendum 9 Rider</span>
+                                    <span class="prob-val">94.8%</span>
+                                </div>
+                                <div class="prob-track">
+                                    <div class="prob-fill fill-winner" id="fill-c" style="width: 94.8%;"></div>
+                                </div>
+                            </div>
+
+                            <div class="prob-item">
+                                <div class="prob-row-text">
+                                    <span><strong class="prob-tag" style="color:var(--text-muted)">[A]</strong> Formal VP Review</span>
+                                    <span class="prob-val" style="color:var(--text-muted)">3.6%</span>
+                                </div>
+                                <div class="prob-track">
+                                    <div class="prob-fill fill-loser" id="fill-a" style="width: 3.6%;"></div>
+                                </div>
+                            </div>
+
+                            <div class="prob-item">
+                                <div class="prob-row-text">
+                                    <span><strong class="prob-tag" style="color:var(--text-muted)">[B]</strong> CFO Escalation</span>
+                                    <span class="prob-val" style="color:var(--text-muted)">1.6%</span>
+                                </div>
+                                <div class="prob-track">
+                                    <div class="prob-fill fill-loser" id="fill-b" style="width: 1.6%;"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Locked Verdict Box -->
+                        <div class="verdict-box" id="verdict-card">
+                            <div class="audio-cue-ripple" id="ripple-verdict"></div>
+                            <div class="verdict-badge-row">
+                                <span class="verdict-label">[C] Locked Verdict</span>
+                                <div class="latency-capsule">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                                    </svg>
+                                    <span id="latency-counter">22.1 ms</span>
+                                </div>
+                            </div>
+
+                            <div class="verdict-main-text">
+                                Engineering Manager Sign-Off Only
+                            </div>
+
+                            <div class="verdict-stats-footer">
+                                <span>Cyclic Debiasing: 100% Invariant</span>
+                                <span>Platt Scaled Temperature: T=1.155</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Production UI Screenshot Window -->
+                <div class="screenshot-frame">
+                    <div class="browser-chrome">
+                        <div class="window-dots">
+                            <span class="w-dot w-red"></span>
+                            <span class="w-dot w-yellow"></span>
+                            <span class="w-dot w-green"></span>
+                        </div>
+                        <div class="address-bar">
+                            <span>http://127.0.0.1:8000/ui/</span>
+                            <span style="color: var(--emerald-primary);">● LIVE LOCAL</span>
+                        </div>
+                    </div>
+                    <div class="preview-img-container" onclick="toggleUiModal()" style="cursor: pointer;" title="Click to inspect full high-resolution UI">
+                        <div class="scanner-beam"></div>
+                        <img src="gevva0_ui_inference.png" alt="Gevva0 Decision Playground UI" />
+                        <div class="live-tag-overlay" >
+                            <span style="display:none;">🔍 Click to expand UI view</span>
+                        </div>
+                    </div>
+                    <div style="padding: 10px 16px; background: rgba(8, 13, 20, 0.95); border-top: 1px solid var(--border-dim); font-size: 0.8rem; font-family: var(--font-mono); color: var(--text-body); display: flex; justify-content: space-between;">
+                        <span>Supports Multimodal Vision & OCR Dropzone</span>
+                        <span style="color: var(--cyan-primary);">Zero-Token Logit Probe</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ==========================================================
+             SCENE 2: THE "SYSTEM 0" PARADIGM (THE 6 PILLARS OF ZERO)
+             ========================================================== -->
+        <section class="scene" id="scene-2">
+            <div class="chip chip-emerald">
+                ⚡ The Mechanics of Zero
+            </div>
+            <h1 class="scene-title">The System 0 Architecture: 6 Pillars of "0"</h1>
+            <p class="scene-desc">
+                Direct feed-forward projection through the model prior—eliminating autoregression, format drift, and latency.
+            </p>
+
+            <div class="six-zeros-grid">
+                <!-- 1. Zero Output Tokens -->
+                <div class="zero-card">
+                    <div class="zero-num-badge">0 Output Tokens</div>
+                    <div class="zero-title">Zero Autoregressive Generation</div>
+                    <div class="zero-text">
+                        Direct readout via <code>llm.scores[llm.n_tokens - 1]</code>. <strong>Token Logsumexp Marginalization</strong> combines bare & space-prefixed tokens (<code>" A"</code> vs <code>"A"</code>), eliminating tokenizer BPE bias.
+                    </div>
+                </div>
+
+                <!-- 2. Zero System 2 Drift -->
+                <div class="zero-card">
+                    <div class="zero-num-badge">0 System 2 Drift</div>
+                    <div class="zero-title">Instant Feed-Forward Intuition</div>
+                    <div class="zero-text">
+                        Transfers beyond System 1 heuristics to pure System 0. Zero pre-decisional sycophancy or CoT hallucinations can bias or poison the final category selection.
+                    </div>
+                </div>
+
+                <!-- 3. Zero Positional Bias -->
+                <div class="zero-card">
+                    <div class="zero-num-badge">0 Positional Bias</div>
+                    <div class="zero-title">100.0% Permutation Invariance</div>
+                    <div class="zero-text">
+                        Marginalizing cyclic shifts <code>O[(i+s) mod N]</code> via <code>kv_cache_seq_cp</code> achieves 100% invariance—running <strong>60% to 75% faster</strong> on context lengths &ge; 1,500 tokens.
+                    </div>
+                </div>
+
+                <!-- 4. Zero Billable Output Tokens -->
+                <div class="zero-card">
+                    <div class="zero-num-badge">0 Billable Tokens</div>
+                    <div class="zero-title">The Jevons Paradox Advantage</div>
+                    <div class="zero-text">
+                        Enterprise decision demand skyrockets as intelligence becomes instantaneous. Output token cost is <strong>$0.00</strong>, slashing on-prem cost to $0.015 / 1,000 decisions.
+                    </div>
+                </div>
+
+                <!-- 5. Zero Data Egress -->
+                <div class="zero-card">
+                    <div class="zero-num-badge">0 Data Egress</div>
+                    <div class="zero-title">100% Air-Gapped Local llama.cpp</div>
+                    <div class="zero-text">
+                        Executes entirely on on-premise CUDA 13 hardware. Zero outbound API calls, guaranteed compliance with strict corporate and sovereign data privacy mandates.
+                    </div>
+                </div>
+
+                <!-- 6. Near-Zero Latency Floor -->
+                <div class="zero-card">
+                    <div class="zero-num-badge">0 Wait Queuing</div>
+                    <div class="zero-title">Physical GPU Bandwidth Floor</div>
+                    <div class="zero-text">
+                        Operating at 14–22ms p50 latency, decisions return at the physical memory bandwidth threshold of local GPU VRAM—instantaneous for microservice middleware.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ==========================================================
+             SCENE 3: MULTIMODAL VISION GATEWAY (ZERO-CHUNKING OCR & MMPROJ)
+             ========================================================== -->
+        <section class="scene" id="scene-3">
+            <div class="chip chip-emerald">
+                📷 Multimodal Vision Projector • mmproj-BF16 • CUDA 13
+            </div>
+            <h1 class="scene-title">Zero-Chunking Multimodal Vision Gateway</h1>
+            <p class="scene-desc">
+                Attaching <code>mmproj-BF16.gguf</code> empowers Gevva0 to project raw pixels directly into decision logits—bypassing OCR engines, text chunking, and transcription latency.
+            </p>
+
+            <div class="vision-grid">
+                <!-- Test 1: Invoice / OCR Routing -->
+                <div class="vision-card">
+                    <div class="vision-icon-row">
+                        <span class="vision-icon">📄</span>
+                        <span class="vision-badge">Test 09 • OCR Invariance</span>
+                    </div>
+                    <div class="vision-card-title">Document & Invoice Routing</div>
+                    <div class="vision-stressor">
+                        <strong>Direct visual inspection</strong> of vendor invoices, bank routing transit numbers, and disbursement compliance stamps without intermediate OCR software.
+                    </div>
+                    <div class="vision-outcome">
+                        ✓ 100% Decision Accuracy: Authorized AP Disbursement
+                    </div>
+                </div>
+
+                <!-- Test 2: UI Defect Routing -->
+                <div class="vision-card">
+                    <div class="vision-icon-row">
+                        <span class="vision-icon">🖥️</span>
+                        <span class="vision-badge">Test 10 • Frontend Triage</span>
+                    </div>
+                    <div class="vision-card-title">UI Defect & Crash Routing</div>
+                    <div class="vision-stressor">
+                        <strong>Browser session crash triage:</strong> Identifies 404 routes, unrendered DOM layouts, and client-side routing exceptions directly from customer screenshots.
+                    </div>
+                    <div class="vision-outcome">
+                        ✓ Zero Transcription Latency: Sub-45ms Incident Triage
+                    </div>
+                </div>
+
+                <!-- Test 3: Security Surveillance -->
+                <div class="vision-card">
+                    <div class="vision-icon-row">
+                        <span class="vision-icon">📹</span>
+                        <span class="vision-badge">Test 11 • Access Control</span>
+                    </div>
+                    <div class="vision-card-title">Surveillance & Tailgating Moderation</div>
+                    <div class="vision-stressor">
+                        <strong>Zero-captioning physical access control:</strong> Inspects turnstile CCTV camera frames for tailgating policy breaches without multi-step captioning models.
+                    </div>
+                    <div class="vision-outcome">
+                        ✓ Real-Time Gate Moderation: Direct Logit Classification
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Vision Banner -->
+            <div class="vision-banner-bottom">
+                <div>
+                    <span class="accent">Zero-Chunking OCR Mechanics:</span> Raw image bytes projected directly through <code>Gemma4ChatHandler</code> into MoE embedding space.
+                </div>
+                <div style="font-family:var(--font-mono); color:var(--emerald-primary); font-weight:700;">
+                    3/3 Vision Batteries Verified • mmproj Active
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ==========================================================
+             SCENE 4: ARCHITECTURAL BREAKDOWN & MOE ADVANTAGE
+             ========================================================== -->
+        <section class="scene" id="scene-4">
+            <div class="chip chip-amber">
+                ⚙️ Architectural Breakdown
+            </div>
+            <h1 class="scene-title">Why Traditional LLM Function-Calling Fails</h1>
+            <p class="scene-desc">
+                Autoregressive CoT drifts, hallucinates pre-decision tokens, and takes seconds. Gevva0 unlocks deterministic classification.
+            </p>
+
+            <div class="scene4-layout">
+                <div class="battle-grid">
+                    <!-- Standard Cloud LLM -->
+                    <div class="battle-card bad">
+                        <div class="card-header-row">
+                            <h3 class="card-title">Standard Cloud LLM</h3>
+                            <span class="card-pill-bad">1,500ms – 2,500ms</span>
+                        </div>
+                        <ul class="bullet-list">
+                            <li class="bullet-item">
+                                <span class="bullet-icon-bad">✕</span>
+                                <div>
+                                    <strong>Autoregressive Drift:</strong> Model generates dozens of tokens before reaching decision.
+                                </div>
+                            </li>
+                            <li class="bullet-item">
+                                <span class="bullet-icon-bad">✕</span>
+                                <div>
+                                    <strong>Logit Poisoning Hazard:</strong> CoT hallucinations corrupt final categorical distribution.
+                                </div>
+                            </li>
+                            <li class="bullet-item">
+                                <span class="bullet-icon-bad">✕</span>
+                                <div>
+                                    <strong>Brittle Schema Formatting:</strong> Markdown/JSON syntax errors break production downstream.
+                                </div>
+                            </li>
+                            <li class="bullet-item">
+                                <span class="bullet-icon-bad">✕</span>
+                                <div>
+                                    <strong>Network & Egress Risk:</strong> Confidential customer contracts transmitted to cloud APIs.
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Gevva0 System 0 Gateway -->
+                    <div class="battle-card good">
+                        <div class="card-header-row">
+                            <h3 class="card-title" style="color: var(--cyan-primary)">Gevva0</h3>
+                            <span class="card-pill-good">22ms Fast-Path</span>
+                        </div>
+                        <ul class="bullet-list">
+                            <li class="bullet-item">
+                                <span class="bullet-icon-good">✓</span>
+                                <div>
+                                    <strong>Zero Output Tokens:</strong> Direct candidate logit readout from single prefill pass via <code>llm.scores[llm.n_tokens - 1]</code>.
+                                </div>
+                            </li>
+                            <li class="bullet-item">
+                                <span class="bullet-icon-good">✓</span>
+                                <div>
+                                    <strong>KV-Cache Branching:</strong> <code>kv_cache_seq_cp</code> evaluates cyclic shifts concurrently—<strong>60% to 75% faster</strong> on &ge; 1,500 token contexts.
+                                </div>
+                            </li>
+                            <li class="bullet-item">
+                                <span class="bullet-icon-good">✓</span>
+                                <div>
+                                    <strong>Token Logsumexp Marginalization:</strong> Combines bare & space-prefixed tokens (<code>" A"</code> vs <code>"A"</code>) via <code>logsumexp</code>, eliminating BPE prefix bias.
+                                </div>
+                            </li>
+                            <li class="bullet-item">
+                                <span class="bullet-icon-good">✓</span>
+                                <div>
+                                    <strong>Bounded System 2 Verification:</strong> Predictions under threshold (&lt; 0.85) trigger a bounded 40-token CoT verification pass for adversarial edge cases.
+                                </div>
+                            </li>
+                            <li class="bullet-item">
+                                <span class="bullet-icon-good">✓</span>
+                                <div>
+                                    <strong>100% Local Inference:</strong> CUDA 13 accelerated MoE on-premise on llama.cpp for $0.015/1k decisions.
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Versus Dense E4B/E2B Rationale Box -->
+                <div class="moe-rationale-box">
+                    <span style="font-size: 1.4rem;">💡</span>
+                    <div>
+                        <strong>Why Gemma 4 26B-A4B MoE vs Dense 2B–4B?</strong> Dense 2B–4B models hit an immediate reasoning ceiling on complex multi-hop enterprise policies (failing the forensic tier). But a dense 27B+ model is too slow for real-time routing. Gemma 4 26B-A4B's Mixture-of-Experts architecture activates only ~4B parameters per token, delivering frontier-level contract comprehension at 214ms p50 latency on a single local GPU.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ==========================================================
+             SCENE 5: OFFICIAL JEVBENCH BATTERY — GLOBAL RANK #1
+             ========================================================== -->
+        <section class="scene" id="scene-5">
+            <div class="chip chip-cyan">
+                🏆 Independent Benchmark Verification
+            </div>
+            <h1 class="scene-title">Official JevBench v1.4.2 Battery — Global Rank #1</h1>
+            <p class="scene-desc">
+                Evaluated across easy, original, and hard forensic legal batteries.
+            </p>
+
+            <div class="bench-container">
+                <div class="table-wrapper">
+                    <table class="bench-table">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>System Architecture</th>
+                                <th>JevBench Score</th>
+                                <th>Intelligence</th>
+                                <th>Hard Tier (Forensic)</th>
+                                <th>p50 Latency</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="winner-row" id="bench-row-winner">
+                                <td><span class="gold-star">⭐</span> <strong>#1</strong></td>
+                                <td><strong>Gevva0 (Gemma 4 26B-A4B MoE)</strong></td>
+                                <td><span class="score-pill">74.63</span></td>
+                                <td><strong>87.2</strong></td>
+                                <td><span style="color:#34d399; font-weight:800;">82.9%</span></td>
+                                <td><strong style="color:var(--cyan-primary);">214 ms</strong></td>
+                            </tr>
+                            <tr>
+                                <td>#2</td>
+                                <td>decider-4b v2 (Mapika)</td>
+                                <td>64.13</td>
+                                <td>49.4</td>
+                                <td>41.4%</td>
+                                <td>118 ms</td>
+                            </tr>
+                            <tr>
+                                <td>#3</td>
+                                <td>TypeSafe Jev 1.13.0 (Closed API)</td>
+                                <td>63.29</td>
+                                <td>53.1</td>
+                                <td>47.7%</td>
+                                <td>652 ms</td>
+                            </tr>
+                            <tr>
+                                <td>#4</td>
+                                <td>JevK5 v0.2.0</td>
+                                <td>62.04</td>
+                                <td>48.9</td>
+                                <td>42.3%</td>
+                                <td>122 ms</td>
+                            </tr>
+                            <tr>
+                                <td>#5</td>
+                                <td>Cygnet (Frozen Gemma-4-12B)</td>
+                                <td>61.76</td>
+                                <td>49.5</td>
+                                <td>43.2%</td>
+                                <td>126 ms</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Callout Badges -->
+                <div class="bench-callouts">
+                    <div class="callout-pill">
+                        <span class="callout-check">✓</span>
+                        <span>+11.34 Over Closed API</span>
+                    </div>
+                    <div class="callout-pill">
+                        <span class="callout-check">✓</span>
+                        <span>82.9% Accuracy on Complex Contracts</span>
+                    </div>
+                    <div class="callout-pill">
+                        <span class="callout-check">✓</span>
+                        <span>Calibration: 70.2 (Platt Scaled)</span>
+                    </div>
+                    <div class="callout-pill" style="border-color: rgba(0, 242, 254, 0.25);">
+                        <span class="callout-check" style="color:var(--cyan-primary);">✓</span>
+                        <span>100% Invariant | Paired McNemar p &lt; 0.0001</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ==========================================================
+             SCENE 6: ASYMMETRIC AUDIT TRAIL & HYBRID BOUNDED-COT
+             ========================================================== -->
+        <section class="scene" id="scene-6">
+            <div class="chip chip-purple">
+                🔒 Compliance & Auditability
+            </div>
+            <h1 class="scene-title">The Asymmetric Audit Trail</h1>
+            <p class="scene-desc">
+                Hybrid Fast / Bounded-CoT: Extracting verbatim evidence without risking pre-decisional sycophancy or logit poisoning.
+            </p>
+
+            <div class="audit-showcase">
+                <!-- 3 Steps -->
+                <div class="audit-pipeline">
+                    <div class="audit-step-card step-active" id="audit-step-1">
+                        <div class="step-index-badge">01</div>
+                        <h4 class="step-heading">Decision Locked</h4>
+                        <p class="step-detail">
+                            Verdict is irreversibly frozen directly from the calibrated logit readout in 22 milliseconds.
+                        </p>
+                    </div>
+
+                    <div class="audit-step-card" id="audit-step-2">
+                        <div class="step-index-badge">02</div>
+                        <h4 class="step-heading">Isolated Pass / Bounded CoT</h4>
+                        <p class="step-detail">
+                            Certainty &lt; 0.85 triggers an isolated bounded 40-token verification pass. Strictly isolated with zero feedback to the locked score.
+                        </p>
+                    </div>
+
+                    <div class="audit-step-card" id="audit-step-3">
+                        <div class="step-index-badge">03</div>
+                        <h4 class="step-heading">Verbatim Citation</h4>
+                        <p class="step-detail">
+                            Extracts exact contractual clauses justifying the locked decision with JSON confidence metrics.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Secondary Extraction Output & Verified Proof -->
+                <div class="audit-citation-grid">
+                    <div class="terminal-block">
+                        <div class="terminal-comment">// Secondary extraction output (Zero logit contamination):</div>
+                        <div>
+                            { <span class="json-key">"citation"</span>: <span class="json-str">"Addendum 9, § 4.2: Subscriptions under $10,000 pre-authorized for Engineering Lead sign-off."</span> }
+                        </div>
+                    </div>
+
+                    <div style="background: rgba(13, 20, 31, 0.88); border: 1px solid var(--border-dim); border-radius: 12px; padding: 14px 18px; display: flex; flex-direction: column; justify-content: center; gap: 8px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; font-family:var(--font-mono); font-size:0.78rem; color:var(--text-muted);">
+                            <span>VERIFIED SOURCE EVIDENCE</span>
+                            <span style="color:var(--emerald-primary);">Audit Latency: 1281.3 ms</span>
+                        </div>
+                        <div style="font-size:0.86rem; font-style:italic; color:#e2e8f0; border-left:3px solid var(--cyan-primary); padding-left:12px; line-height:1.4;">
+                            “Cloud developer tooling and observability subscriptions approved under annual platform engineering budget are pre-authorized up to $10,000 and require only Engineering Manager sign-off.”
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom Values Banner -->
+                <div class="audit-values-banner">
+                    <div class="banner-item">
+                        <span class="callout-check">✓</span> Air-Gapped (llama.cpp)
+                    </div>
+                    <div class="banner-item">
+                        <span class="callout-check">✓</span> Zero Data Egress
+                    </div>
+                    <div class="banner-item">
+                        <span class="callout-check">✓</span> <span class="accent">$0.015</span> / 1,000 Decisions
+                    </div>
+                    <div class="banner-item" style="color: var(--cyan-primary); font-weight:700;">
+                        Gemma 4 26B-A4B MoE (CUDA 13)
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Bottom Controls & Timeline Bar -->
+    <footer class="bottom-bar">
+        <div class="shortcuts-guide">
+            <span><span class="key-cap">Space</span> Play/Pause</span>
+            <span><span class="key-cap">←</span> <span class="key-cap">→</span> Jump</span>
+            <span><span class="key-cap">R</span> Restart</span>
+            <span><span class="key-cap">F</span> Fullscreen</span>
+        </div>
+
+        <div class="timeline-controls">
+            <button class="play-btn" id="play-pause-btn" onclick="togglePlayPause()" title="Space to toggle">
+                <span id="play-icon">⏸</span>
+            </button>
+            <div class="scene-pills">
+                <div class="pill-dot active" onclick="jumpToScene(0)" title="Scene 1: Sub-30ms Decisions">
+                    <div class="pill-progress" id="progress-0"></div>
+                </div>
+                <div class="pill-dot" onclick="jumpToScene(1)" title="Scene 2: 6 Pillars of System 0">
+                    <div class="pill-progress" id="progress-1"></div>
+                </div>
+                <div class="pill-dot" onclick="jumpToScene(2)" title="Scene 3: Multimodal Vision Gateway">
+                    <div class="pill-progress" id="progress-2"></div>
+                </div>
+                <div class="pill-dot" onclick="jumpToScene(3)" title="Scene 4: Architectural Breakdown & MoE">
+                    <div class="pill-progress" id="progress-3"></div>
+                </div>
+                <div class="pill-dot" onclick="jumpToScene(4)" title="Scene 5: Official JevBench Rank #1">
+                    <div class="pill-progress" id="progress-4"></div>
+                </div>
+                <div class="pill-dot" onclick="jumpToScene(5)" title="Scene 6: Asymmetric Audit Trail">
+                    <div class="pill-progress" id="progress-5"></div>
+                </div>
+            </div>
+            <span class="time-badge" id="time-display">00:00 / 01:06</span>
+        </div>
+
+        <div class="right-info">
+            <span>Total Demo Duration: ~66s • Press F11 for Full Screen Recording</span>
+            <span style="color: var(--cyan-primary); font-weight:700;">Gevva0 v0.1.0</span>
+        </div>
+    </footer>
+
+</div>
+
+<script>
+    // ========================================================
+    // TIMELINE ENGINE & CONTROLLER (~66s Total Duration, 6 Scenes)
+    // ========================================================
+    const sceneDurations = [11000, 11000, 11000, 11000, 11000, 11000]; // 11.0s per scene = 66.0s total
+    const totalDuration = sceneDurations.reduce((a, b) => a + b, 0);
+
+    const scenes = document.querySelectorAll('.scene');
+    const pillDots = document.querySelectorAll('.pill-dot');
+    const pillProgresses = [
+        document.getElementById('progress-0'),
+        document.getElementById('progress-1'),
+        document.getElementById('progress-2'),
+        document.getElementById('progress-3'),
+        document.getElementById('progress-4'),
+        document.getElementById('progress-5')
+    ];
+    const playBtn = document.getElementById('play-pause-btn');
+    const playIcon = document.getElementById('play-icon');
+    const timeDisplay = document.getElementById('time-display');
+    const hudToast = document.getElementById('hud-toast');
+    const hudIcon = document.getElementById('hud-icon');
+    const hudMessage = document.getElementById('hud-message');
+
+    let currentScene = 0;
+    let isPlaying = true;
+    let sceneStartTime = performance.now();
+    let elapsedInCurrentScene = 0;
+    let animFrameId = null;
+
+    function formatTime(ms) {
+        const totalSec = Math.floor(ms / 1000);
+        const mins = Math.floor(totalSec / 60);
+        const secs = totalSec % 60;
+        return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    }
+
+    function showHud(text, icon) {
+        hudMessage.textContent = text;
+        hudIcon.textContent = icon;
+        hudToast.classList.add('visible');
+        clearTimeout(hudToast._timer);
+        hudToast._timer = setTimeout(() => {
+            hudToast.classList.remove('visible');
+        }, 1200);
+    }
+
+    function triggerAudioCueRipple(elementId) {
+        const el = document.getElementById(elementId);
+        if (!el) return;
+        el.classList.remove('ripple-anim');
+        void el.offsetWidth;
+        el.classList.add('ripple-anim');
+    }
+
+    function triggerSceneAnimations(index) {
+        if (index === 0) {
+            const counter = document.getElementById('latency-counter');
+            const target = 22.1;
+            const startTime = performance.now();
+            function tick(now) {
+                const p = Math.min((now - startTime) / 600, 1);
+                const val = (target * p).toFixed(1);
+                if (counter) counter.textContent = `${val} ms`;
+                if (p < 1) requestAnimationFrame(tick);
+                else {
+                    triggerAudioCueRipple('ripple-verdict');
+                    triggerAudioCueRipple('ripple-c');
+                }
+            }
+            requestAnimationFrame(tick);
+        } else if (index === 4) {
+            const row = document.getElementById('bench-row-winner');
+            if (row) {
+                row.style.boxShadow = '0 0 30px rgba(0, 242, 254, 0.4)';
+                setTimeout(() => {
+                    row.style.boxShadow = 'none';
+                }, 1500);
+            }
+        } else if (index === 5) {
+            const step1 = document.getElementById('audit-step-1');
+            const step2 = document.getElementById('audit-step-2');
+            const step3 = document.getElementById('audit-step-3');
+            [step1, step2, step3].forEach(s => s && s.classList.remove('step-active'));
+            if (step1) step1.classList.add('step-active');
+
+            setTimeout(() => {
+                if (currentScene === 5) {
+                    if (step1) step1.classList.remove('step-active');
+                    if (step2) step2.classList.add('step-active');
+                }
+            }, 3000);
+
+            setTimeout(() => {
+                if (currentScene === 5) {
+                    if (step2) step2.classList.remove('step-active');
+                    if (step3) step3.classList.add('step-active');
+                }
+            }, 6500);
+        }
+    }
+
+    function setScene(index, preserveTime = false) {
+        if (index < 0) index = 0;
+        if (index >= scenes.length) index = 0;
+
+        currentScene = index;
+
+        scenes.forEach((sc, i) => sc.classList.toggle('active', i === index));
+        pillDots.forEach((dot, i) => dot.classList.toggle('active', i === index));
+
+        if (!preserveTime) {
+            elapsedInCurrentScene = 0;
+            sceneStartTime = performance.now();
+        }
+
+        for (let i = 0; i < pillProgresses.length; i++) {
+            if (i < index) pillProgresses[i].style.width = '100%';
+            else if (i > index) pillProgresses[i].style.width = '0%';
+        }
+
+        triggerSceneAnimations(index);
+    }
+
+    function jumpToScene(index) {
+        setScene(index);
+        showHud(`SCENE ${index + 1}`, '⏭');
+    }
+
+    function togglePlayPause() {
+        isPlaying = !isPlaying;
+        if (isPlaying) {
+            sceneStartTime = performance.now() - elapsedInCurrentScene;
+            playIcon.textContent = '⏸';
+            showHud('PLAY', '▶');
+        } else {
+            playIcon.textContent = '▶';
+            showHud('PAUSE', '⏸');
+        }
+    }
+
+    function restartDemo() {
+        currentScene = 0;
+        elapsedInCurrentScene = 0;
+        sceneStartTime = performance.now();
+        isPlaying = true;
+        playIcon.textContent = '⏸';
+        setScene(0);
+        showHud('RESTART', '↺');
+    }
+
+    function toggleFullscreen() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(() => {});
+            showHud('FULLSCREEN', '⛶');
+        } else {
+            document.exitFullscreen().catch(() => {});
+            showHud('WINDOWED', '⊡');
+        }
+    }
+
+    function toggleUiModal() {
+        const modal = document.getElementById('ui-modal');
+        modal.classList.toggle('open');
+    }
+
+    function closeUiModal(e) {
+        const modal = document.getElementById('ui-modal');
+        modal.classList.remove('open');
+    }
+
+    function updateTimeline(now) {
+        if (isPlaying) {
+            elapsedInCurrentScene = now - sceneStartTime;
+            const targetDur = sceneDurations[currentScene];
+
+            if (elapsedInCurrentScene >= targetDur) {
+                let next = currentScene + 1;
+                if (next >= scenes.length) next = 0;
+                setScene(next);
+            } else {
+                const pct = (elapsedInCurrentScene / targetDur) * 100;
+                pillProgresses[currentScene].style.width = `${pct}%`;
+            }
+        }
+
+        let accTime = 0;
+        for (let i = 0; i < currentScene; i++) {
+            accTime += sceneDurations[i];
+        }
+        accTime += Math.min(elapsedInCurrentScene, sceneDurations[currentScene]);
+        timeDisplay.textContent = `${formatTime(accTime)} / ${formatTime(totalDuration)}`;
+
+        animFrameId = requestAnimationFrame(updateTimeline);
+    }
+
+    window.jumpToScene = jumpToScene;
+    window.togglePlayPause = togglePlayPause;
+    window.restartDemo = restartDemo;
+    window.setScene = setScene;
+    window.toggleFullscreen = toggleFullscreen;
+    window.toggleUiModal = toggleUiModal;
+
+    // Keyboard Hotkeys
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            const modal = document.getElementById('ui-modal');
+            if (modal.classList.contains('open')) {
+                modal.classList.remove('open');
+                return;
+            }
+        }
+
+        if (e.code === 'Space') {
+            e.preventDefault();
+            togglePlayPause();
+        } else if (e.code === 'ArrowRight') {
+            e.preventDefault();
+            jumpToScene((currentScene + 1) % scenes.length);
+        } else if (e.code === 'ArrowLeft') {
+            e.preventDefault();
+            jumpToScene((currentScene - 1 + scenes.length) % scenes.length);
+        } else if (e.code === 'KeyR') {
+            e.preventDefault();
+            restartDemo();
+        } else if (e.code === 'KeyF') {
+            e.preventDefault();
+            toggleFullscreen();
+        } else if (['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5', 'Digit6'].includes(e.code)) {
+            const sceneNum = parseInt(e.code.replace('Digit', '')) - 1;
+            jumpToScene(sceneNum);
+        }
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+        setScene(0);
+        animFrameId = requestAnimationFrame(updateTimeline);
+    });
+
+</script>
+
+</body>
+</html>

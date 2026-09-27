@@ -1,0 +1,24 @@
+{
+  "n_ctx": 4096,
+  "n_batch": 2048,
+  "n_seq_max": 8,
+  "kv_unified": true,
+  "kv_cache": "F16",
+  "type_k": 1,
+  "type_v": 1,
+  "model": {
+    "model_path": "models/gemma-4-26B-A4B-it-qat-UD-Q4_K_XL/gemma-4-26B-A4B-it-qat-UD-Q4_K_XL.gguf",
+    "mmproj_path": "models/gemma-4-26B-A4B-it-qat-UD-Q4_K_XL/mmproj-BF16.gguf",
+    "n_gpu_layers": -1,
+    "verbose": false
+  },
+  "decision": {
+    "cot_threshold": 0.85,
+    "cot_max_tokens": 256,
+    "cot_temp": 0.0,
+    "cot_prompt": "Analysis: First calculate the exact sliding window cutoff timestamp and evaluate which log entries fall strictly inside it: ",
+    "cyclic_debias": true,
+    "kv_branching": true,
+    "kv_branching_min_tokens": 50
+  }
+}
