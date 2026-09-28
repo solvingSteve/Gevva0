@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en" class="dark scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gevva0 — Generative Studio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            obsidian: '#090a0f',
+            surface: {
+              DEFAULT: '#0f111a',
+              card: '#141724',
+              border: '#1f2438',
+              hover: '#242a42'
+            },
+            accent: {
+              emerald: '#10b981',
+              cyan: '#06b6d4',
+              violet: '#8b5cf6',
+              amber: '#f59e0b',
+              rose: '#f43f5e'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #090a0f; }
+    ::-webkit-scrollbar-thumb { background: #1f2438; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #06b6d4; }
+    .loading-ring { border: 2.5px solid #1f2438; border-top-color: #8b5cf6; border-radius: 50%; width: 18px; height: 18px; animation: spin 0.7s linear infinite; display: inline-block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    textarea:focus { outline: none; border-color: #8b5cf6; }
+    input[type=range] { -webkit-appearance: none; appearance: none; height: 5px; border-radius: 3px; background: #1f2438; }
+    input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #8b5cf6; cursor: pointer; }
+    /* Markdown Styles */
+    .prose-custom p { margin-bottom: 0.75rem; line-height: 1.6; }
+    .prose-custom p:last-child { margin-bottom: 0; }
+    .prose-custom pre { background: #090a0f; border: 1px solid #1f2438; border-radius: 0.375rem; padding: 0.75rem 1rem; margin: 0.75rem 0; overflow-x: auto; font-family: 'JetBrains Mono', monospace; font-size: 0.8125rem; }
+    .prose-custom code:not(pre code) { background: #1f2438; color: #a78bfa; padding: 0.15rem 0.35rem; border-radius: 0.25rem; font-size: 0.8125rem; font-family: 'JetBrains Mono', monospace; }
+    .prose-custom ul { list-style-type: disc; margin-left: 1.25rem; margin-bottom: 0.75rem; }
+    .prose-custom ol { list-style-type: decimal; margin-left: 1.25rem; margin-bottom: 0.75rem; }
+    .prose-custom li { margin-bottom: 0.25rem; }
+    .prose-custom h1, .prose-custom h2, .prose-custom h3 { font-weight: 700; color: #f4f4f5; margin-top: 1rem; margin-bottom: 0.5rem; }
+    .prose-custom h1 { font-size: 1.25rem; }
+    .prose-custom h2 { font-size: 1.1rem; }
+    .prose-custom h3 { font-size: 0.95rem; }
+    .prose-custom blockquote { border-left: 3px solid #8b5cf6; padding-left: 0.75rem; color: #a1a1aa; margin: 0.75rem 0; font-style: italic; }
+    .prose-custom table { width: 100%; border-collapse: collapse; margin: 0.75rem 0; font-size: 0.8125rem; }
+    .prose-custom th, .prose-custom td { border: 1px solid #1f2438; padding: 0.5rem; text-align: left; }
+    .prose-custom th { background: #141724; font-weight: 600; color: #d4d4d8; }
+  </style>
+</head>
+<body class="bg-obsidian text-zinc-200 font-sans antialiased min-h-screen flex flex-col">
+
+  <!-- Header -->
+  <header class="sticky top-0 z-50 backdrop-blur-md bg-obsidian/85 border-b border-surface-border">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="h-8 w-8 rounded-lg bg-gradient-to-tr from-accent-violet to-accent-cyan flex items-center justify-center font-mono font-bold text-white text-sm shadow-lg">G0</div>
+        <div>
+          <h1 class="text-sm font-bold text-white flex items-center gap-2">
+            Gevva0
+            <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-violet-950 text-accent-violet border border-violet-800 font-mono">Generative Studio</span>
+          </h1>
+        </div>
+
+        <!-- Mode Nav Pills -->
+        <nav class="hidden md:flex items-center space-x-1 ml-4 pl-4 border-l border-surface-border">
+          <a href="/ui/index.html" class="px-2.5 py-1 text-xs font-medium rounded-md text-zinc-400 hover:text-zinc-200 hover:bg-surface-card/60 transition-colors flex items-center gap-1.5" title="Sub-50ms Logit Scoring Decision Gateway">
+            <span>⚡</span> Decisions
+          </a>
+          <a href="/ui/chat.html" class="px-2.5 py-1 text-xs font-medium rounded-md bg-violet-950/80 text-violet-300 border border-violet-800/80 shadow-sm flex items-center gap-1.5" title="Autoregressive Text & JSON Generation">
+            <span>💬</span> Generative Studio
+          </a>
+        </nav>
+      </div>
+
+      <!-- Right Header Status Items -->
+      <div class="flex items-center gap-3">
+        <div id="vram-shared-badge" class="hidden sm:flex items-center gap-1.5 text-[10px] font-mono text-zinc-400 bg-surface-card border border-surface-border px-2.5 py-1 rounded-full">
+          <span class="w-1.5 h-1.5 rounded-full bg-accent-violet animate-pulse"></span>
+          <span>Shared VRAM Engine</span>
+        </div>
+        <div id="vision-status-badge" class="hidden items-center gap-1.5 text-[11px] font-mono text-accent-emerald bg-emerald-950/60 border border-emerald-800/80 px-2 py-0.5 rounded-full shadow-sm">
+          <span class="w-1.5 h-1.5 rounded-full bg-accent-emerald animate-pulse"></span>
+          Vision Active
+        </div>
+        <div id="health-dot" class="flex items-center gap-1.5 text-[11px] font-mono text-zinc-500">
+          <span class="relative flex h-2 w-2"><span class="relative inline-flex rounded-full h-2 w-2 bg-zinc-600"></span></span>
+          Checking...
+        </div>
+        <div class="hidden lg:flex items-center gap-1 text-[11px] font-mono text-zinc-400 bg-surface-card border border-surface-border px-2.5 py-1 rounded">
+          <span class="text-zinc-500">Model:</span>
+          <span id="active-model-name" class="text-zinc-200 truncate max-w-[140px]">loading...</span>
+        </div>
+        <a href="/docs" target="_blank" class="text-[11px] font-mono text-zinc-400 hover:text-accent-violet transition-colors px-2 py-1 rounded border border-surface-border bg-surface-card">API Docs</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Layout -->
+  <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+      <!-- Left Panel: Configuration & Options (4 cols) -->
+      <div class="lg:col-span-4 space-y-4">
+
+        <!-- Mode Selection Box -->
+        <div class="bg-surface-card border border-surface-border rounded-xl p-4 shadow-sm">
+          <div class="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2.5 flex items-center justify-between">
+            <span>Operating Mode</span>
+            <span class="text-[10px] text-violet-400 font-mono">Traditional LLM</span>
+          </div>
+          <div class="grid grid-cols-3 gap-2">
+            <button type="button" id="btn-mode-chat" onclick="setMode('chat')" class="flex flex-col items-center justify-center p-2 rounded-lg border text-center transition-all bg-violet-950/50 border-violet-700 text-white">
+              <span class="text-base mb-1">💬</span>
+              <span class="text-[11px] font-medium">Chat</span>
+            </button>
+            <button type="button" id="btn-mode-prompt" onclick="setMode('prompt')" class="flex flex-col items-center justify-center p-2 rounded-lg border text-center transition-all bg-surface border-surface-border text-zinc-400 hover:text-zinc-200">
+              <span class="text-base mb-1">📝</span>
+              <span class="text-[11px] font-medium">Text</span>
+            </button>
+            <button type="button" id="btn-mode-json" onclick="setMode('json')" class="flex flex-col items-center justify-center p-2 rounded-lg border text-center transition-all bg-surface border-surface-border text-zinc-400 hover:text-zinc-200">
+              <span class="text-base mb-1">🏷️</span>
+              <span class="text-[11px] font-medium">JSON</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Presets Box -->
+        <div class="bg-surface-card border border-surface-border rounded-xl p-4 shadow-sm">
+          <div class="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2 flex items-center justify-between">
+            <span>Quick Starters</span>
+          </div>
+          <div class="space-y-1.5">
+            <button onclick="applyPreset('summarize')" class="w-full text-left text-[11px] font-mono p-2 rounded bg-surface hover:bg-surface-hover border border-surface-border hover:border-violet-800 text-zinc-300 transition-colors flex items-center justify-between">
+              <span>📄 Summarize text succinctly</span>
+              <span class="text-violet-400 text-xs">→</span>
+            </button>
+            <button onclick="applyPreset('json_extract')" class="w-full text-left text-[11px] font-mono p-2 rounded bg-surface hover:bg-surface-hover border border-surface-border hover:border-violet-800 text-zinc-300 transition-colors flex items-center justify-between">
+              <span>🏷️ Extract entities to strict JSON</span>
+              <span class="text-violet-400 text-xs">→</span>
+            </button>
+            <button onclick="applyPreset('reason')" class="w-full text-left text-[11px] font-mono p-2 rounded bg-surface hover:bg-surface-hover border border-surface-border hover:border-violet-800 text-zinc-300 transition-colors flex items-center justify-between">
+              <span>🧠 Step-by-step technical analysis</span>
+              <span class="text-violet-400 text-xs">→</span>
+            </button>
+            <button onclick="applyPreset('code')" class="w-full text-left text-[11px] font-mono p-2 rounded bg-surface hover:bg-surface-hover border border-surface-border hover:border-violet-800 text-zinc-300 transition-colors flex items-center justify-between">
+              <span>💻 Python high-throughput routine</span>
+              <span class="text-violet-400 text-xs">→</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- System Prompt Box -->
+        <div class="bg-surface-card border border-surface-border rounded-xl p-4 shadow-sm">
+          <div class="flex items-center justify-between mb-2">
+            <label for="system-prompt" class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">System Instruction</label>
+            <button type="button" onclick="resetSystemPrompt()" class="text-[10px] font-mono text-zinc-500 hover:text-violet-400 transition-colors">Reset</button>
+          </div>
+          <textarea id="system-prompt" rows="3" class="w-full text-xs font-mono bg-surface border border-surface-border rounded-lg p-2.5 text-zinc-200 focus:outline-none focus:border-violet-500 transition-colors resize-y" placeholder="You are a helpful, accurate, and concise AI assistant."></textarea>
+        </div>
+
+        <!-- Hyperparameters Box -->
+        <div class="bg-surface-card border border-surface-border rounded-xl p-4 shadow-sm space-y-3.5">
+          <div class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Generation Parameters</div>
+          
+          <!-- Temperature -->
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="text-zinc-400">Temperature</span>
+              <span id="val-temp" class="font-mono text-violet-400">0.7</span>
+            </div>
+            <input type="range" id="param-temp" min="0.0" max="1.5" step="0.05" value="0.7" oninput="updateParamLabels()" class="w-full">
+            <div class="flex justify-between text-[10px] text-zinc-500 font-mono mt-0.5">
+              <span>0.0 (Deterministic)</span>
+              <span>1.5 (Creative)</span>
+            </div>
+          </div>
+
+          <!-- Max Tokens -->
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="text-zinc-400">Max Tokens</span>
+              <span id="val-max-tokens" class="font-mono text-violet-400">1024</span>
+            </div>
+            <input type="range" id="param-max-tokens" min="64" max="4096" step="64" value="1024" oninput="updateParamLabels()" class="w-full">
+            <div class="flex justify-between text-[10px] text-zinc-500 font-mono mt-0.5">
+              <span>64</span>
+              <span>4096</span>
+            </div>
+          </div>
+
+          <!-- Top-P -->
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="text-zinc-400">Top-P</span>
+              <span id="val-topp" class="font-mono text-violet-400">0.95</span>
+            </div>
+            <input type="range" id="param-topp" min="0.1" max="1.0" step="0.05" value="0.95" oninput="updateParamLabels()" class="w-full">
+          </div>
+
+          <!-- Toggles -->
+          <div class="pt-2 border-t border-surface-border space-y-2">
+            <label class="flex items-center justify-between cursor-pointer">
+              <span class="text-xs text-zinc-300">Live Token Streaming (SSE)</span>
+              <input type="checkbox" id="param-stream" checked class="w-4 h-4 accent-violet-600 rounded bg-surface border-surface-border cursor-pointer">
+            </label>
+            <label class="flex items-center justify-between cursor-pointer">
+              <span class="text-xs text-zinc-300">Enforce JSON Output</span>
+              <input type="checkbox" id="param-json-mode" onchange="onJsonModeToggle()" class="w-4 h-4 accent-violet-600 rounded bg-surface border-surface-border cursor-pointer">
+            </label>
+          </div>
+        </div>
+
+        <!-- Image Attachment (Multimodal) -->
+        <div id="vision-upload-card" class="bg-surface-card border border-surface-border rounded-xl p-4 shadow-sm">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Vision Attachment</span>
+            <span id="vision-card-tag" class="text-[10px] text-emerald-400 font-mono">mmproj ready</span>
+          </div>
+          <div class="flex flex-col gap-2">
+            <input type="file" id="inp-image-file" accept="image/*" onchange="handleImageUpload(event)" class="text-xs text-zinc-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-mono file:bg-surface-hover file:text-zinc-200 hover:file:bg-violet-900 cursor-pointer">
+            <div id="image-preview-wrapper" class="hidden relative rounded border border-surface-border overflow-hidden bg-black max-h-36 flex items-center justify-center">
+              <img id="image-preview" src="" alt="Attachment" class="max-h-36 object-contain">
+              <button onclick="clearImageAttachment()" class="absolute top-1 right-1 bg-obsidian/80 hover:bg-rose-950 text-zinc-300 hover:text-rose-400 p-1 rounded-full text-xs" title="Remove attachment">✕</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Integration snippet toggle -->
+        <div class="bg-surface-card/60 border border-surface-border rounded-xl p-3">
+          <button onclick="toggleApiCode()" class="w-full flex items-center justify-between text-xs text-zinc-400 hover:text-violet-300 font-mono">
+            <span>⚙️ View OpenAI SDK / cURL code</span>
+            <span id="code-arrow">▼</span>
+          </button>
+          <div id="api-code-block" class="hidden mt-2 pt-2 border-t border-surface-border">
+            <p class="text-[11px] text-zinc-400 mb-1.5">You can point any OpenAI-compatible tool at Gevva0:</p>
+            <pre class="bg-obsidian border border-surface-border p-2 rounded text-[10px] font-mono text-violet-300 overflow-x-auto">from openai import OpenAI
+
+client = OpenAI(
+    base_url="http://localhost:8000/v1",
+    api_key="not-needed"
+)
+resp = client.chat.completions.create(
+    model="gemma-4-26B",
+    messages=[{"role": "user", "content": "Hello!"}]
+)</pre>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right Panel: Conversation / Prompt Area (8 cols) -->
+      <div class="lg:col-span-8 flex flex-col space-y-4 min-h-[640px]">
+
+        <!-- Output Container -->
+        <div class="flex-grow bg-surface-card border border-surface-border rounded-xl flex flex-col overflow-hidden shadow-sm">
+          
+          <!-- Box Header -->
+          <div class="px-4 py-3 border-b border-surface-border flex items-center justify-between bg-surface/50">
+            <div class="flex items-center gap-2">
+              <span id="view-mode-title" class="text-xs font-semibold text-zinc-200">Conversation Stream</span>
+              <span id="stream-indicator" class="hidden items-center gap-1 text-[10px] font-mono text-violet-400">
+                <span class="loading-ring"></span> Generating...
+              </span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="clearChatHistory()" class="text-xs text-zinc-400 hover:text-rose-400 transition-colors px-2 py-0.5 rounded border border-surface-border bg-surface text-[11px] font-mono">
+                Clear
+              </button>
+              <button onclick="copyCurrentOutput()" class="text-xs text-zinc-400 hover:text-violet-300 transition-colors px-2 py-0.5 rounded border border-surface-border bg-surface text-[11px] font-mono">
+                Copy
+              </button>
+            </div>
+          </div>
+
+          <!-- Messages / Content Scrollable Area -->
+          <div id="messages-container" class="flex-grow p-4 overflow-y-auto space-y-4 max-h-[580px] min-h-[420px]">
+            <!-- Welcome placeholder message -->
+            <div id="welcome-message" class="text-center py-12 px-4 space-y-3">
+              <div class="w-12 h-12 rounded-xl bg-violet-950/80 border border-violet-800 text-violet-300 flex items-center justify-center mx-auto text-xl shadow-lg">
+                💬
+              </div>
+              <h2 class="text-base font-bold text-white">Gevva0 Generative Playground</h2>
+              <p class="text-xs text-zinc-400 max-w-md mx-auto">
+                Running alongside Gevva0's 15ms Decision Engine on shared Gemma 4 weights in VRAM. Ask questions, generate technical documents, or extract structured JSON.
+              </p>
+              <div class="flex flex-wrap items-center justify-center gap-2 pt-2">
+                <button onclick="sendQuickPrompt('What is the difference between direct token logit scoring and traditional autoregressive generation?')" class="text-[11px] font-mono bg-surface hover:bg-surface-hover text-zinc-300 border border-surface-border hover:border-violet-700 px-3 py-1.5 rounded-full transition-colors">
+                  💡 Compare Logit Scoring vs Generation
+                </button>
+                <button onclick="applyPreset('json_extract')" class="text-[11px] font-mono bg-surface hover:bg-surface-hover text-zinc-300 border border-surface-border hover:border-violet-700 px-3 py-1.5 rounded-full transition-colors">
+                  🏷️ Structured JSON Test
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Generation Metrics Footer Bar -->
+          <div id="metrics-bar" class="hidden px-4 py-2 bg-surface border-t border-surface-border text-[11px] font-mono text-zinc-400 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-4">
+              <span>⏱️ Duration: <strong id="metric-duration" class="text-violet-400">-</strong></span>
+              <span>⚡ Speed: <strong id="metric-tps" class="text-violet-400">-</strong></span>
+              <span>📊 Tokens: <strong id="metric-tokens" class="text-violet-400">-</strong></span>
+            </div>
+            <div class="text-[10px] text-zinc-500">Shared VRAM: Zero duplicate allocation</div>
+          </div>
+
+          <!-- Input Area -->
+          <div class="p-3 bg-surface border-t border-surface-border">
+            <div class="relative flex flex-col">
+              <textarea id="user-input" rows="3" onkeydown="handleInputKeyDown(event)" class="w-full text-xs font-sans bg-surface-card border border-surface-border rounded-lg p-3 pr-24 text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-violet-500 transition-colors resize-none" placeholder="Type a message or prompt... (Ctrl + Enter to send)"></textarea>
+              
+              <div class="flex items-center justify-between mt-2 pt-1">
+                <span class="text-[10px] font-mono text-zinc-500">Press <kbd class="px-1 py-0.5 bg-surface-card border border-surface-border rounded text-zinc-400">Ctrl</kbd> + <kbd class="px-1 py-0.5 bg-surface-card border border-surface-border rounded text-zinc-400">Enter</kbd> to run</span>
+                
+                <div class="flex items-center gap-2">
+                  <button type="button" id="btn-stop" onclick="stopGeneration()" class="hidden px-3 py-1.5 rounded-lg bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-800 text-xs font-medium transition-colors">
+                    ⏹ Stop
+                  </button>
+                  <button type="button" id="btn-submit" onclick="submitMessage()" class="px-4 py-1.5 rounded-lg bg-violet-600 hover:bg-violet-500 text-white font-medium text-xs shadow-md transition-colors flex items-center gap-1.5">
+                    <span>Generate</span>
+                    <span>→</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    // State
+    let currentMode = 'chat'; // 'chat' | 'prompt' | 'json'
+    let conversationHistory = [];
+    let attachedImageBase64 = null;
+    let activeAbortController = null;
+    let isGenerating = false;
+
+    // Presets
+    const PRESETS = {
+      summarize: {
+        system: "You are a concise executive summarizer. Condense provided material into essential takeaways and bullet points.",
+        prompt: "Please summarize the core architectural principles of Project Gevva0: specifically how direct logit scoring eliminates autoregressive drift and how KV cache branching accelerates permutation passes.",
+        mode: 'prompt',
+        json: false
+      },
+      json_extract: {
+        system: "You are an entity extraction engine. Always output pure, valid JSON with no markdown wrapping.",
+        prompt: "Extract the customer metadata, incident severity, and action items from this report:\n\n'Customer ACME Corp reported a critical outage in region us-east-1 on 2026-09-28. System engineer Alice diagnosed a cache eviction fault. Action item: patch cache eviction logic by 18:00.'",
+        mode: 'json',
+        json: true
+      },
+      reason: {
+        system: "You are an expert systems engineer. Reason systematically through edge cases before presenting solutions.",
+        prompt: "Explain how a local LLM gateway running llama.cpp can safely interleave 15ms categorical decision queries with multi-token generative streaming requests on a single GPU without VRAM collisions.",
+        mode: 'chat',
+        json: false
+      },
+      code: {
+        system: "You are a Python systems specialist. Provide clean, well-typed Python code with explanations.",
+        prompt: "Write a complete Python client using `httpx` to send a streaming request to Gevva0's `/v1/chat/completions` endpoint and print tokens as they arrive.",
+        mode: 'chat',
+        json: false
+      }
+    };
+
+    // Initialization
+    window.addEventListener('DOMContentLoaded', () => {
+      checkHealthAndModel();
+      updateParamLabels();
+      resetSystemPrompt();
+    });
+
+    function checkHealthAndModel() {
+      fetch('/health')
+        .then(r => r.json())
+        .then(data => {
+          const dot = document.getElementById('health-dot');
+          if (data.status === 'ok') {
+            dot.innerHTML = `<span class="relative flex h-2 w-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-accent-emerald"></span></span> Ready`;
+            dot.className = 'flex items-center gap-1.5 text-[11px] font-mono text-accent-emerald';
+          }
+          if (data.has_vision) {
+            const vBadge = document.getElementById('vision-status-badge');
+            vBadge.classList.remove('hidden');
+            vBadge.classList.add('flex');
+          }
+          if (data.model) {
+            const mParts = data.model.replace(/\\/g, '/').split('/');
+            document.getElementById('active-model-name').textContent = mParts[mParts.length - 1];
+          }
+        })
+        .catch(() => {
+          const dot = document.getElementById('health-dot');
+          dot.innerHTML = `<span class="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span> Offline`;
+          dot.className = 'flex items-center gap-1.5 text-[11px] font-mono text-rose-400';
+        });
+    }
+
+    function setMode(mode) {
+      currentMode = mode;
+      const bChat = document.getElementById('btn-mode-chat');
+      const bPrompt = document.getElementById('btn-mode-prompt');
+      const bJson = document.getElementById('btn-mode-json');
+      const jsonToggle = document.getElementById('param-json-mode');
+      const title = document.getElementById('view-mode-title');
+
+      [bChat, bPrompt, bJson].forEach(b => {
+        b.className = 'flex flex-col items-center justify-center p-2 rounded-lg border text-center transition-all bg-surface border-surface-border text-zinc-400 hover:text-zinc-200';
+      });
+
+      if (mode === 'chat') {
+        bChat.className = 'flex flex-col items-center justify-center p-2 rounded-lg border text-center transition-all bg-violet-950/50 border-violet-700 text-white';
+        jsonToggle.checked = false;
+        title.textContent = 'Interactive Conversation';
+      } else if (mode === 'prompt') {
+        bPrompt.className = 'flex flex-col items-center justify-center p-2 rounded-lg border text-center transition-all bg-violet-950/50 border-violet-700 text-white';
+        jsonToggle.checked = false;
+        title.textContent = 'Text Generation Stream';
+      } else if (mode === 'json') {
+        bJson.className = 'flex flex-col items-center justify-center p-2 rounded-lg border text-center transition-all bg-violet-950/50 border-violet-700 text-white';
+        jsonToggle.checked = true;
+        title.textContent = 'Structured JSON Output';
+      }
+    }
+
+    function onJsonModeToggle() {
+      const isChecked = document.getElementById('param-json-mode').checked;
+      if (isChecked && currentMode !== 'json') {
+        setMode('json');
+      } else if (!isChecked && currentMode === 'json') {
+        setMode('prompt');
+      }
+    }
+
+    function updateParamLabels() {
+      document.getElementById('val-temp').textContent = document.getElementById('param-temp').value;
+      document.getElementById('val-max-tokens').textContent = document.getElementById('param-max-tokens').value;
+      document.getElementById('val-topp').textContent = document.getElementById('param-topp').value;
+    }
+
+    function resetSystemPrompt() {
+      document.getElementById('system-prompt').value = "You are a helpful, knowledgeable, and accurate AI assistant running locally on Gemma 4.";
+    }
+
+    function applyPreset(name) {
+      const preset = PRESETS[name];
+      if (!preset) return;
+      document.getElementById('system-prompt').value = preset.system;
+      document.getElementById('user-input').value = preset.prompt;
+      setMode(preset.mode);
+      document.getElementById('param-json-mode').checked = preset.json;
+    }
+
+    function toggleApiCode() {
+      const block = document.getElementById('api-code-block');
+      const arrow = document.getElementById('code-arrow');
+      if (block.classList.contains('hidden')) {
+        block.classList.remove('hidden');
+        arrow.textContent = '▲';
+      } else {
+        block.classList.add('hidden');
+        arrow.textContent = '▼';
+      }
+    }
+
+    function handleImageUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        attachedImageBase64 = evt.target.result;
+        document.getElementById('image-preview').src = attachedImageBase64;
+        document.getElementById('image-preview-wrapper').classList.remove('hidden');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function clearImageAttachment() {
+      attachedImageBase64 = null;
+      document.getElementById('inp-image-file').value = '';
+      document.getElementById('image-preview').src = '';
+      document.getElementById('image-preview-wrapper').classList.add('hidden');
+    }
+
+    function handleInputKeyDown(e) {
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        submitMessage();
+      }
+    }
+
+    function sendQuickPrompt(text) {
+      document.getElementById('user-input').value = text;
+      submitMessage();
+    }
+
+    function clearChatHistory() {
+      conversationHistory = [];
+      const container = document.getElementById('messages-container');
+      container.innerHTML = `
+        <div id="welcome-message" class="text-center py-12 px-4 space-y-3">
+          <div class="w-12 h-12 rounded-xl bg-violet-950/80 border border-violet-800 text-violet-300 flex items-center justify-center mx-auto text-xl shadow-lg">
+            💬
+          </div>
+          <h2 class="text-base font-bold text-white">Gevva0 Generative Playground</h2>
+          <p class="text-xs text-zinc-400 max-w-md mx-auto">
+            Session history cleared. Ready for new inputs.
+          </p>
+        </div>
+      `;
+      document.getElementById('metrics-bar').classList.add('hidden');
+    }
+
+    function copyCurrentOutput() {
+      const container = document.getElementById('messages-container');
+      const text = container.innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        alert("Conversation text copied to clipboard!");
+      });
+    }
+
+    // ── Generation Logic ──────────────────────────────────────
+
+    async function submitMessage() {
+      if (isGenerating) return;
+      const inputEl = document.getElementById('user-input');
+      const text = inputEl.value.trim();
+      if (!text && !attachedImageBase64) return;
+
+      // Hide welcome
+      const welcome = document.getElementById('welcome-message');
+      if (welcome) welcome.remove();
+
+      inputEl.value = '';
+      inputEl.style.height = 'auto';
+
+      // Build User message object
+      let userMsgContent;
+      if (attachedImageBase64) {
+        userMsgContent = [
+          { type: "text", text: text || "Please examine this image." },
+          { type: "image_url", image_url: { url: attachedImageBase64 } }
+        ];
+      } else {
+        userMsgContent = text;
+      }
+
+      // Append user bubble to UI
+      appendUserMessage(text, attachedImageBase64);
+
+      // In single prompt/json mode, replace prior assistant turns
+      if (currentMode !== 'chat') {
+        conversationHistory = [];
+      }
+
+      conversationHistory.push({ role: "user", content: userMsgContent });
+
+      // Create assistant container
+      const assistantBubble = createAssistantMessageBubble();
+      const contentTarget = assistantBubble.querySelector('.content-body');
+
+      // Params
+      const systemPrompt = document.getElementById('system-prompt').value.trim();
+      const temperature = parseFloat(document.getElementById('param-temp').value);
+      const maxTokens = parseInt(document.getElementById('param-max-tokens').value, 10);
+      const topP = parseFloat(document.getElementById('param-topp').value);
+      const stream = document.getElementById('param-stream').checked;
+      const jsonMode = document.getElementById('param-json-mode').checked;
+
+      // Construct messages payload with system prompt
+      const payloadMessages = [];
+      if (systemPrompt) {
+        payloadMessages.push({ role: "system", content: systemPrompt });
+      }
+      payloadMessages.push(...conversationHistory);
+
+      const requestBody = {
+        messages: payloadMessages,
+        temperature: temperature,
+        max_tokens: maxTokens,
+        top_p: topP,
+        stream: stream,
+        response_format: jsonMode ? { type: "json_object" } : null
+      };
+
+      setGeneratingState(true);
+      const startTime = performance.now();
+      let generatedText = "";
+      let tokenCount = 0;
+
+      activeAbortController = new AbortController();
+
+      try {
+        if (stream) {
+          const response = await fetch('/v1/chat/completions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestBody),
+            signal: activeAbortController.signal
+          });
+
+          if (!response.ok) {
+            const errData = await response.json().catch(() => ({}));
+            throw new Error(errData.detail || `Server returned ${response.status}`);
+          }
+
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder("utf-8");
+          let buffer = "";
+
+          while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split("\n");
+            buffer = lines.pop(); // keep last incomplete line
+
+            for (const line of lines) {
+              const cleanLine = line.trim();
+              if (!cleanLine.startsWith("data:")) continue;
+              const dataStr = cleanLine.replace(/^data:\s*/, "");
+              if (dataStr === "[DONE]") break;
+
+              try {
+                const parsed = JSON.parse(dataStr);
+                const delta = parsed.choices?.[0]?.delta?.content;
+                if (delta) {
+                  generatedText += delta;
+                  tokenCount++;
+                  renderContent(contentTarget, generatedText, jsonMode);
+                  scrollToBottom();
+                }
+              } catch (e) {
+                // ignore parse errors for partial chunks
+              }
+            }
+          }
+        } else {
+          // Non-streaming fetch
+          const response = await fetch('/v1/chat/completions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestBody),
+            signal: activeAbortController.signal
+          });
+
+          if (!response.ok) {
+            const errData = await response.json().catch(() => ({}));
+            throw new Error(errData.detail || `Server returned ${response.status}`);
+          }
+
+          const data = await response.json();
+          generatedText = data.choices?.[0]?.message?.content || "";
+          tokenCount = data.usage?.completion_tokens || generatedText.split(/\s+/).length;
+          renderContent(contentTarget, generatedText, jsonMode);
+        }
+
+        const endTime = performance.now();
+        const durationMs = endTime - startTime;
+        updateMetrics(durationMs, tokenCount);
+
+        // Record in conversation history
+        conversationHistory.push({ role: "assistant", content: generatedText });
+
+      } catch (err) {
+        if (err.name === 'AbortError') {
+          contentTarget.innerHTML += `<div class="mt-2 text-[11px] font-mono text-amber-400">[Generation aborted by user]</div>`;
+        } else {
+          contentTarget.innerHTML = `<div class="text-rose-400 text-xs font-mono bg-rose-950/30 p-2.5 rounded border border-rose-800">Error: ${err.message}</div>`;
+        }
+      } finally {
+        setGeneratingState(false);
+        activeAbortController = null;
+        clearImageAttachment();
+        scrollToBottom();
+      }
+    }
+
+    function stopGeneration() {
+      if (activeAbortController) {
+        activeAbortController.abort();
+      }
+    }
+
+    function setGeneratingState(generating) {
+      isGenerating = generating;
+      const ind = document.getElementById('stream-indicator');
+      const btnSubmit = document.getElementById('btn-submit');
+      const btnStop = document.getElementById('btn-stop');
+
+      if (generating) {
+        ind.classList.remove('hidden');
+        ind.classList.add('flex');
+        btnSubmit.classList.add('hidden');
+        btnStop.classList.remove('hidden');
+      } else {
+        ind.classList.add('hidden');
+        ind.classList.remove('flex');
+        btnSubmit.classList.remove('hidden');
+        btnStop.classList.add('hidden');
+      }
+    }
+
+    function renderContent(targetEl, text, isJson) {
+      if (isJson) {
+        try {
+          const parsed = JSON.parse(text);
+          targetEl.innerHTML = `<pre class="bg-obsidian border border-surface-border text-emerald-300 p-3 rounded-lg overflow-x-auto font-mono text-xs">${escapeHtml(JSON.stringify(parsed, null, 2))}</pre>`;
+          return;
+        } catch {
+          // If JSON is still streaming and not complete yet
+          targetEl.innerHTML = `<pre class="bg-obsidian border border-surface-border text-zinc-300 p-3 rounded-lg overflow-x-auto font-mono text-xs">${escapeHtml(text)}</pre>`;
+          return;
+        }
+      }
+
+      // Markdown rendering using marked.js
+      if (window.marked) {
+        targetEl.innerHTML = marked.parse(text);
+      } else {
+        targetEl.innerText = text;
+      }
+    }
+
+    function appendUserMessage(text, imageBase64) {
+      const container = document.getElementById('messages-container');
+      const div = document.createElement('div');
+      div.className = "flex justify-end";
+
+      let imgHtml = "";
+      if (imageBase64) {
+        imgHtml = `<div class="mb-2"><img src="${imageBase64}" class="max-h-48 rounded border border-surface-border object-contain"></div>`;
+      }
+
+      div.innerHTML = `
+        <div class="max-w-[85%] bg-surface-card border border-violet-900/50 rounded-2xl rounded-tr-none px-4 py-3 shadow-md">
+          <div class="text-[10px] font-mono text-violet-400 font-semibold mb-1 flex items-center justify-between gap-4">
+            <span>You</span>
+          </div>
+          ${imgHtml}
+          <div class="text-xs text-zinc-100 whitespace-pre-wrap font-sans">${escapeHtml(text)}</div>
+        </div>
+      `;
+      container.appendChild(div);
+      scrollToBottom();
+    }
+
+    function createAssistantMessageBubble() {
+      const container = document.getElementById('messages-container');
+      const div = document.createElement('div');
+      div.className = "flex justify-start";
+      div.innerHTML = `
+        <div class="max-w-[90%] bg-surface border border-surface-border rounded-2xl rounded-tl-none px-4 py-3 shadow-sm w-full">
+          <div class="text-[10px] font-mono text-accent-cyan font-semibold mb-2 flex items-center justify-between">
+            <span class="flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-accent-violet"></span> Gemma 4
+            </span>
+          </div>
+          <div class="content-body text-xs text-zinc-200 prose-custom">
+            <span class="text-zinc-500 italic">Thinking...</span>
+          </div>
+        </div>
+      `;
+      container.appendChild(div);
+      return div;
+    }
+
+    function updateMetrics(durationMs, tokenCount) {
+      const bar = document.getElementById('metrics-bar');
+      bar.classList.remove('hidden');
+
+      const durSec = durationMs / 1000.0;
+      document.getElementById('metric-duration').textContent = `${(durSec).toFixed(2)}s`;
+      
+      const tps = durSec > 0 && tokenCount > 0 ? (tokenCount / durSec).toFixed(1) : "-";
+      document.getElementById('metric-tps').textContent = `${tps} tok/s`;
+      document.getElementById('metric-tokens').textContent = `${tokenCount} tokens`;
+    }
+
+    function scrollToBottom() {
+      const container = document.getElementById('messages-container');
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function escapeHtml(string) {
+      if (!string) return '';
+      return String(string)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+  </script>
+</body>
+</html>

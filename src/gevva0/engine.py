@@ -738,7 +738,100 @@ class GemmaDecisionEngine:
             "letter_probabilities": {k: float(p) for k, p in zip(labels, probs)},
         }
 
+    def chat_completion(
+        self,
+        messages: list[dict[str, Any]],
+        temperature: float = 0.7,
+        top_p: float = 0.95,
+        max_tokens: int = 1024,
+        response_format: dict[str, Any] | None = None,
+        stop: list[str] | str | None = None,
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        Executes a traditional autoregressive chat completion using the shared llama.cpp model.
+        Acquires the engine lock for thread safety and cleanly resets the KV cache afterwards.
+        """
+        with self._lock:
+            has_image = any(
+                isinstance(m.get("content"), list)
+                and any(isinstance(item, dict) and item.get("type") == "image_url" for item in m["content"])
+                for m in messages
+            )
+            if has_image and not self.has_vision:
+                self._ensure_vision_handler()
+
+            try:
+                call_kwargs: dict[str, Any] = {
+                    "messages": messages,
+                    "temperature": temperature,
+                    "top_p": top_p,
+                    "max_tokens": max_tokens,
+                    "stream": False,
+                }
+                if response_format:
+                    call_kwargs["response_format"] = response_format
+                if stop:
+                    call_kwargs["stop"] = stop
+                call_kwargs.update(kwargs)
+
+                return self.llm.create_chat_completion(**call_kwargs)
+            finally:
+                try:
+                    self.llm.reset()
+                    self.llm._ctx.kv_cache_clear()
+                except Exception:
+                    pass
+
+    def stream_chat_completion(
+        self,
+        messages: list[dict[str, Any]],
+        temperature: float = 0.7,
+        top_p: float = 0.95,
+        max_tokens: int = 1024,
+        response_format: dict[str, Any] | None = None,
+        stop: list[str] | str | None = None,
+        **kwargs: Any,
+    ):
+        """
+        Streams autoregressive chat tokens chunk by chunk.
+        Ensures lock safety and resets KV cache upon stream completion or disconnection.
+        """
+        has_image = any(
+            isinstance(m.get("content"), list)
+            and any(isinstance(item, dict) and item.get("type") == "image_url" for item in m["content"])
+            for m in messages
+        )
+        if has_image and not self.has_vision:
+            self._ensure_vision_handler()
+
+        self._lock.acquire()
+        try:
+            call_kwargs: dict[str, Any] = {
+                "messages": messages,
+                "temperature": temperature,
+                "top_p": top_p,
+                "max_tokens": max_tokens,
+                "stream": True,
+            }
+            if response_format:
+                call_kwargs["response_format"] = response_format
+            if stop:
+                call_kwargs["stop"] = stop
+            call_kwargs.update(kwargs)
+
+            for chunk in self.llm.create_chat_completion(**call_kwargs):
+                yield chunk
+        finally:
+            try:
+                self.llm.reset()
+                self.llm._ctx.kv_cache_clear()
+            except Exception:
+                pass
+            self._lock.release()
+
     def explain_decision(
+
         self,
         context: str,
         verdict_letter: str,

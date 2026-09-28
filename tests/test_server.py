@@ -118,3 +118,82 @@ def test_server_config_defaults_and_cot_prompt():
     )
     assert r.status_code == 200
     assert mock_engine.decide.call_args[1]["cot_prompt"] == custom_prompt
+
+
+def test_server_chat_completions_and_generate():
+    mock_engine = MagicMock()
+    mock_engine.model_path = "models/gemma-4-E2B-it-qat-UD-Q4_K_XL/gemma-4-E2B-it-qat-UD-Q4_K_XL.gguf"
+    mock_engine.chat_completion.return_value = {
+        "id": "chatcmpl-test",
+        "object": "chat.completion",
+        "created": 1234567,
+        "model": "gemma-4-26B-A4B-it",
+        "choices": [
+            {
+                "index": 0,
+                "message": {"role": "assistant", "content": '{"summary": "test response"}'},
+                "finish_reason": "stop",
+            }
+        ],
+        "usage": {"prompt_tokens": 12, "completion_tokens": 8, "total_tokens": 20},
+    }
+
+    def mock_stream(*args, **kwargs):
+        yield {"choices": [{"delta": {"content": "Hello"}}]}
+        yield {"choices": [{"delta": {"content": " world"}}]}
+
+    mock_engine.stream_chat_completion = mock_stream
+
+    app = build_app(mock_engine)
+    client = TestClient(app)
+
+    # 1. Non-streaming chat completions
+    r1 = client.post(
+        "/v1/chat/completions",
+        json={
+            "messages": [{"role": "user", "content": "What is logit scoring?"}],
+            "temperature": 0.5,
+            "max_tokens": 256,
+        },
+    )
+    assert r1.status_code == 200
+    data1 = r1.json()
+    assert data1["choices"][0]["message"]["content"] == '{"summary": "test response"}'
+    assert mock_engine.chat_completion.called
+
+    # 2. Streaming chat completions
+    r2 = client.post(
+        "/v1/chat/completions",
+        json={
+            "messages": [{"role": "user", "content": "Stream me an answer"}],
+            "stream": True,
+        },
+    )
+    assert r2.status_code == 200
+    assert "text/event-stream" in r2.headers["content-type"]
+    assert "Hello" in r2.text
+    assert "[DONE]" in r2.text
+
+    # 3. Simple generate endpoint
+    r3 = client.post(
+        "/api/generate",
+        json={
+            "prompt": "Extract JSON",
+            "json_mode": True,
+        },
+    )
+    assert r3.status_code == 200
+    assert r3.json()["text"] == '{"summary": "test response"}'
+
+    # 4. UI chat route aliases
+    resp_chat = client.get("/ui/chat.html")
+    assert resp_chat.status_code == 200
+
+    resp_web_dash = client.get("/ui/web_dashboard/chat.html")
+    assert resp_web_dash.status_code == 200
+
+    resp_redir = client.get("/chat", follow_redirects=False)
+    assert resp_redir.status_code in (302, 307)
+    assert resp_redir.headers["location"] == "/ui/chat.html"
+
+

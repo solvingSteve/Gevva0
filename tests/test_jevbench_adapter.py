@@ -5,6 +5,9 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT / "jevbench") not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT / "jevbench"))
+if str(PROJECT_ROOT / "scripts") not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
+
 
 from jevbench.adapters.gevva0 import Gevva0Adapter
 from convert_jevbench import normalize_jevbench_task

@@ -142,6 +142,20 @@ uv run gevva0 decide --context "..." --options "A: x,B: y,C: z" --cyclic
 uv run gevva0 serve --host 127.0.0.1 --port 8000
 ```
 
+### 4. Dual Web Interfaces: Decisions + Generation (1 Setup, 0 Duplicate VRAM)
+
+Gevva0 provides two distinct browser interfaces served simultaneously from a **single loaded model instance**:
+
+| Interface | URL | Capability & Workflow |
+| :--- | :--- | :--- |
+| **Decision Gateway** | `http://localhost:8000/ui/` (`index.html`) | **Make Decisions**: Sub-45ms direct token logit scoring, Platt temperature calibration, cyclic debiasing, and forensic quote audit trails. |
+| **Interactive Chat** | `http://localhost:8000/chat` (`chat.html`) | **Generate Text**: Full conversational chat, real-time streaming tokens (SSE), OpenAI-compatible `/v1/chat/completions`, and freeform `/v1/generate`. |
+
+> [!TIP]
+> **Massive VRAM Savings — Two Capabilities with One Setup:**  
+> In conventional architectures, running low-latency decision routing alongside an interactive text generation assistant requires loading two separate models or running parallel inference runtimes—doubling your GPU memory requirements (e.g., 28 GB+ for two 14 GB model instances).  
+> Gevva0 bridges both paradigms on a **single in-memory model weight footprint** using thread-safe execution locks and clean KV cache resets. You achieve high-speed deterministic decision-making **and** open-ended generative chat from a single setup on consumer GPUs.
+
 ---
 
 ## Key Architectural Principles
@@ -177,8 +191,9 @@ uv run gevva0 serve --host 127.0.0.1 --port 8000
 │       ├── server.py         # FastAPI service (serves /ui and API routes)
 │       └── cli.py            # CLI entrypoint ('gevva0')
 ├── ui/
-│   └── web_dashboard/        # Interactive dashboard & audit UI (mounted at / and /ui/)
-│       └── index.html        # Single source of truth web interface
+│   └── web_dashboard/        # Interactive web interfaces (mounted at /ui/)
+│       ├── index.html        # Decision Gateway: direct logit scoring & calibration UI
+│       └── chat.html         # Interactive Chat & Generation: streaming chat interface
 ├── benchmarks/
 │   ├── benchmark_suite_650.json    # Rigorous N=650 4-class balanced evaluation battery
 │   ├── benchmark_suite.json        # Standard benchmark suite

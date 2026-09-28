@@ -1,14 +1,15 @@
-from __future__ import annotations
-
+import base64
+import json
 import threading
 import time
 from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
+
 
 from . import __version__
 from .config import (
@@ -74,7 +75,35 @@ class SwitchConfigRequest(BaseModel):
     max_cot_tokens: int | None = Field(None, ge=16, le=2048)
 
 
+class ChatMessage(BaseModel):
+    role: str = Field("user", description="Role: system, user, or assistant")
+    content: Any = Field(..., description="Message text or multimodal content items")
+
+
+class ChatCompletionRequest(BaseModel):
+    messages: list[ChatMessage] = Field(..., description="List of messages in conversation")
+    model: str | None = Field(None, description="Optional model identifier")
+    temperature: float = Field(0.7, ge=0.0, le=2.0)
+    top_p: float = Field(0.95, ge=0.0, le=1.0)
+    max_tokens: int = Field(1024, ge=1, le=16384)
+    stream: bool = Field(False, description="Stream Server-Sent Events (SSE)")
+    response_format: dict[str, Any] | None = Field(None, description="e.g. {'type': 'json_object'}")
+    stop: list[str] | str | None = Field(None)
+
+
+class GenerateRequest(BaseModel):
+    prompt: str = Field(..., description="User prompt or instructions")
+    system: str | None = Field(None, description="Optional system instruction")
+    temperature: float = Field(0.7, ge=0.0, le=2.0)
+    top_p: float = Field(0.95, ge=0.0, le=1.0)
+    max_tokens: int = Field(1024, ge=1, le=16384)
+    json_mode: bool = Field(False, description="Enforce JSON object response format")
+    stream: bool = Field(False, description="Stream Server-Sent Events (SSE)")
+    image: str | None = Field(None, description="Base64 data URL, raw base64, or local file path")
+
+
 def build_app(engine: GemmaDecisionEngine) -> FastAPI:
+
     app = FastAPI(title="Project Gevva0 Gateway", version=__version__)
     app.state.engine = engine
     _reload_lock = threading.Lock()
@@ -450,7 +479,115 @@ def build_app(engine: GemmaDecisionEngine) -> FastAPI:
         except Exception as exc:
             raise HTTPException(status_code=500, detail=str(exc))
 
+    # ── Traditional Autoregressive Generation & Chat API ──────
+
+    @app.post("/v1/chat/completions")
+    @app.post("/api/chat")
+    def chat_completions(req: ChatCompletionRequest):
+        """
+        OpenAI-compatible chat completion endpoint.
+        Uses the shared Gemma 4 model in VRAM for autoregressive text/JSON generation.
+        """
+        eng = _engine()
+        msg_dicts = [m.model_dump() for m in req.messages]
+
+        if req.stream:
+            def event_generator():
+                try:
+                    for chunk in eng.stream_chat_completion(
+                        messages=msg_dicts,
+                        temperature=req.temperature,
+                        top_p=req.top_p,
+                        max_tokens=req.max_tokens,
+                        response_format=req.response_format,
+                        stop=req.stop,
+                    ):
+                        yield f"data: {json.dumps(chunk)}\n\n"
+                    yield "data: [DONE]\n\n"
+                except Exception as exc:
+                    err_chunk = {"error": {"message": str(exc), "type": "server_error"}}
+                    yield f"data: {json.dumps(err_chunk)}\n\n"
+                    yield "data: [DONE]\n\n"
+
+            return StreamingResponse(event_generator(), media_type="text/event-stream")
+        else:
+            try:
+                return eng.chat_completion(
+                    messages=msg_dicts,
+                    temperature=req.temperature,
+                    top_p=req.top_p,
+                    max_tokens=req.max_tokens,
+                    response_format=req.response_format,
+                    stop=req.stop,
+                )
+            except Exception as exc:
+                raise HTTPException(status_code=500, detail=str(exc))
+
+    @app.post("/api/generate")
+    def generate_completion(req: GenerateRequest):
+        """
+        Convenience endpoint for single-turn prompt text/JSON generation.
+        """
+        eng = _engine()
+        messages: list[dict[str, Any]] = []
+        if req.system and req.system.strip():
+            messages.append({"role": "system", "content": req.system.strip()})
+
+        if req.image:
+            try:
+                b = load_image_bytes(req.image)
+                b64_url = f"data:image/png;base64,{base64.b64encode(b).decode('utf-8')}"
+                user_content = [
+                    {"type": "text", "text": req.prompt},
+                    {"type": "image_url", "image_url": {"url": b64_url}},
+                ]
+            except Exception as exc:
+                raise HTTPException(status_code=400, detail=f"Failed to load image: {exc}")
+        else:
+            user_content = req.prompt
+
+        messages.append({"role": "user", "content": user_content})
+        response_format = {"type": "json_object"} if req.json_mode else None
+
+        if req.stream:
+            def event_generator():
+                try:
+                    for chunk in eng.stream_chat_completion(
+                        messages=messages,
+                        temperature=req.temperature,
+                        top_p=req.top_p,
+                        max_tokens=req.max_tokens,
+                        response_format=response_format,
+                    ):
+                        yield f"data: {json.dumps(chunk)}\n\n"
+                    yield "data: [DONE]\n\n"
+                except Exception as exc:
+                    err_chunk = {"error": {"message": str(exc), "type": "server_error"}}
+                    yield f"data: {json.dumps(err_chunk)}\n\n"
+                    yield "data: [DONE]\n\n"
+
+            return StreamingResponse(event_generator(), media_type="text/event-stream")
+        else:
+            try:
+                res = eng.chat_completion(
+                    messages=messages,
+                    temperature=req.temperature,
+                    top_p=req.top_p,
+                    max_tokens=req.max_tokens,
+                    response_format=response_format,
+                )
+                choice = res.get("choices", [{}])[0]
+                text = choice.get("message", {}).get("content", "")
+                return {
+                    "text": text,
+                    "usage": res.get("usage", {}),
+                    "model": res.get("model", getattr(eng, "model_path", "")),
+                }
+            except Exception as exc:
+                raise HTTPException(status_code=500, detail=str(exc))
+
     @app.get("/v1/config/defaults")
+
     def get_config_defaults() -> dict[str, Any]:
         """Return runtime decision settings and defaults from config."""
         cfg = _load_llm_config() or {}
@@ -519,7 +656,14 @@ def build_app(engine: GemmaDecisionEngine) -> FastAPI:
         app.mount("/tests", StaticFiles(directory=str(_TESTS_DIR)), name="tests")
 
     if _UI_DASHBOARD_DIR.is_dir():
+        app.mount("/ui/web_dashboard", StaticFiles(directory=str(_UI_DASHBOARD_DIR), html=True), name="ui_web_dashboard")
         app.mount("/ui", StaticFiles(directory=str(_UI_DASHBOARD_DIR), html=True), name="ui")
+
+    @app.get("/chat", include_in_schema=False)
+    @app.get("/chat.html", include_in_schema=False)
+    def chat_redirect():
+        return RedirectResponse(url="/ui/chat.html")
+
 
     return app
 

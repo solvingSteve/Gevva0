@@ -66,7 +66,17 @@
             <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-cyan-950 text-accent-cyan border border-cyan-800 font-mono">v0.1.0</span>
           </h1>
         </div>
+        <!-- Mode Nav Pills -->
+        <nav class="hidden md:flex items-center space-x-1 ml-4 pl-4 border-l border-surface-border">
+          <a href="/ui/index.html" class="px-2.5 py-1 text-xs font-medium rounded-md bg-cyan-950/80 text-cyan-300 border border-cyan-800/80 shadow-sm flex items-center gap-1.5" title="Sub-50ms Logit Scoring Decision Gateway">
+            <span>⚡</span> Decisions
+          </a>
+          <a href="/ui/chat.html" class="px-2.5 py-1 text-xs font-medium rounded-md text-zinc-400 hover:text-zinc-200 hover:bg-surface-card/60 transition-colors flex items-center gap-1.5" title="Autoregressive Text & JSON Generation">
+            <span>💬</span> Generative Studio
+          </a>
+        </nav>
       </div>
+
       <div class="flex items-center gap-3">
         <div id="vision-status-badge" class="hidden items-center gap-1.5 text-[11px] font-mono text-accent-emerald bg-emerald-950/60 border border-emerald-800/80 px-2 py-0.5 rounded-full shadow-sm">
           <span class="w-1.5 h-1.5 rounded-full bg-accent-emerald animate-pulse"></span>
@@ -1771,14 +1781,8 @@ async function checkHealth() {
     const resp = await fetch('/health');
     if (!resp.ok) throw new Error();
     const data = await resp.json();
-    const calText = data.temperature ? ` • T=${data.temperature.toFixed(4)}` : '';
-    let modelName = '';
-    if (data.model) {
-      const mMatch = String(data.model).match(/gemma-4-[0-9a-zA-Z]+/i);
-      modelName = mMatch ? ` • ${mMatch[0].replace(/gemma-4-/i, 'Gemma 4 ').toUpperCase()}` : '';
-    }
-    const ctxText = data.n_ctx ? ` • ctx=${data.n_ctx}` : '';
     const vBadge = document.getElementById('vision-status-badge');
+
     if (vBadge) {
       if (data.has_vision) {
         vBadge.classList.remove('hidden');
@@ -1788,15 +1792,17 @@ async function checkHealth() {
         vBadge.classList.remove('flex');
       }
     }
+    dot.title = `Model: ${data.model || 'Unknown'} | ctx: ${data.n_ctx || '-'} | T: ${data.temperature ? data.temperature.toFixed(4) : '-'}`;
     dot.innerHTML = `
       <span class="relative flex h-2 w-2">
         <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
         <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
       </span>
-      Loaded${modelName}${ctxText}${calText}
+      Loaded
     `;
   } catch (err) {
     console.warn('Health check failed:', err);
+    dot.title = 'Offline';
     dot.innerHTML = `
       <span class="relative flex h-2 w-2">
         <span class="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
@@ -1804,6 +1810,7 @@ async function checkHealth() {
       Offline
     `;
   }
+
 }
 
 // ─── Init ───────────────────────────────────────────────────
