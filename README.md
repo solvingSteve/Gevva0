@@ -4,6 +4,7 @@
 [![Python: 3.12](https://img.shields.io/badge/Python-3.12-3776AB.svg?logo=python&logoColor=white)](https://python.org)
 [![llama.cpp](https://img.shields.io/badge/Backend-llama.cpp%20CUDA-green.svg)](https://github.com/ggerganov/llama.cpp)
 [![JevBench](https://img.shields.io/badge/JevBench%20Rank-%231%20Global%20(74.63)-00f2fe)](docs/JEVBENCH_PUBLICATION_EVALUATION_26B.md)
+[![JevBench v1.5](https://img.shields.io/badge/JevBench%20v1.5-Rank%20%231%20(74.84)-00f2fe)](docs/JEVBENCH_v1.5_EVALUATION_26B.md)
 [![ECE < 0.03](https://img.shields.io/badge/Calibration-ECE%20%3C%200.03-success.svg)]()
 
 A high-speed, local decision gateway running on **Gemma 4** (`llama.cpp` / CUDA) that replaces flaky autoregressive JSON generation with **direct token logit scoring**, **mathematical cyclic debiasing**, **asymmetric post-decision quotation**, and **Platt temperature calibration**.
@@ -42,17 +43,19 @@ Prompt ──> Direct Logit Readout ──> Platt Scaled ──> Confidence >= T
 
 ## Official JevBench Leaderboard — Global Rank #1 🏆
 
-Evaluated across easy, original, and hard forensic legal batteries from the official JevBench v1.4.2 benchmark suite.
+Evaluated across easy, original, and hard forensic batteries using the canonical JevBench v1.5 public suite (Headline A Equal-Axes weighting).
 
 | Rank | System Architecture | JevBench Score | Intelligence | Hard Tier (Forensic) | p50 Latency |
 | :---: | :--- | :---: | :---: | :---: | :---: |
-| ⭐ **#1** | **Gevva0 (Gemma 4 26B-A4B MoE)** | **74.63** | **87.2** | **82.9%** | **214 ms** |
-| #2 | decider-4b v2 (Mapika) | 64.13 | 49.4 | 41.4% | 118 ms |
-| #3 | TypeSafe Jev 1.13.0 (Closed API) | 63.29 | 53.1 | 47.7% | 652 ms |
-| #4 | JevK5 v0.2.0 | 62.04 | 48.9 | 42.3% | 122 ms |
-| #5 | Cygnet (Frozen Gemma-4-12B) | 61.76 | 49.5 | 43.2% | 126 ms |
+| ⭐ **#1** | **Gevva0 (Gemma 4 26B-A4B MoE)** | **74.84** | **83.7** | **83.8%** | **226 ms** |
+| #2 | Imajev-4B | 67.37 | 52.2 | 43.1% | 88 ms |
+| #3 | Plumb-4B (crh225, JevK5 v0.2 + LoRA) | 65.84 | 53.0 | 44.2% | 82 ms |
+| #4 | decider-4b v2 (Mapika) | 64.13 | 49.4 | 41.4% | 118 ms |
+| #5 | TypeSafe Jev 1.13.0 (Closed API) | 63.29 | 53.1 | 47.7% | 652 ms |
+| #6 | JevK5 v0.2.0 | 62.04 | 48.9 | 42.3% | 122 ms |
+| #7 | Cygnet (Frozen Gemma-4-12B) | 61.76 | 49.5 | 43.2% | 126 ms |
 
-> See full evaluation report: [`docs/JEVBENCH_PUBLICATION_EVALUATION_26B.md`](docs/JEVBENCH_PUBLICATION_EVALUATION_26B.md)
+> **Reports**: Full v1.5 evaluation write-up: [`docs/JEVBENCH_v1.5_EVALUATION_26B.md`](docs/JEVBENCH_v1.5_EVALUATION_26B.md) | Archived v1.4.2 report: [`docs/JEVBENCH_PUBLICATION_EVALUATION_26B.md`](docs/JEVBENCH_PUBLICATION_EVALUATION_26B.md)
 
 ### Secondary Ablation Study (N = 650, Gemma 4 26B-A4B MoE)
 
@@ -206,9 +209,10 @@ Gevva0 provides two distinct browser interfaces served simultaneously from a **s
 │   ├── test_metrics.py       # Unit tests for statistical & calibration formulas
 │   └── test_benchmark_runner.py # Integration tests for benchmark runner
 ├── docs/
-│   ├── ARCHITECTURE.md       # In-depth technical write-up on logit scoring & calibration
+│   ├── ARCHITECTURE.md                  # In-depth technical write-up on logit scoring & calibration
 │   ├── BENCHMARK_REPORT_gemma-4-26B-A4B.md
-│   └── JEVBENCH_PUBLICATION_EVALUATION_26B.md
+│   ├── JEVBENCH_v1.5_EVALUATION_26B.md  # Official JevBench v1.5 benchmark report (Score: 74.84)
+│   └── JEVBENCH_PUBLICATION_EVALUATION_26B.md # Archived JevBench v1.4.2 report
 ├── models/
 │   └── gemma-4-26B-A4B-it-qat-UD-Q4_K_XL/
 │       ├── gemma-4-26B-A4B-it-qat-UD-Q4_K_XL.gguf
