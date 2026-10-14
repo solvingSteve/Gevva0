@@ -118,8 +118,8 @@ Gevva0 includes three full-featured interactive applications demonstrating high-
 ```
 ├── /demos/
 │   └── pacman/        # Real-time arcade loop using DecisionBridge (Tier 1 + Tier 2) -> 31.5ms p50
-│   └── pig/           # Game of Pig 1v1 battle using Tier0DecisionBridge (Tier 0) -> sub-3ms GTO
-│   └── blackjack/     # Vegas Blackjack 21 table using Tier0DecisionBridge (Tier 0) -> sub-3ms GTO
+│   └── pig/           # Game of Pig 1v1 battle using Tier0DecisionBridge (Tier 0) -> sub-3ms
+│   └── blackjack/     # Vegas Blackjack 21 table using Tier0DecisionBridge (Tier 0) -> sub-3ms
 ```
 <img width="1802" height="1188" alt="pacman-debiased" src="https://github.com/user-attachments/assets/cf40eaa6-4f64-4f3d-ab90-93fd003f2300" />
 
@@ -140,7 +140,7 @@ Gevva0 includes three full-featured interactive applications demonstrating high-
 ### 2. The Game of Pig (`demos/pig`)
 - **Tiers Employed**: **Tier 0** (`Tier0Engine` + `Tier0DecisionBridge`).
 - **Absorbing Markov Decision Process**: Solves the exact Absorbing Markov Chain for Pig (Todd & Fisher, 2007) in closed form across a 104-node domain manifold in **sub-3 ms**.
-- **Flawless GTO Strategy**: Dynamically shifts risk thresholds $k^*(i, j)$ across the 3D game state—holding conservatively ($k^* \le 15$) when leading and taking aggressive calculated risks ($k^* > 32$) when trailing, consistently beating human heuristics ("Hold at 20").
+- **76% GTO Strategy**
 - **Launch Command**:
   ```powershell
   # Interactive 1v1 battle against Gevva0 Tier 0
@@ -153,7 +153,8 @@ Gevva0 includes three full-featured interactive applications demonstrating high-
 ### 3. Vegas Blackjack 21 (`demos/blackjack`)
 - **Tiers Employed**: **Tier 0** (`Tier0Engine` + `Tier0DecisionBridge`).
 - **Absorbing Markov Decision Process**: Solves the exact Absorbing Markov Chain for 6-deck Blackjack (Baldwin et al., 1956; Thorp, 1962) over transient hand totals terminating in absorbing dealer sinks.
-- **Flawless GTO Strategy**: Resolves `HIT`, `STAND`, `DOUBLE DOWN`, and `SPLIT PAIR` along with **Hi-Lo Illustrious 18 True Count Index Warps** in **~2 ms** with **100% GTO Parity**, crushing amateur heuristics (`Timid Tourist`, `Dealer Mimic`, `Vegas Hunch`).
+- **15-29% GTO Strategy**
+
 - **Launch Command**:
   ```powershell
   # Interactive Vegas Blackjack table alongside Tier 0
