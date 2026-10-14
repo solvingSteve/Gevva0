@@ -234,7 +234,10 @@ class BasePigBrain:
     def build_situation(self, i: int, j: int, k: int, roll_count: int = 1) -> PigSituation:
         solver = get_gto_solver()
         gto_eval = solver.evaluate_state(i, j, k)
-        query_text = gto_eval.regime_description
+        query_text = (
+            f"Pig dice game: player score is {i}, opponent score is {j}, "
+            f"unbanked turn pot is {k}."
+        )
         return PigSituation(
             i=i,
             j=j,
