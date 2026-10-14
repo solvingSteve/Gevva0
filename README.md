@@ -1,3 +1,5 @@
+
+
 # Gevva0 (G0): Cascading Decision Engine
 
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
@@ -11,6 +13,8 @@
 **Gevva0** (or **G0**) is an ultra-low-latency, local **Cascading Decision Engine** that replaces slow, brittle autoregressive LLM text generation with a 4-tier execution hierarchy: **Tier -1 (Static Rules)** $\to$ **Tier 0 (Absorbing Markov Chains)** $\to$ **Tier 1 (Fast-Path Micro-Head Logits)** $\to$ **Tier 2 (Hot-KV Bounded Chain-of-Thought)**.
 
 Get deterministic verdicts, well-calibrated confidence scores, and verbatim audit trails in **sub-3ms (T0)** to **31.5–37.5ms (T1)** on consumer workstation GPUs with **zero cloud API cost**.
+
+<img width="1706" height="966" alt="Cascade" src="https://github.com/user-attachments/assets/e4ae5d2f-7df9-4c6f-b7b5-17c1e9dd7d4b" />
 
 ---
 
@@ -117,6 +121,7 @@ Gevva0 includes three full-featured interactive applications demonstrating high-
 │   └── pig/           # Game of Pig 1v1 battle using Tier0DecisionBridge (Tier 0) -> sub-3ms GTO
 │   └── blackjack/     # Vegas Blackjack 21 table using Tier0DecisionBridge (Tier 0) -> sub-3ms GTO
 ```
+<img width="1802" height="1188" alt="pacman-debiased" src="https://github.com/user-attachments/assets/cf40eaa6-4f64-4f3d-ab90-93fd003f2300" />
 
 ### 1. Arcade Pac-Man (`demos/pacman`)
 - **Tiers Employed**: **Tier 1** ($K=64$ Sparse Micro-Head) + **Tier 2** (Slack-Aware Bounded CoT).
