@@ -244,10 +244,6 @@ class BlackjackGTOSolver:
         if can_split and is_pair:
             action_evs["SPLIT"] = ev_sp
 
-        max_other = max(v for k, v in action_evs.items() if k != opt_act)
-        if action_evs[opt_act] <= max_other:
-            action_evs[opt_act] = max_other + 0.035
-
         ev_h = action_evs["HIT"]
         ev_s = action_evs["STAND"]
         ev_d = action_evs.get("DOUBLE", -99.0)

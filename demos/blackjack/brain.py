@@ -281,6 +281,17 @@ class BaseBlackjackBrain:
             can_split=can_split,
             true_count=true_count,
         )
+        hand_desc = (
+            f"Pair of {solver._upcard_str(pair_rank)}s ({player_total})"
+            if (is_pair and can_split)
+            else (f"Soft {player_total}" if is_soft else f"Hard {player_total}")
+        )
+        up_s = solver._upcard_str(dealer_upcard)
+        query_text = (
+            f"Blackjack hand: player has {hand_desc}, dealer upcard is {up_s}, "
+            f"true count {true_count:+.1f}, can double: {'yes' if can_double else 'no'}, "
+            f"can split: {'yes' if (can_split and is_pair) else 'no'}."
+        )
         return BlackjackSituation(
             player_total=player_total,
             is_soft=is_soft,
@@ -292,7 +303,7 @@ class BaseBlackjackBrain:
             true_count=true_count,
             cards_str=cards_str,
             gto=gto_eval,
-            query_text=gto_eval.regime_description,
+            query_text=query_text,
             serial=self.next_serial(),
         )
 
