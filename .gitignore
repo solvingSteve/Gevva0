@@ -6,8 +6,14 @@ dist/
 wheels/
 *.egg-info
 *.gguf
+*.onnx
+*.onnx_data
 
 # Virtual environments
 .venv
 jevbench
+decision-index
 .pytest_cache
+embeddinggemma-2-repo
+tests/
+models/

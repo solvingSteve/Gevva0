@@ -1,0 +1,78 @@
+{
+  "version": "1.1",
+  "default_action": "EVALUATE_ALL",
+  "rules": [
+    {
+      "name": "Temporal, Rate-Limiting & Financial Arithmetic",
+      "description": "Multi-step time window, rate limit, reserve, and financial calculations require chain-of-thought verification",
+      "action": "FORCE_COT",
+      "priority": 1,
+      "conditions": {
+        "regex_match": "\\b(sliding window|rate limit|quota|depreciation|required reserves|compound interest|elapsed time|business days|calendar days|rescheduled to|between what times)\\b",
+        "min_words": 15
+      }
+    },
+    {
+      "name": "Probabilistic & Statistical Reasoning",
+      "description": "Bayesian posteriors, combinatorics, and calibrated probability distributions require explicit derivation",
+      "action": "FORCE_COT",
+      "priority": 2,
+      "conditions": {
+        "regex_match": "\\b(Give probabilities|conditional probability|Bayes|false-positive rate|base rate|drawn without replacement|expected value|standard deviation)\\b",
+        "min_words": 15
+      }
+    },
+    {
+      "name": "Nested Boolean & Symbolic Logic",
+      "description": "Boolean negations, truth tables, and formal syllogisms cannot be resolved by vector similarity",
+      "action": "SKIP_TIER0",
+      "priority": 3,
+      "conditions": {
+        "regex_match": "(\\bnot\\s*\\([\\s\\w()]*\\b(True|False)\\b)|(\\bnot\\s*\\(\\s*not\\b)|(\\b(truth table|tautology|syllogism|boolean expression|deductively valid)\\b)"
+      }
+    },
+    {
+      "name": "Scientific & Reaction Balancing",
+      "description": "Stoichiometric equations, redox balancing, and chemical half-reactions require discrete derivation",
+      "action": "FORCE_COT",
+      "priority": 4,
+      "conditions": {
+        "regex_match": "(->|-->|⇌|\\b(half-reaction|redox|stoichiometr\\w+|oxidation state|balanced equation)\\b)"
+      }
+    },
+    {
+      "name": "API Schema & Parameter Verification",
+      "description": "Function call parameters, tool signatures, and missing argument checks require exact token parsing",
+      "action": "SKIP_TIER0",
+      "priority": 5,
+      "conditions": {
+        "regex_match": "\\b(missing argument|required parameter|tool signature|function definition|schema validation|Available tools:)\\b"
+      }
+    },
+    {
+      "name": "Hierarchical Legal & Policy Override",
+      "description": "Long documents with conflicting clauses or endorsements dilute embedding centroids",
+      "action": "SKIP_TIER0",
+      "priority": 6,
+      "conditions": {
+        "regex_match": "\\b(override|notwithstanding|statute|clause \\d+|addendum|endorsement|supersede\\w*)\\b",
+        "min_words": 100
+      }
+    },
+    {
+      "name": "Deterministic Account Actions",
+      "description": "Bypass Tier 0 for short account commands",
+      "action": "SKIP_TIER0",
+      "priority": 7,
+      "conditions": {
+        "keywords_any": [
+          "reset password",
+          "forgot password",
+          "opt out",
+          "unsubscribe"
+        ],
+        "max_words": 20
+      }
+    }
+  ]
+}

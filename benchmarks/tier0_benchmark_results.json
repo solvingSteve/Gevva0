@@ -1,0 +1,998 @@
+{
+  "generated_at": "2026-10-11 13:04:38",
+  "tier0_model": "C:\\code\\demos\\Gevva0\\models\\embeddings\\embeddinggemma-2-onnx",
+  "modalities_loaded": [
+    "text",
+    "vision"
+  ],
+  "audio_loaded": false,
+  "vision_loaded": true,
+  "default_landmarks_count": 39,
+  "domain_landmarks_count": 320,
+  "suite_650_default_scaffold": {
+    "markov": {
+      "n_samples": 650,
+      "correct": 214,
+      "accuracy_pct": 32.92,
+      "ci_lower_pct": 29.38,
+      "ci_upper_pct": 36.31,
+      "brier": 1.039,
+      "ece": 0.4168,
+      "exit0_count": 416,
+      "exit0_coverage_pct": 64.0,
+      "exit0_accuracy_pct": 28.37,
+      "ood_total": 120,
+      "ood_correct": 0,
+      "ood_recall_pct": 0.0,
+      "latency": {
+        "p50": 15.06,
+        "p90": 28.16,
+        "p95": 29.71,
+        "p99": 34.42,
+        "mean": 17.1
+      },
+      "groups": {
+        "Autonomous Agent Tool Execution Safety Gating": {
+          "count": 65,
+          "correct": 22,
+          "accuracy_pct": 33.85
+        },
+        "Contractual Liability, Indemnity & Carve-Outs": {
+          "count": 65,
+          "correct": 22,
+          "accuracy_pct": 33.85
+        },
+        "Corporate Procurement & Financial Precedence": {
+          "count": 65,
+          "correct": 21,
+          "accuracy_pct": 32.31
+        },
+        "Cross-Border Regulatory Compliance & Data Residency": {
+          "count": 65,
+          "correct": 22,
+          "accuracy_pct": 33.85
+        },
+        "Infrastructure Root Cause Isolation vs Alert Storms": {
+          "count": 65,
+          "correct": 19,
+          "accuracy_pct": 29.23
+        },
+        "Multimodal Document Verification & Telemetry": {
+          "count": 65,
+          "correct": 21,
+          "accuracy_pct": 32.31
+        },
+        "Out-of-Distribution & Non-Matching Fallback Controls": {
+          "count": 65,
+          "correct": 20,
+          "accuracy_pct": 30.77
+        },
+        "Security Guardrails & Adversarial Roleplay Defense": {
+          "count": 65,
+          "correct": 22,
+          "accuracy_pct": 33.85
+        },
+        "System Rate Limiting & Temporal Sliding Windows": {
+          "count": 65,
+          "correct": 22,
+          "accuracy_pct": 33.85
+        },
+        "Temporal Discourse Intent Shift vs Historical Grievance": {
+          "count": 65,
+          "correct": 23,
+          "accuracy_pct": 35.38
+        }
+      }
+    },
+    "cosine": {
+      "n_samples": 650,
+      "correct": 508,
+      "accuracy_pct": 78.15,
+      "ci_lower_pct": 74.92,
+      "ci_upper_pct": 81.23,
+      "brier": 0.4553,
+      "ece": 0.3108,
+      "exit0_count": 5,
+      "exit0_coverage_pct": 0.77,
+      "exit0_accuracy_pct": 0.0,
+      "ood_total": 120,
+      "ood_correct": 74,
+      "ood_recall_pct": 61.67,
+      "latency": {
+        "p50": 15.06,
+        "p90": 28.16,
+        "p95": 29.71,
+        "p99": 34.42,
+        "mean": 17.1
+      },
+      "groups": {
+        "Autonomous Agent Tool Execution Safety Gating": {
+          "count": 65,
+          "correct": 43,
+          "accuracy_pct": 66.15
+        },
+        "Contractual Liability, Indemnity & Carve-Outs": {
+          "count": 65,
+          "correct": 47,
+          "accuracy_pct": 72.31
+        },
+        "Corporate Procurement & Financial Precedence": {
+          "count": 65,
+          "correct": 58,
+          "accuracy_pct": 89.23
+        },
+        "Cross-Border Regulatory Compliance & Data Residency": {
+          "count": 65,
+          "correct": 57,
+          "accuracy_pct": 87.69
+        },
+        "Infrastructure Root Cause Isolation vs Alert Storms": {
+          "count": 65,
+          "correct": 46,
+          "accuracy_pct": 70.77
+        },
+        "Multimodal Document Verification & Telemetry": {
+          "count": 65,
+          "correct": 59,
+          "accuracy_pct": 90.77
+        },
+        "Out-of-Distribution & Non-Matching Fallback Controls": {
+          "count": 65,
+          "correct": 41,
+          "accuracy_pct": 63.08
+        },
+        "Security Guardrails & Adversarial Roleplay Defense": {
+          "count": 65,
+          "correct": 55,
+          "accuracy_pct": 84.62
+        },
+        "System Rate Limiting & Temporal Sliding Windows": {
+          "count": 65,
+          "correct": 47,
+          "accuracy_pct": 72.31
+        },
+        "Temporal Discourse Intent Shift vs Historical Grievance": {
+          "count": 65,
+          "correct": 55,
+          "accuracy_pct": 84.62
+        }
+      }
+    },
+    "hybrid": {
+      "n_samples": 650,
+      "correct": 383,
+      "accuracy_pct": 58.92,
+      "ci_lower_pct": 55.08,
+      "ci_upper_pct": 62.62,
+      "brier": 0.7182,
+      "ece": 0.29,
+      "exit0_count": 212,
+      "exit0_coverage_pct": 32.62,
+      "exit0_accuracy_pct": 63.68,
+      "ood_total": 120,
+      "ood_correct": 12,
+      "ood_recall_pct": 10.0,
+      "latency": {
+        "p50": 15.06,
+        "p90": 28.16,
+        "p95": 29.71,
+        "p99": 34.42,
+        "mean": 17.1
+      },
+      "groups": {
+        "Autonomous Agent Tool Execution Safety Gating": {
+          "count": 65,
+          "correct": 37,
+          "accuracy_pct": 56.92
+        },
+        "Contractual Liability, Indemnity & Carve-Outs": {
+          "count": 65,
+          "correct": 42,
+          "accuracy_pct": 64.62
+        },
+        "Corporate Procurement & Financial Precedence": {
+          "count": 65,
+          "correct": 34,
+          "accuracy_pct": 52.31
+        },
+        "Cross-Border Regulatory Compliance & Data Residency": {
+          "count": 65,
+          "correct": 36,
+          "accuracy_pct": 55.38
+        },
+        "Infrastructure Root Cause Isolation vs Alert Storms": {
+          "count": 65,
+          "correct": 41,
+          "accuracy_pct": 63.08
+        },
+        "Multimodal Document Verification & Telemetry": {
+          "count": 65,
+          "correct": 39,
+          "accuracy_pct": 60.0
+        },
+        "Out-of-Distribution & Non-Matching Fallback Controls": {
+          "count": 65,
+          "correct": 38,
+          "accuracy_pct": 58.46
+        },
+        "Security Guardrails & Adversarial Roleplay Defense": {
+          "count": 65,
+          "correct": 37,
+          "accuracy_pct": 56.92
+        },
+        "System Rate Limiting & Temporal Sliding Windows": {
+          "count": 65,
+          "correct": 40,
+          "accuracy_pct": 61.54
+        },
+        "Temporal Discourse Intent Shift vs Historical Grievance": {
+          "count": 65,
+          "correct": 39,
+          "accuracy_pct": 60.0
+        }
+      }
+    }
+  },
+  "suite_650_domain_scaffold": {
+    "markov": {
+      "n_samples": 650,
+      "correct": 592,
+      "accuracy_pct": 91.08,
+      "ci_lower_pct": 88.77,
+      "ci_upper_pct": 93.38,
+      "brier": 0.1798,
+      "ece": 0.1144,
+      "exit0_count": 619,
+      "exit0_coverage_pct": 95.23,
+      "exit0_accuracy_pct": 93.21,
+      "ood_total": 120,
+      "ood_correct": 68,
+      "ood_recall_pct": 56.67,
+      "latency": {
+        "p50": 18.39,
+        "p90": 33.64,
+        "p95": 37.21,
+        "p99": 40.72,
+        "mean": 19.26
+      },
+      "groups": {
+        "Autonomous Agent Tool Execution Safety Gating": {
+          "count": 65,
+          "correct": 50,
+          "accuracy_pct": 76.92
+        },
+        "Contractual Liability, Indemnity & Carve-Outs": {
+          "count": 65,
+          "correct": 58,
+          "accuracy_pct": 89.23
+        },
+        "Corporate Procurement & Financial Precedence": {
+          "count": 65,
+          "correct": 64,
+          "accuracy_pct": 98.46
+        },
+        "Cross-Border Regulatory Compliance & Data Residency": {
+          "count": 65,
+          "correct": 65,
+          "accuracy_pct": 100.0
+        },
+        "Infrastructure Root Cause Isolation vs Alert Storms": {
+          "count": 65,
+          "correct": 55,
+          "accuracy_pct": 84.62
+        },
+        "Multimodal Document Verification & Telemetry": {
+          "count": 65,
+          "correct": 65,
+          "accuracy_pct": 100.0
+        },
+        "Out-of-Distribution & Non-Matching Fallback Controls": {
+          "count": 65,
+          "correct": 53,
+          "accuracy_pct": 81.54
+        },
+        "Security Guardrails & Adversarial Roleplay Defense": {
+          "count": 65,
+          "correct": 64,
+          "accuracy_pct": 98.46
+        },
+        "System Rate Limiting & Temporal Sliding Windows": {
+          "count": 65,
+          "correct": 54,
+          "accuracy_pct": 83.08
+        },
+        "Temporal Discourse Intent Shift vs Historical Grievance": {
+          "count": 65,
+          "correct": 64,
+          "accuracy_pct": 98.46
+        }
+      }
+    },
+    "cosine": {
+      "n_samples": 650,
+      "correct": 508,
+      "accuracy_pct": 78.15,
+      "ci_lower_pct": 74.92,
+      "ci_upper_pct": 81.23,
+      "brier": 0.4553,
+      "ece": 0.3108,
+      "exit0_count": 5,
+      "exit0_coverage_pct": 0.77,
+      "exit0_accuracy_pct": 0.0,
+      "ood_total": 120,
+      "ood_correct": 74,
+      "ood_recall_pct": 61.67,
+      "latency": {
+        "p50": 18.39,
+        "p90": 33.64,
+        "p95": 37.21,
+        "p99": 40.72,
+        "mean": 19.26
+      },
+      "groups": {
+        "Autonomous Agent Tool Execution Safety Gating": {
+          "count": 65,
+          "correct": 43,
+          "accuracy_pct": 66.15
+        },
+        "Contractual Liability, Indemnity & Carve-Outs": {
+          "count": 65,
+          "correct": 47,
+          "accuracy_pct": 72.31
+        },
+        "Corporate Procurement & Financial Precedence": {
+          "count": 65,
+          "correct": 58,
+          "accuracy_pct": 89.23
+        },
+        "Cross-Border Regulatory Compliance & Data Residency": {
+          "count": 65,
+          "correct": 57,
+          "accuracy_pct": 87.69
+        },
+        "Infrastructure Root Cause Isolation vs Alert Storms": {
+          "count": 65,
+          "correct": 46,
+          "accuracy_pct": 70.77
+        },
+        "Multimodal Document Verification & Telemetry": {
+          "count": 65,
+          "correct": 59,
+          "accuracy_pct": 90.77
+        },
+        "Out-of-Distribution & Non-Matching Fallback Controls": {
+          "count": 65,
+          "correct": 41,
+          "accuracy_pct": 63.08
+        },
+        "Security Guardrails & Adversarial Roleplay Defense": {
+          "count": 65,
+          "correct": 55,
+          "accuracy_pct": 84.62
+        },
+        "System Rate Limiting & Temporal Sliding Windows": {
+          "count": 65,
+          "correct": 47,
+          "accuracy_pct": 72.31
+        },
+        "Temporal Discourse Intent Shift vs Historical Grievance": {
+          "count": 65,
+          "correct": 55,
+          "accuracy_pct": 84.62
+        }
+      }
+    },
+    "hybrid": {
+      "n_samples": 650,
+      "correct": 592,
+      "accuracy_pct": 91.08,
+      "ci_lower_pct": 88.77,
+      "ci_upper_pct": 93.38,
+      "brier": 0.2015,
+      "ece": 0.1318,
+      "exit0_count": 412,
+      "exit0_coverage_pct": 63.38,
+      "exit0_accuracy_pct": 98.54,
+      "ood_total": 120,
+      "ood_correct": 68,
+      "ood_recall_pct": 56.67,
+      "latency": {
+        "p50": 18.39,
+        "p90": 33.64,
+        "p95": 37.21,
+        "p99": 40.72,
+        "mean": 19.26
+      },
+      "groups": {
+        "Autonomous Agent Tool Execution Safety Gating": {
+          "count": 65,
+          "correct": 50,
+          "accuracy_pct": 76.92
+        },
+        "Contractual Liability, Indemnity & Carve-Outs": {
+          "count": 65,
+          "correct": 58,
+          "accuracy_pct": 89.23
+        },
+        "Corporate Procurement & Financial Precedence": {
+          "count": 65,
+          "correct": 64,
+          "accuracy_pct": 98.46
+        },
+        "Cross-Border Regulatory Compliance & Data Residency": {
+          "count": 65,
+          "correct": 65,
+          "accuracy_pct": 100.0
+        },
+        "Infrastructure Root Cause Isolation vs Alert Storms": {
+          "count": 65,
+          "correct": 55,
+          "accuracy_pct": 84.62
+        },
+        "Multimodal Document Verification & Telemetry": {
+          "count": 65,
+          "correct": 65,
+          "accuracy_pct": 100.0
+        },
+        "Out-of-Distribution & Non-Matching Fallback Controls": {
+          "count": 65,
+          "correct": 53,
+          "accuracy_pct": 81.54
+        },
+        "Security Guardrails & Adversarial Roleplay Defense": {
+          "count": 65,
+          "correct": 64,
+          "accuracy_pct": 98.46
+        },
+        "System Rate Limiting & Temporal Sliding Windows": {
+          "count": 65,
+          "correct": 54,
+          "accuracy_pct": 83.08
+        },
+        "Temporal Discourse Intent Shift vs Historical Grievance": {
+          "count": 65,
+          "correct": 64,
+          "accuracy_pct": 98.46
+        }
+      }
+    }
+  },
+  "decision_index_default_scaffold": {
+    "markov": {
+      "n_samples": 200,
+      "correct": 33,
+      "accuracy_pct": 16.5,
+      "ci_lower_pct": 11.5,
+      "ci_upper_pct": 21.5,
+      "brier": 1.2401,
+      "ece": 0.5268,
+      "exit0_count": 115,
+      "exit0_coverage_pct": 57.5,
+      "exit0_accuracy_pct": 17.39,
+      "ood_total": 17,
+      "ood_correct": 0,
+      "ood_recall_pct": 0.0,
+      "latency": {
+        "p50": 26.51,
+        "p90": 34.08,
+        "p95": 36.49,
+        "p99": 42.48,
+        "mean": 26.12
+      },
+      "groups": {
+        "BBH fixed-option tasks": {
+          "count": 50,
+          "correct": 11,
+          "accuracy_pct": 22.0
+        },
+        "MMLU-Pro": {
+          "count": 50,
+          "correct": 7,
+          "accuracy_pct": 14.0
+        },
+        "New Yorker caption matching": {
+          "count": 50,
+          "correct": 6,
+          "accuracy_pct": 12.0
+        },
+        "When2Call MCQ": {
+          "count": 50,
+          "correct": 9,
+          "accuracy_pct": 18.0
+        }
+      }
+    },
+    "cosine": {
+      "n_samples": 200,
+      "correct": 52,
+      "accuracy_pct": 26.0,
+      "ci_lower_pct": 20.0,
+      "ci_upper_pct": 32.0,
+      "brier": 0.8023,
+      "ece": 0.1132,
+      "exit0_count": 6,
+      "exit0_coverage_pct": 3.0,
+      "exit0_accuracy_pct": 50.0,
+      "ood_total": 17,
+      "ood_correct": 1,
+      "ood_recall_pct": 5.88,
+      "latency": {
+        "p50": 26.51,
+        "p90": 34.08,
+        "p95": 36.49,
+        "p99": 42.48,
+        "mean": 26.12
+      },
+      "groups": {
+        "BBH fixed-option tasks": {
+          "count": 50,
+          "correct": 16,
+          "accuracy_pct": 32.0
+        },
+        "MMLU-Pro": {
+          "count": 50,
+          "correct": 6,
+          "accuracy_pct": 12.0
+        },
+        "New Yorker caption matching": {
+          "count": 50,
+          "correct": 12,
+          "accuracy_pct": 24.0
+        },
+        "When2Call MCQ": {
+          "count": 50,
+          "correct": 18,
+          "accuracy_pct": 36.0
+        }
+      }
+    },
+    "hybrid": {
+      "n_samples": 200,
+      "correct": 45,
+      "accuracy_pct": 22.5,
+      "ci_lower_pct": 17.0,
+      "ci_upper_pct": 29.0,
+      "brier": 0.944,
+      "ece": 0.2661,
+      "exit0_count": 32,
+      "exit0_coverage_pct": 16.0,
+      "exit0_accuracy_pct": 25.0,
+      "ood_total": 17,
+      "ood_correct": 0,
+      "ood_recall_pct": 0.0,
+      "latency": {
+        "p50": 26.51,
+        "p90": 34.08,
+        "p95": 36.49,
+        "p99": 42.48,
+        "mean": 26.12
+      },
+      "groups": {
+        "BBH fixed-option tasks": {
+          "count": 50,
+          "correct": 17,
+          "accuracy_pct": 34.0
+        },
+        "MMLU-Pro": {
+          "count": 50,
+          "correct": 8,
+          "accuracy_pct": 16.0
+        },
+        "New Yorker caption matching": {
+          "count": 50,
+          "correct": 9,
+          "accuracy_pct": 18.0
+        },
+        "When2Call MCQ": {
+          "count": 50,
+          "correct": 11,
+          "accuracy_pct": 22.0
+        }
+      }
+    }
+  },
+  "decision_index_domain_scaffold": {
+    "markov": {
+      "n_samples": 200,
+      "correct": 49,
+      "accuracy_pct": 24.5,
+      "ci_lower_pct": 19.0,
+      "ci_upper_pct": 30.5,
+      "brier": 1.1846,
+      "ece": 0.5058,
+      "exit0_count": 135,
+      "exit0_coverage_pct": 67.5,
+      "exit0_accuracy_pct": 26.67,
+      "ood_total": 17,
+      "ood_correct": 1,
+      "ood_recall_pct": 5.88,
+      "latency": {
+        "p50": 25.42,
+        "p90": 35.55,
+        "p95": 37.28,
+        "p99": 39.11,
+        "mean": 26.62
+      },
+      "groups": {
+        "BBH fixed-option tasks": {
+          "count": 50,
+          "correct": 20,
+          "accuracy_pct": 40.0
+        },
+        "MMLU-Pro": {
+          "count": 50,
+          "correct": 8,
+          "accuracy_pct": 16.0
+        },
+        "New Yorker caption matching": {
+          "count": 50,
+          "correct": 9,
+          "accuracy_pct": 18.0
+        },
+        "When2Call MCQ": {
+          "count": 50,
+          "correct": 12,
+          "accuracy_pct": 24.0
+        }
+      }
+    },
+    "cosine": {
+      "n_samples": 200,
+      "correct": 52,
+      "accuracy_pct": 26.0,
+      "ci_lower_pct": 20.0,
+      "ci_upper_pct": 32.0,
+      "brier": 0.8023,
+      "ece": 0.1132,
+      "exit0_count": 6,
+      "exit0_coverage_pct": 3.0,
+      "exit0_accuracy_pct": 50.0,
+      "ood_total": 17,
+      "ood_correct": 1,
+      "ood_recall_pct": 5.88,
+      "latency": {
+        "p50": 25.42,
+        "p90": 35.55,
+        "p95": 37.28,
+        "p99": 39.11,
+        "mean": 26.62
+      },
+      "groups": {
+        "BBH fixed-option tasks": {
+          "count": 50,
+          "correct": 16,
+          "accuracy_pct": 32.0
+        },
+        "MMLU-Pro": {
+          "count": 50,
+          "correct": 6,
+          "accuracy_pct": 12.0
+        },
+        "New Yorker caption matching": {
+          "count": 50,
+          "correct": 12,
+          "accuracy_pct": 24.0
+        },
+        "When2Call MCQ": {
+          "count": 50,
+          "correct": 18,
+          "accuracy_pct": 36.0
+        }
+      }
+    },
+    "hybrid": {
+      "n_samples": 200,
+      "correct": 50,
+      "accuracy_pct": 25.0,
+      "ci_lower_pct": 19.0,
+      "ci_upper_pct": 31.0,
+      "brier": 1.0356,
+      "ece": 0.3633,
+      "exit0_count": 95,
+      "exit0_coverage_pct": 47.5,
+      "exit0_accuracy_pct": 27.37,
+      "ood_total": 17,
+      "ood_correct": 1,
+      "ood_recall_pct": 5.88,
+      "latency": {
+        "p50": 25.42,
+        "p90": 35.55,
+        "p95": 37.28,
+        "p99": 39.11,
+        "mean": 26.62
+      },
+      "groups": {
+        "BBH fixed-option tasks": {
+          "count": 50,
+          "correct": 18,
+          "accuracy_pct": 36.0
+        },
+        "MMLU-Pro": {
+          "count": 50,
+          "correct": 8,
+          "accuracy_pct": 16.0
+        },
+        "New Yorker caption matching": {
+          "count": 50,
+          "correct": 11,
+          "accuracy_pct": 22.0
+        },
+        "When2Call MCQ": {
+          "count": 50,
+          "correct": 13,
+          "accuracy_pct": 26.0
+        }
+      }
+    }
+  },
+  "vision_fixtures": {
+    "markov": {
+      "n_samples": 3,
+      "correct": 2,
+      "accuracy_pct": 66.67,
+      "ci_lower_pct": 0.0,
+      "ci_upper_pct": 100.0,
+      "brier": 0.6104,
+      "ece": 0.3981,
+      "exit0_count": 3,
+      "exit0_coverage_pct": 100.0,
+      "exit0_accuracy_pct": 66.67,
+      "ood_total": 0,
+      "ood_correct": 0,
+      "ood_recall_pct": 0.0,
+      "latency": {
+        "p50": 59.43,
+        "p90": 70.92,
+        "p95": 72.35,
+        "p99": 73.5,
+        "mean": 64.08
+      },
+      "groups": {
+        "Vision": {
+          "count": 3,
+          "correct": 2,
+          "accuracy_pct": 66.67
+        }
+      }
+    },
+    "cosine": {
+      "n_samples": 3,
+      "correct": 2,
+      "accuracy_pct": 66.67,
+      "ci_lower_pct": 0.0,
+      "ci_upper_pct": 100.0,
+      "brier": 0.4333,
+      "ece": 0.1121,
+      "exit0_count": 1,
+      "exit0_coverage_pct": 33.33,
+      "exit0_accuracy_pct": 100.0,
+      "ood_total": 0,
+      "ood_correct": 0,
+      "ood_recall_pct": 0.0,
+      "latency": {
+        "p50": 59.43,
+        "p90": 70.92,
+        "p95": 72.35,
+        "p99": 73.5,
+        "mean": 64.08
+      },
+      "groups": {
+        "Vision": {
+          "count": 3,
+          "correct": 2,
+          "accuracy_pct": 66.67
+        }
+      }
+    },
+    "hybrid": {
+      "n_samples": 3,
+      "correct": 2,
+      "accuracy_pct": 66.67,
+      "ci_lower_pct": 0.0,
+      "ci_upper_pct": 100.0,
+      "brier": 0.3057,
+      "ece": 0.0454,
+      "exit0_count": 1,
+      "exit0_coverage_pct": 33.33,
+      "exit0_accuracy_pct": 100.0,
+      "ood_total": 0,
+      "ood_correct": 0,
+      "ood_recall_pct": 0.0,
+      "latency": {
+        "p50": 59.43,
+        "p90": 70.92,
+        "p95": 72.35,
+        "p99": 73.5,
+        "mean": 64.08
+      },
+      "groups": {
+        "Vision": {
+          "count": 3,
+          "correct": 2,
+          "accuracy_pct": 66.67
+        }
+      }
+    }
+  },
+  "vision_item_details": [
+    {
+      "test_id": "test_10_invoice_ocr_routing",
+      "title": "Invoice OCR Routing (Zero Chunking)",
+      "image": "fixtures/invoice_payment_auth.png",
+      "expected": "A",
+      "cosine_decision": "A",
+      "cosine_conf": 0.5627,
+      "markov_decision": "A",
+      "markov_conf": 1.0,
+      "hybrid_decision": "A",
+      "hybrid_conf": 0.9969,
+      "latency_ms": 73.79
+    },
+    {
+      "test_id": "test_11_ui_defect_routing",
+      "title": "Visual UI Defect Routing",
+      "image": "fixtures/ui_defect_404.png",
+      "expected": "A",
+      "cosine_decision": "A",
+      "cosine_conf": 0.821,
+      "markov_decision": "C",
+      "markov_conf": 0.8825,
+      "hybrid_decision": "A",
+      "hybrid_conf": 0.5773,
+      "latency_ms": 59.02
+    },
+    {
+      "test_id": "test_12_security_surveillance_moderation",
+      "title": "Security & Surveillance Moderation",
+      "image": "fixtures/security_cctv_tailgating.png",
+      "expected": "B",
+      "cosine_decision": "A",
+      "cosine_conf": 0.5947,
+      "markov_decision": "B",
+      "markov_conf": 0.6883,
+      "hybrid_decision": "A",
+      "hybrid_conf": 0.5557,
+      "latency_ms": 59.43
+    }
+  ],
+  "live_gemma4_26b_a4b": {
+    "suite_650": {
+      "n_samples": 650,
+      "correct": 647,
+      "accuracy_pct": 99.54,
+      "brier": 0.0624,
+      "ece": 0.1694,
+      "ood_recall_pct": 100.0,
+      "latency": {
+        "p50": 69.95,
+        "p90": 77.56,
+        "p95": 80.09,
+        "p99": 88.45,
+        "mean": 70.82
+      },
+      "groups": {
+        "Autonomous Agent Tool Execution Safety Gating": {
+          "count": 65,
+          "correct": 65,
+          "accuracy_pct": 100.0
+        },
+        "Contractual Liability, Indemnity & Carve-Outs": {
+          "count": 65,
+          "correct": 65,
+          "accuracy_pct": 100.0
+        },
+        "Corporate Procurement & Financial Precedence": {
+          "count": 65,
+          "correct": 64,
+          "accuracy_pct": 98.46
+        },
+        "Cross-Border Regulatory Compliance & Data Residency": {
+          "count": 65,
+          "correct": 65,
+          "accuracy_pct": 100.0
+        },
+        "Infrastructure Root Cause Isolation vs Alert Storms": {
+          "count": 65,
+          "correct": 65,
+          "accuracy_pct": 100.0
+        },
+        "Multimodal Document Verification & Telemetry": {
+          "count": 65,
+          "correct": 65,
+          "accuracy_pct": 100.0
+        },
+        "Out-of-Distribution & Non-Matching Fallback Controls": {
+          "count": 65,
+          "correct": 65,
+          "accuracy_pct": 100.0
+        },
+        "Security Guardrails & Adversarial Roleplay Defense": {
+          "count": 65,
+          "correct": 64,
+          "accuracy_pct": 98.46
+        },
+        "System Rate Limiting & Temporal Sliding Windows": {
+          "count": 65,
+          "correct": 65,
+          "accuracy_pct": 100.0
+        },
+        "Temporal Discourse Intent Shift vs Historical Grievance": {
+          "count": 65,
+          "correct": 64,
+          "accuracy_pct": 98.46
+        }
+      }
+    },
+    "decision_index": {
+      "n_samples": 200,
+      "correct": 123,
+      "accuracy_pct": 61.5,
+      "brier": 0.523,
+      "ece": 0.0822,
+      "latency": {
+        "p50": 89.53,
+        "p90": 295.12,
+        "p95": 396.21,
+        "p99": 2254.72,
+        "mean": 179.59
+      },
+      "groups": {
+        "BBH fixed-option tasks": {
+          "count": 50,
+          "correct": 36,
+          "accuracy_pct": 72.0
+        },
+        "MMLU-Pro": {
+          "count": 50,
+          "correct": 27,
+          "accuracy_pct": 54.0
+        },
+        "New Yorker caption matching": {
+          "count": 50,
+          "correct": 30,
+          "accuracy_pct": 60.0
+        },
+        "When2Call MCQ": {
+          "count": 50,
+          "correct": 30,
+          "accuracy_pct": 60.0
+        }
+      }
+    },
+    "vision": {
+      "n_samples": 3,
+      "correct": 3,
+      "accuracy_pct": 100.0,
+      "latency": {
+        "p50": 232.51,
+        "p90": 241.01,
+        "p95": 242.07,
+        "p99": 242.92,
+        "mean": 233.64
+      },
+      "details": [
+        {
+          "test_id": "test_10_invoice_ocr_routing",
+          "expected": "A",
+          "decision": "A",
+          "confidence": 0.7374,
+          "latency_ms": 243.13
+        },
+        {
+          "test_id": "test_11_ui_defect_routing",
+          "expected": "A",
+          "decision": "A",
+          "confidence": 0.9197,
+          "latency_ms": 225.28
+        },
+        {
+          "test_id": "test_12_security_surveillance_moderation",
+          "expected": "B",
+          "decision": "B",
+          "confidence": 0.9366,
+          "latency_ms": 232.51
+        }
+      ]
+    }
+  }
+}

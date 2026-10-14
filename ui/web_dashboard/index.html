@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Gevva0 — Decision Playground</title>
+  <title>Gevva0 — Decision & Chat Playground</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -51,281 +51,1019 @@
     input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; cursor: pointer; }
     input[type=range].accent-cyan::-webkit-slider-thumb { background: #06b6d4; }
     input[type=range].accent-emerald::-webkit-slider-thumb { background: #10b981; }
+
+    /* Drawer animation & rail active states */
+    .drawer-open { transform: translateX(0) !important; }
+    .rail-btn-active { background-color: rgba(6, 182, 212, 0.15) !important; color: #06b6d4 !important; border-color: rgba(6, 182, 212, 0.8) !important; box-shadow: 0 0 15px rgba(6, 182, 212, 0.25) !important; }
+    .tier-node-active { border-color: rgba(6, 182, 212, 0.8) !important; box-shadow: 0 0 16px rgba(6, 182, 212, 0.2) !important; }
+    .tier-node-bypassed { opacity: 0.42; filter: grayscale(0.5); }
+    .composer-dropzone-active { border-color: #06b6d4 !important; background-color: rgba(6, 182, 212, 0.08) !important; }
   </style>
 </head>
-<body class="bg-obsidian text-zinc-200 font-sans antialiased min-h-screen flex flex-col">
+<body class="bg-obsidian text-zinc-200 font-sans antialiased min-h-screen flex flex-col pl-16 selection:bg-cyan-900 selection:text-white">
 
-  <!-- Header -->
-  <header class="sticky top-0 z-50 backdrop-blur-md bg-obsidian/85 border-b border-surface-border">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
-      <div class="flex items-center space-x-3">
-        <div class="h-8 w-8 rounded-lg bg-gradient-to-tr from-accent-cyan to-accent-emerald flex items-center justify-center font-mono font-bold text-black text-sm shadow-lg">G0</div>
-        <div>
-          <h1 class="text-sm font-bold text-white flex items-center gap-2">
-            Gevva0
-            <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-cyan-950 text-accent-cyan border border-cyan-800 font-mono">v0.1.0</span>
-          </h1>
-        </div>
-        <!-- Mode Nav Pills -->
-        <nav class="hidden md:flex items-center space-x-1 ml-4 pl-4 border-l border-surface-border">
-          <a href="/ui/index.html" class="px-2.5 py-1 text-xs font-medium rounded-md bg-cyan-950/80 text-cyan-300 border border-cyan-800/80 shadow-sm flex items-center gap-1.5" title="Sub-50ms Logit Scoring Decision Gateway">
-            <span>⚡</span> Decisions
-          </a>
-          <a href="/ui/chat.html" class="px-2.5 py-1 text-xs font-medium rounded-md text-zinc-400 hover:text-zinc-200 hover:bg-surface-card/60 transition-colors flex items-center gap-1.5" title="Autoregressive Text & JSON Generation">
-            <span>💬</span> Generative Studio
-          </a>
-        </nav>
+  <!-- ========================================================= -->
+  <!-- FIXED LEFT ICON RAIL (Navigation & Slide-out Triggers)    -->
+  <!-- ========================================================= -->
+  <aside id="left-icon-rail" class="fixed left-0 top-0 bottom-0 w-16 bg-[#090b12] border-r border-surface-border flex flex-col items-center py-3.5 z-40 select-none shadow-2xl">
+    <!-- Brand / Flow Trigger -->
+    <button onclick="toggleDrawer('flow')" class="h-10 w-10 rounded-xl bg-gradient-to-tr from-accent-cyan to-accent-emerald flex items-center justify-center font-mono font-bold text-black text-sm shadow-lg mb-4 hover:scale-105 active:scale-95 transition-all cursor-pointer" title="Flow of Inference (Overview)">
+      G0
+    </button>
+
+    <!-- Rail Icons Stack -->
+    <div class="flex flex-col items-center gap-2.5 w-full px-2">
+      <!-- 1. Flow of Inference: Routing -->
+      <div class="relative group w-full flex justify-center">
+        <button id="btn-rail-flow" onclick="toggleDrawer('flow')" class="w-11 h-11 rounded-xl flex items-center justify-center text-zinc-400 hover:text-accent-cyan hover:bg-surface-hover/80 border border-transparent hover:border-surface-border transition-all cursor-pointer" title="Flow of Inference: Routing">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+          </svg>
+        </button>
+        <span class="pointer-events-none absolute left-full ml-3 top-1.5 px-2.5 py-1 rounded-md bg-[#121624] text-zinc-100 text-[11px] font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity border border-surface-border shadow-xl z-50">
+          Flow of Inference
+        </span>
       </div>
 
+      <!-- 2. Tier -1 Rules -->
+      <div class="relative group w-full flex justify-center">
+        <button id="btn-rail-tier-1" onclick="toggleDrawer('tier-1')" class="w-11 h-11 rounded-xl flex items-center justify-center text-zinc-400 hover:text-purple-400 hover:bg-surface-hover/80 border border-transparent hover:border-surface-border transition-all cursor-pointer" title="Tier -1: Heuristic Rules">
+          <div class="relative flex items-center justify-center">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            <span class="absolute -bottom-1 -right-1.5 text-[9px] font-mono font-bold px-1 rounded bg-purple-950 text-purple-300 border border-purple-800 leading-tight">-1</span>
+          </div>
+        </button>
+        <span class="pointer-events-none absolute left-full ml-3 top-1.5 px-2.5 py-1 rounded-md bg-[#121624] text-zinc-100 text-[11px] font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity border border-surface-border shadow-xl z-50">
+          Tier -1: Heuristic Rules
+        </span>
+      </div>
+
+      <!-- 3. Tier 0 Embedding -->
+      <div class="relative group w-full flex justify-center">
+        <button id="btn-rail-tier0" onclick="toggleDrawer('tier0')" class="w-11 h-11 rounded-xl flex items-center justify-center text-zinc-400 hover:text-accent-emerald hover:bg-surface-hover/80 border border-transparent hover:border-surface-border transition-all cursor-pointer" title="Tier 0: Embedding Tripwires">
+          <div class="relative flex items-center justify-center">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/>
+            </svg>
+            <span class="absolute -bottom-1 -right-1 text-[9px] font-mono font-bold px-1 rounded bg-emerald-950 text-emerald-300 border border-emerald-800 leading-tight">0</span>
+          </div>
+        </button>
+        <span class="pointer-events-none absolute left-full ml-3 top-1.5 px-2.5 py-1 rounded-md bg-[#121624] text-zinc-100 text-[11px] font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity border border-surface-border shadow-xl z-50">
+          Tier 0: Embedding Tripwires
+        </span>
+      </div>
+
+      <!-- 4. Tier 1 Fast-Path -->
+      <div class="relative group w-full flex justify-center">
+        <button id="btn-rail-tier1" onclick="toggleDrawer('tier1')" class="w-11 h-11 rounded-xl flex items-center justify-center text-zinc-400 hover:text-accent-cyan hover:bg-surface-hover/80 border border-transparent hover:border-surface-border transition-all cursor-pointer" title="Tier 1: Direct Logit Fast-Path">
+          <div class="relative flex items-center justify-center">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+            </svg>
+            <span class="absolute -bottom-1 -right-1 text-[9px] font-mono font-bold px-1 rounded bg-cyan-950 text-cyan-300 border border-cyan-800 leading-tight">1</span>
+          </div>
+        </button>
+        <span class="pointer-events-none absolute left-full ml-3 top-1.5 px-2.5 py-1 rounded-md bg-[#121624] text-zinc-100 text-[11px] font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity border border-surface-border shadow-xl z-50">
+          Tier 1: Direct Logits Fast-Path
+        </span>
+      </div>
+
+      <!-- 5. Tier 2 CoT -->
+      <div class="relative group w-full flex justify-center">
+        <button id="btn-rail-tier2" onclick="toggleDrawer('tier2')" class="w-11 h-11 rounded-xl flex items-center justify-center text-zinc-400 hover:text-accent-amber hover:bg-surface-hover/80 border border-transparent hover:border-surface-border transition-all cursor-pointer" title="Tier 2: CoT Verification">
+          <div class="relative flex items-center justify-center">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+            </svg>
+            <span class="absolute -bottom-1 -right-1 text-[9px] font-mono font-bold px-1 rounded bg-amber-950 text-amber-300 border border-amber-800 leading-tight">2</span>
+          </div>
+        </button>
+        <span class="pointer-events-none absolute left-full ml-3 top-1.5 px-2.5 py-1 rounded-md bg-[#121624] text-zinc-100 text-[11px] font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity border border-surface-border shadow-xl z-50">
+          Tier 2: CoT Verification
+        </span>
+      </div>
+
+      <!-- Divider -->
+      <div class="w-8 h-[1px] bg-surface-border/70 my-1"></div>
+
+      <!-- 6. Tests -->
+      <div class="relative group w-full flex justify-center">
+        <button id="btn-rail-tests" onclick="toggleDrawer('tests')" class="w-11 h-11 rounded-xl flex items-center justify-center text-zinc-400 hover:text-accent-cyan hover:bg-surface-hover/80 border border-transparent hover:border-surface-border transition-all cursor-pointer" title="Benchmark Tests & Runner">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+          </svg>
+        </button>
+        <span class="pointer-events-none absolute left-full ml-3 top-1.5 px-2.5 py-1 rounded-md bg-[#121624] text-zinc-100 text-[11px] font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity border border-surface-border shadow-xl z-50">
+          Benchmark Tests
+        </span>
+      </div>
+
+      <!-- 7. Advanced Engine Settings -->
+      <div class="relative group w-full flex justify-center">
+        <button id="btn-rail-settings" onclick="toggleDrawer('settings')" class="w-11 h-11 rounded-xl flex items-center justify-center text-zinc-400 hover:text-white hover:bg-surface-hover/80 border border-transparent hover:border-surface-border transition-all cursor-pointer" title="Advanced Engine Settings">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+        </button>
+        <span class="pointer-events-none absolute left-full ml-3 top-1.5 px-2.5 py-1 rounded-md bg-[#121624] text-zinc-100 text-[11px] font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity border border-surface-border shadow-xl z-50">
+          Engine Settings
+        </span>
+      </div>
+    </div>
+
+    <!-- Spacer -->
+    <div class="flex-grow"></div>
+
+    <!-- 8. Help & Documentation -->
+    <div class="relative group w-full flex justify-center pb-1">
+      <button id="btn-rail-help" onclick="toggleDrawer('help')" class="w-11 h-11 rounded-xl flex items-center justify-center text-zinc-500 hover:text-accent-cyan hover:bg-surface-hover/80 border border-transparent hover:border-surface-border transition-all cursor-pointer" title="Help & Architecture Guide">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+      </button>
+      <span class="pointer-events-none absolute left-full ml-3 bottom-2 px-2.5 py-1 rounded-md bg-[#121624] text-zinc-100 text-[11px] font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity border border-surface-border shadow-xl z-50">
+        Help & Docs
+      </span>
+    </div>
+  </aside>
+
+  <!-- ========================================================= -->
+  <!-- SLIDE-OUT DRAWER BACKDROP & SHELL                         -->
+  <!-- ========================================================= -->
+  <div id="drawer-backdrop" onclick="closeAllDrawers()" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-30 hidden transition-opacity"></div>
+
+  <aside id="side-drawer" class="fixed top-0 left-2 bottom-0 w-[480px] max-w-[calc(100vw-4.5rem)] bg-[#0d101b] border-r border-surface-border shadow-2xl z-40 transition-transform duration-300 ease-in-out -translate-x-[110%] flex flex-col overflow-hidden">
+    <!-- Drawer Top Header -->
+    <div class="p-4 border-b border-surface-border/80 flex items-center justify-between bg-surface-card/60 backdrop-blur-md">
       <div class="flex items-center gap-3">
-        <div id="vision-status-badge" class="hidden items-center gap-1.5 text-[11px] font-mono text-accent-emerald bg-emerald-950/60 border border-emerald-800/80 px-2 py-0.5 rounded-full shadow-sm">
-          <span class="w-1.5 h-1.5 rounded-full bg-accent-emerald animate-pulse"></span>
-          Vision 
+        <div id="drawer-icon-box" class="w-8 h-8 rounded-lg bg-surface border border-surface-border flex items-center justify-center text-accent-cyan shadow-sm">
+          <!-- Dynamically populated icon -->
         </div>
-        <div id="health-dot" class="flex items-center gap-1.5 text-[11px] font-mono text-zinc-500">
-          <span class="relative flex h-2 w-2"><span class="relative inline-flex rounded-full h-2 w-2 bg-zinc-600"></span></span>
-          Checking...
+        <div>
+          <h2 id="drawer-title" class="text-xs font-mono font-bold text-white uppercase tracking-wider">Flow of Inference</h2>
+          <p id="drawer-subtitle" class="text-[10px] text-zinc-400 font-mono">Routing & Pipeline Architecture</p>
         </div>
-        <div class="flex items-center gap-2">
-          <!-- Drop Down 1: Model Select -->
-          <div class="flex items-center gap-1">
-            <label for="model-select" class="text-[10px] font-mono text-zinc-500 uppercase tracking-wider hidden sm:inline">Model:</label>
-            <select id="model-select" onchange="onModelOrContextChange()" class="text-[11px] font-mono bg-surface-card text-zinc-200 border border-surface-border rounded px-2.5 py-1 focus:outline-none focus:border-cyan-700 cursor-pointer" title="LLM Model (Disk Size)">
-              <option value="">Loading models…</option>
+      </div>
+      <button onclick="closeAllDrawers()" class="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-surface-hover transition-colors cursor-pointer" title="Close Drawer (Esc)">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <!-- Drawer Content Panels -->
+    <div class="flex-grow overflow-y-auto p-4 space-y-4">
+
+      <!-- ─── PANEL 1: FLOW OF INFERENCE: ROUTING ─── -->
+      <div id="panel-flow" class="drawer-panel hidden space-y-4">
+        <!-- Routing Policy Selector -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between text-xs">
+            <span class="text-[11px] font-mono text-zinc-300 uppercase tracking-wider font-semibold">Active Routing Policy</span>
+            <span id="routing-summary-badge" class="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950 text-accent-cyan border border-cyan-800">Fast-Path Only</span>
+          </div>
+
+           <!-- Tier -1 Heuristic Rules Deterministic Bypass / Enable Toggle -->
+        <div class="rounded-xl border border-surface-border bg-obsidian p-3 space-y-2">
+          <div class="flex items-center justify-between">
+            <label for="chk-enable-tier-1" class="flex items-center gap-2 cursor-pointer select-none">
+              <input type="checkbox" id="chk-enable-tier-1" checked onchange="onTier1ToggleChange(this.checked)" class="w-4 h-4 rounded bg-surface-card border-surface-border text-purple-600 focus:ring-0 focus:ring-offset-0 cursor-pointer accent-purple-600">
+              <div class="flex flex-col">
+                <span class="text-xs font-mono font-bold text-zinc-200">Enable Tier -1 Heuristic Rules</span>
+                <span class="text-[10px] font-mono text-zinc-400">Hard-coded ruleset evaluated before Tier 0 / LLM</span>
+              </div>
+            </label>
+            <span id="tier-1-toggle-status" class="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-800 font-semibold">Active</span>
+          </div>
+        </div>
+
+          <div class="text-[10px] text-zinc-400 font-mono italic px-0.5 hidden">
+            <span id="policy-desc">Direct logits only (no CoT)</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <label class="flex flex-col p-2.5 rounded-lg bg-obsidian border border-surface-border cursor-pointer hover:border-accent-emerald/60 transition-all group has-[:checked]:border-accent-emerald has-[:checked]:bg-emerald-950/20 shadow-sm">
+              <input type="radio" name="routing_policy" value="early_exit" checked class="sr-only" onchange="onRoutingPolicyChange(this.value)">
+              <span class="text-xs font-semibold text-zinc-200 group-has-[:checked]:text-accent-emerald flex items-center gap-1.5">
+                <span>⚡</span> Tier 0 Early Exit
+              </span>
+              <span class="text-[10px] font-mono text-zinc-500 group-has-[:checked]:text-emerald-400 mt-0.5">Embedding &lt; 3ms</span>
+            </label>
+            <label class="flex flex-col p-2.5 rounded-lg bg-obsidian border border-surface-border cursor-pointer hover:border-accent-cyan/60 transition-all group has-[:checked]:border-accent-cyan has-[:checked]:bg-cyan-950/20 shadow-sm">
+              <input type="radio" name="routing_policy" value="fast_path" class="sr-only" onchange="onRoutingPolicyChange(this.value)">
+              <span class="text-xs font-semibold text-zinc-200 group-has-[:checked]:text-accent-cyan flex items-center gap-1.5">
+                <span>🎯</span> Tier 1 Fast-Path Only
+              </span>
+              <span class="text-[10px] font-mono text-zinc-500 group-has-[:checked]:text-cyan-400 mt-0.5">Direct Logits &lt; 50ms</span>
+            </label>
+            <label class="flex flex-col p-2.5 rounded-lg bg-obsidian border border-surface-border cursor-pointer hover:border-accent-cyan/60 transition-all group has-[:checked]:border-accent-cyan has-[:checked]:bg-cyan-950/20 shadow-sm">
+              <input type="radio" name="routing_policy" value="balanced" class="sr-only" onchange="onRoutingPolicyChange(this.value)">
+              <span id="lbl-balanced-title" class="text-xs font-semibold text-zinc-200 group-has-[:checked]:text-accent-cyan flex items-center gap-1.5">
+                <span>⚖️</span> Fast to CoT at (50%)
+              </span>
+              <span id="lbl-balanced-desc" class="text-[10px] font-mono text-zinc-500 group-has-[:checked]:text-cyan-400 mt-0.5">&lt; 50% CoT</span>
+            </label>
+            <label class="flex flex-col p-2.5 rounded-lg bg-obsidian border border-surface-border cursor-pointer hover:border-accent-amber/60 transition-all group has-[:checked]:border-accent-amber has-[:checked]:bg-amber-950/20 shadow-sm">
+              <input type="radio" name="routing_policy" value="always_verify" class="sr-only" onchange="onRoutingPolicyChange(this.value)">
+              <span class="text-xs font-semibold text-zinc-200 group-has-[:checked]:text-accent-amber flex items-center gap-1.5">
+                <span>🧠</span> Tier 2 Always CoT
+              </span>
+              <span class="text-[10px] font-mono text-zinc-500 group-has-[:checked]:text-amber-400 mt-0.5">100% Autoregressive CoT</span>
+            </label>
+          </div>
+        </div>
+
+       
+
+        <!-- Visual Flow of Inference Pipeline -->
+        <div class="space-y-3 pt-2 border-t border-surface-border/60">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-mono text-zinc-300 uppercase tracking-wider font-semibold">Inference Pipeline Flow</span>
+            <span class="text-[10px] font-mono text-zinc-500">Live Tier Execution</span>
+          </div>
+
+          <!-- TIER -1 NODE -->
+          <div id="flow-node-tier-1" class="rounded-xl border border-surface-border bg-obsidian p-3.5 space-y-2 transition-all">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span id="flow-tier-1-dot" class="w-2 h-2 rounded-full bg-purple-400 animate-pulse"></span>
+                <span id="flow-tier-1-title" class="text-xs font-mono font-bold text-purple-300">Tier -1: Heuristic Rule Gateway</span>
+              </div>
+              <span id="flow-tier-1-badge" class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-800 font-semibold">&lt; 0.05ms</span>
+            </div>
+            <p class="text-[11px] text-zinc-400 font-mono">Instant regex &amp; keyword matching for deterministic routing.</p>
+            <div class="flex items-center justify-between text-[11px] font-mono bg-surface-card/70 rounded-lg p-2 border border-surface-border/50">
+              <span class="text-zinc-400">Rules File:</span>
+              <span id="flow-tier-1-file" class="text-purple-300 font-semibold truncate max-w-[220px]">default.json</span>
+            </div>
+            <div class="flex justify-end">
+              <button onclick="openDrawer('tier-1')" class="text-[10px] font-mono text-purple-400 hover:text-purple-300 flex items-center gap-1 transition-colors">
+                Configure Tier -1 Rules &rarr;
+              </button>
+            </div>
+          </div>
+
+          <!-- FLOW CONNECTOR: -1 -> 0 -->
+          <div class="flex flex-col items-center justify-center my-0.5">
+            <div class="w-[2px] h-3 bg-surface-border"></div>
+            <span class="text-[10px] font-mono text-zinc-500 py-0.5 px-2 rounded-full bg-obsidian border border-surface-border">No match &darr;</span>
+            <div class="w-[2px] h-3 bg-surface-border"></div>
+          </div>
+
+          <!-- TIER 0 NODE -->
+          <div id="flow-node-tier0" class="rounded-xl border border-surface-border bg-obsidian p-3.5 space-y-2 transition-all">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span id="flow-tier0-dot" class="w-2 h-2 rounded-full bg-zinc-600"></span>
+                <span class="text-xs font-mono font-bold text-zinc-200" id="flow-tier0-title">Tier 0: Early-Exit Tripwires</span>
+              </div>
+              <span id="flow-tier0-status-badge" class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 border border-zinc-700">Offline</span>
+            </div>
+            <p class="text-[11px] text-zinc-400 font-mono">Topological Absorbing Markov Chain in Gemma-2 768D embedding space.</p>
+            <div class="flex items-center justify-between text-[11px] font-mono bg-surface-card/70 rounded-lg p-2 border border-surface-border/50">
+              <span class="text-zinc-400">Embedding Model:</span>
+              <span id="flow-tier0-model" class="text-emerald-400 font-semibold truncate max-w-[220px]">Gemma-2 768D</span>
+            </div>
+            <div class="flex justify-end">
+              <button onclick="openDrawer('tier0')" class="text-[10px] font-mono text-emerald-400 hover:text-emerald-300 flex items-center gap-1 transition-colors">
+                Configure Tier 0 Tripwires &rarr;
+              </button>
+            </div>
+          </div>
+
+          <!-- FLOW CONNECTOR: 0 -> 1 -->
+          <div class="flex flex-col items-center justify-center my-0.5">
+            <div class="w-[2px] h-3 bg-surface-border"></div>
+            <span class="text-[10px] font-mono text-zinc-500 py-0.5 px-2 rounded-full bg-obsidian border border-surface-border">Escalate ambiguity &darr;</span>
+            <div class="w-[2px] h-3 bg-surface-border"></div>
+          </div>
+
+          <!-- TIER 1 NODE -->
+          <div id="flow-node-tier1" class="rounded-xl border border-surface-border bg-obsidian p-3.5 space-y-2 transition-all">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span id="flow-tier1-dot" class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+                <span class="text-xs font-mono font-bold text-cyan-300">Tier 1: Direct Logit Fast-Path</span>
+              </div>
+              <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-800 font-semibold">&lt; 50ms</span>
+            </div>
+            <p class="text-[11px] text-zinc-400 font-mono">Single-forward-pass logit projection on candidate token vocabulary.</p>
+            <div class="flex items-center justify-between text-[11px] font-mono bg-surface-card/70 rounded-lg p-2 border border-surface-border/50">
+              <span class="text-zinc-400">LLM Backbone:</span>
+              <span id="flow-tier1-model" class="text-cyan-300 font-semibold truncate max-w-[220px]">Loading model...</span>
+            </div>
+            <div class="flex justify-end">
+              <button onclick="openDrawer('tier1')" class="text-[10px] font-mono text-accent-cyan hover:text-cyan-300 flex items-center gap-1 transition-colors">
+                Configure Tier 1 LLM &rarr;
+              </button>
+            </div>
+          </div>
+
+          <!-- FLOW CONNECTOR WITH COT THRESHOLD SLIDER: 1 -> 2 -->
+          <div class="rounded-xl border border-cyan-800/40 bg-cyan-950/20 p-3 space-y-2">
+            <div class="flex items-center justify-between text-xs font-mono">
+              <span class="text-accent-cyan font-semibold flex items-center gap-1.5">
+                <span>⚖️</span> CoT Trigger Threshold
+              </span>
+              <div class="flex items-center gap-1">
+                <span class="text-zinc-400 text-[11px]">CoT if confidence &lt;</span>
+                <span id="flow-cot-val-display" class="font-bold text-accent-cyan bg-obsidian px-1.5 py-0.5 rounded border border-cyan-800">50%</span>
+              </div>
+            </div>
+            <input id="flow-cot-thresh-slider" type="range" min="1" max="99" step="1" value="50" oninput="onCotSliderChange(this.value)" class="w-full accent-cyan h-1.5 bg-surface-border rounded cursor-pointer">
+            <div class="flex justify-between text-[10px] font-mono text-zinc-500">
+              <span>0% (Fast-Path only)</span>
+              <span>Balanced</span>
+              <span>100% (Always CoT)</span>
+            </div>
+          </div>
+
+          <!-- FLOW CONNECTOR: 1 -> 2 arrow -->
+          <div class="flex flex-col items-center justify-center my-0.5">
+            <div class="w-[2px] h-3 bg-surface-border"></div>
+            <span class="text-[10px] font-mono text-zinc-500 py-0.5 px-2 rounded-full bg-obsidian border border-surface-border">Confidence &lt; threshold &darr;</span>
+            <div class="w-[2px] h-3 bg-surface-border"></div>
+          </div>
+
+          <!-- TIER 2 NODE -->
+          <div id="flow-node-tier2" class="rounded-xl border border-surface-border bg-obsidian p-3.5 space-y-2 transition-all">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span id="flow-tier2-dot" class="w-2 h-2 rounded-full bg-amber-400"></span>
+                <span class="text-xs font-mono font-bold text-amber-300">Tier 2: CoT Verification &amp; Reasoning</span>
+              </div>
+              <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-800 font-semibold">Deep Reasoning</span>
+            </div>
+            <p class="text-[11px] text-zinc-400 font-mono">Autoregressive scratchpad generation for complex decision verification.</p>
+            <div class="flex items-center justify-between text-[11px] font-mono bg-surface-card/70 rounded-lg p-2 border border-surface-border/50">
+              <span class="text-zinc-400">LLM Backbone:</span>
+              <span id="flow-tier2-model" class="text-amber-300 font-semibold truncate max-w-[220px]">Loading model...</span>
+            </div>
+            <div class="flex justify-end">
+              <button onclick="openDrawer('tier2')" class="text-[10px] font-mono text-amber-400 hover:text-amber-300 flex items-center gap-1 transition-colors">
+                Configure Tier 2 Settings &rarr;
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── PANEL 2: TIER -1 SETTINGS ─── -->
+      <div id="panel-tier-1" class="drawer-panel hidden space-y-4">
+        <div class="flex items-center justify-between">
+          <div class="text-[11px] font-mono text-zinc-400 uppercase tracking-wider font-semibold">
+            Heuristic Rules Gateway (&lt; 0.05ms)
+          </div>
+          <span id="rules-count-badge" class="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-800 font-semibold">Loading...</span>
+        </div>
+        <p class="text-xs font-mono text-zinc-400">
+          Tier -1 evaluates regular expressions, keywords, and length conditions before touching GPU memory.
+        </p>
+
+        <!-- Rules File Selector & Reload -->
+        <div class="flex items-center justify-between gap-2 bg-obsidian rounded-xl p-3 border border-surface-border">
+          <div class="flex items-center gap-2 flex-grow min-w-0">
+            <label for="card-rules-select" class="text-[10px] font-mono text-zinc-400 uppercase shrink-0">Profile:</label>
+            <select id="card-rules-select" onchange="onRuleFileChange(this.value)" class="text-xs font-mono bg-surface-card text-zinc-200 border border-surface-border rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-cyan-700 cursor-pointer w-full truncate">
+              <option value="">Loading rules…</option>
             </select>
           </div>
-
-          <!-- Context Size: [textbox] (est VRAM use) -->
-          <div class="flex items-center gap-1.5">
-            <label for="inp-context-size" class="text-[10px] font-mono text-zinc-400 uppercase tracking-wider whitespace-nowrap">Context:</label>
-            <input type="number" id="inp-context-size" min="512" max="131072" step="512" value="8192" oninput="onModelOrContextChange()" class="w-20 text-[11px] font-mono bg-surface-card text-zinc-200 border border-surface-border rounded px-2 py-1 focus:outline-none focus:border-cyan-700 text-center" title="Context token size (n_ctx)">
-            <span id="vram-est-label" class="text-[10px] font-mono text-accent-cyan whitespace-nowrap" title="Estimated total VRAM usage">(est VRAM use)</span>
-          </div>
-
-          <!-- Reload Button -->
-          <button id="btn-reload" onclick="applyConfigAndReload()" title="Switch model / context size &amp; reload model" class="flex items-center gap-1 text-[11px] font-mono text-zinc-400 hover:text-accent-cyan transition-colors px-2 py-1 rounded border border-surface-border bg-surface-card hover:border-cyan-800">
-            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-            Reload
+          <button onclick="reloadRulesFromDisk()" title="Hot-reload routing rules from JSON" class="text-xs font-mono px-3 py-1.5 rounded-lg bg-surface-card text-zinc-200 hover:text-accent-cyan border border-surface-border hover:border-cyan-800 transition-colors shrink-0 flex items-center gap-1.5 cursor-pointer">
+            ↻ Reload
           </button>
         </div>
-        <a href="/docs" target="_blank" class="text-[11px] font-mono text-zinc-400 hover:text-accent-cyan transition-colors px-2 py-1 rounded border border-surface-border bg-surface-card">API Docs</a>
+
+        
+
+      
+        <!-- Rules Table -->
+        <div class="space-y-2">
+          <span class="text-[11px] font-mono text-zinc-400 uppercase tracking-wider font-semibold">Active Rules</span>
+          <div id="rules-table-body" class="space-y-2 max-h-[500px] overflow-y-auto pr-1"></div>
+        </div>
+
+
+  <!-- Add / Edit Rule Card -->
+        <div id="rule-editor-card" class="bg-obsidian rounded-xl p-3.5 border border-surface-border space-y-3 transition-all shadow-sm">
+          <div class="flex items-center justify-between">
+            <span id="rule-editor-title" class="text-[11px] font-mono text-zinc-300 uppercase tracking-wider font-semibold flex items-center gap-1.5">
+              <span>➕</span> Add Heuristic Rule
+            </span>
+            <button id="btn-cancel-rule-edit" type="button" onclick="cancelRuleEdit()" class="hidden text-[10px] font-mono text-zinc-400 hover:text-white px-2 py-0.5 rounded border border-surface-border hover:bg-surface-card transition-colors cursor-pointer">
+              Cancel Edit
+            </button>
+          </div>
+
+          <!-- Rule Name Input -->
+          <div class="space-y-1">
+            <label for="inp-rule-name" class="text-[10px] font-mono text-zinc-400 uppercase tracking-wider block">Rule Name *</label>
+            <input type="text" id="inp-rule-name" placeholder="e.g. Temporal Arithmetic / Quota Rate" class="w-full text-xs font-mono bg-surface-card text-zinc-200 border border-surface-border rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-cyan-700">
+          </div>
+
+          <!-- Action Dropdown & Decision Target -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div class="space-y-1">
+              <label for="sel-rule-action" class="text-[10px] font-mono text-zinc-400 uppercase tracking-wider block">Action *</label>
+              <select id="sel-rule-action" onchange="onRuleActionSelectChange(this.value)" class="w-full text-xs font-mono bg-surface-card text-zinc-200 border border-surface-border rounded-lg px-2 py-1.5 focus:outline-none focus:border-cyan-700 cursor-pointer">
+                <option value="FORCE_COT">FORCE_COT (Deep CoT Reasoning)</option>
+                <option value="SKIP_TIER0">SKIP_TIER0 (Direct Logit Fast-Path)</option>
+                <option value="DIRECT_EXIT">DIRECT_EXIT (Instant &lt;0.05ms Bypass)</option>
+                <option value="FORCE_TIER0">FORCE_TIER0 (Force Markov Router)</option>
+                <option value="EVALUATE_ALL">EVALUATE_ALL (Standard Pipeline Flow)</option>
+              </select>
+            </div>
+            <div class="space-y-1">
+              <label for="inp-rule-decision" class="text-[10px] font-mono text-zinc-400 uppercase tracking-wider block">Target Decision</label>
+              <input type="text" id="inp-rule-decision" placeholder="e.g. Legal, Billing, A" class="w-full text-xs font-mono bg-surface-card text-zinc-200 border border-surface-border rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-cyan-700">
+            </div>
+          </div>
+
+          <!-- Trigger Conditions: Keywords -->
+          <div class="space-y-1">
+            <div class="flex items-center justify-between">
+              <label for="inp-rule-keywords" class="text-[10px] font-mono text-zinc-400 uppercase tracking-wider">Keywords (Comma-separated)</label>
+              <div class="flex items-center gap-2 text-[10px] font-mono text-zinc-400">
+                <label class="flex items-center gap-1 cursor-pointer">
+                  <input type="radio" name="rule_keyword_mode" value="any" checked class="accent-cyan h-3 w-3"> Any (OR)
+                </label>
+                <label class="flex items-center gap-1 cursor-pointer">
+                  <input type="radio" name="rule_keyword_mode" value="all" class="accent-cyan h-3 w-3"> All (AND)
+                </label>
+              </div>
+            </div>
+            <input type="text" id="inp-rule-keywords" placeholder="e.g. rate limit, quota, exceeds, sum of" class="w-full text-xs font-mono bg-surface-card text-zinc-200 border border-surface-border rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-cyan-700">
+          </div>
+
+          <!-- Advanced Conditions Accordion -->
+          <details class="text-xs font-mono text-zinc-400 space-y-2">
+            <summary class="cursor-pointer text-[10px] uppercase text-zinc-400 hover:text-accent-cyan py-0.5 select-none">
+              + Regex Pattern, Word Limits &amp; Priority
+            </summary>
+            <div class="pt-2 space-y-2 border-t border-surface-border/40">
+              <div class="space-y-1">
+                <label for="inp-rule-regex" class="text-[10px] uppercase tracking-wider block">Regex Pattern</label>
+                <input type="text" id="inp-rule-regex" placeholder="e.g. (\\d{1,2}:\\d{2})|\\b(quota|exceeds)\\b" class="w-full text-xs font-mono bg-surface-card text-zinc-200 border border-surface-border rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-cyan-700">
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div class="space-y-1">
+                  <label for="inp-rule-min-words" class="text-[10px] uppercase tracking-wider block">Min Words</label>
+                  <input type="number" id="inp-rule-min-words" min="0" placeholder="0" class="w-full text-xs font-mono bg-surface-card text-zinc-200 border border-surface-border rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-cyan-700">
+                </div>
+                <div class="space-y-1">
+                  <label for="inp-rule-max-words" class="text-[10px] uppercase tracking-wider block">Max Words</label>
+                  <input type="number" id="inp-rule-max-words" min="0" placeholder="Unlimited" class="w-full text-xs font-mono bg-surface-card text-zinc-200 border border-surface-border rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-cyan-700">
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div class="space-y-1">
+                  <label for="inp-rule-priority" class="text-[10px] uppercase tracking-wider block">Priority (1 = High)</label>
+                  <input type="number" id="inp-rule-priority" min="1" max="99" value="1" class="w-full text-xs font-mono bg-surface-card text-zinc-200 border border-surface-border rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-cyan-700">
+                </div>
+                <div class="space-y-1">
+                  <label for="inp-rule-desc" class="text-[10px] uppercase tracking-wider block">Description</label>
+                  <input type="text" id="inp-rule-desc" placeholder="Rationale for rule" class="w-full text-xs font-mono bg-surface-card text-zinc-200 border border-surface-border rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-cyan-700">
+                </div>
+              </div>
+            </div>
+          </details>
+
+          <!-- Save Button -->
+          <button id="btn-save-rule" type="button" onclick="saveRuleForm()" class="w-full py-2 px-3 rounded-lg bg-cyan-950/80 hover:bg-cyan-900 text-accent-cyan border border-cyan-800 text-xs font-mono font-semibold transition-all flex items-center justify-center gap-1.5 shadow-sm cursor-pointer">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
+            <span id="btn-save-rule-label">Add Rule to .json</span>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- ─── PANEL 3: TIER 0 SETTINGS ─── -->
+      <div id="panel-tier0" class="drawer-panel hidden space-y-4">
+        <div class="flex items-center justify-between">
+          <div class="text-[11px] font-mono text-zinc-400 uppercase tracking-wider font-semibold">
+            Tier 0 Early-Exit Tripwires
+          </div>
+          <span id="tier0-status-badge" class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950 text-accent-emerald border border-emerald-800">RTX Ready</span>
+        </div>
+        <p id="tier0-desc-text" class="text-xs font-mono text-zinc-400 leading-relaxed">
+          Embeds query into high-dimensional vector space. Evaluates Shannon entropy and classification margins against prototype landmarks in under 3 milliseconds.
+        </p>
+
+        <!-- Embedding Model Selector & Load / Unload Toggle -->
+        <div class="bg-obsidian rounded-xl p-3.5 border border-surface-border space-y-3">
+          <div class="flex items-center justify-between">
+            <div class="space-y-0.5">
+              <span class="text-xs font-mono font-bold text-zinc-200">Embedding Model</span>
+              <p id="tier0-model-sub-label" class="text-[10px] font-mono text-zinc-500">GGUF (.gguf) or Hugging Face</p>
+            </div>
+            <button id="btn-tier0-load-ui" onclick="toggleTier0Engine()" class="text-xs font-mono px-3 py-1.5 rounded-lg border border-emerald-800 bg-emerald-950/60 text-accent-emerald hover:text-white cursor-pointer transition-colors shadow-sm">
+              Load Embedding
+            </button>
+          </div>
+          <div class="space-y-1">
+            <select id="tier0-model-select" onchange="onTier0ModelSelectChange()" class="w-full text-xs font-mono bg-surface-card text-zinc-200 border border-surface-border rounded-lg pl-3 pr-8 py-2 focus:outline-none focus:border-emerald-700 cursor-pointer truncate" title="Select Embedding Model from models/embeddings or models/">
+              <option value="">Default (Auto-detect)</option>
+            </select>
+          </div>
+          <!-- Multimodal ONNX Modality Encoders (Vision & Audio) Checkboxes -->
+          <div id="tier0-modalities-box" class="pt-2 border-t border-surface-border/60 flex items-center justify-between gap-3 text-xs font-mono">
+            <span class="text-[10px] text-zinc-400 uppercase tracking-wider font-semibold">ONNX Encoders:</span>
+            <div class="flex items-center gap-3">
+              <label class="flex items-center gap-1.5 cursor-pointer select-none text-zinc-300 hover:text-white" title="Enable ONNX Vision Encoder (also processes video frames)">
+                <input type="checkbox" id="chk-tier0-vision" checked onchange="onTier0ModalityCheckboxChange()" class="w-3.5 h-3.5 rounded bg-surface-card border-surface-border text-emerald-600 focus:ring-0 cursor-pointer accent-emerald-500">
+                <span class="text-[11px] font-semibold">Vision (+Video)</span>
+              </label>
+              <label class="flex items-center gap-1.5 cursor-pointer select-none text-zinc-300 hover:text-white" title="Enable ONNX Audio Encoder">
+                <input type="checkbox" id="chk-tier0-audio" checked onchange="onTier0ModalityCheckboxChange()" class="w-3.5 h-3.5 rounded bg-surface-card border-surface-border text-emerald-600 focus:ring-0 cursor-pointer accent-emerald-500">
+                <span class="text-[11px] font-semibold">Audio</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tripwire Threshold Sliders -->
+        <div class="bg-obsidian rounded-xl p-4 border border-surface-border space-y-4">
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between text-xs font-mono">
+              <span class="text-zinc-300 font-semibold" title="Max allowed Shannon entropy before escalating to Tier 1">Entropy Tripwire (&tau;<sub>1</sub>):</span>
+              <span id="val-t0-entropy" class="text-xs font-mono text-accent-emerald font-bold bg-surface-card px-2 py-0.5 rounded border border-emerald-900">0.65</span>
+            </div>
+            <input id="set-t0-entropy" type="range" min="0.10" max="0.95" step="0.05" value="0.65" oninput="document.getElementById('val-t0-entropy').textContent = this.value" class="w-full accent-emerald h-1.5 bg-surface-border rounded cursor-pointer">
+            <p class="text-[10px] font-mono text-zinc-500">Escalates if decision distribution Shannon entropy &gt; &tau;<sub>1</sub>.</p>
+          </div>
+
+          <div class="space-y-1.5 pt-2 border-t border-surface-border/60">
+            <div class="flex items-center justify-between text-xs font-mono">
+              <span class="text-zinc-300 font-semibold" title="Minimum top-1 vs top-2 probability margin required for Tier 0 exit">Margin Tripwire (&Delta; &tau;<sub>2</sub>):</span>
+              <span id="val-t0-margin" class="text-xs font-mono text-accent-emerald font-bold bg-surface-card px-2 py-0.5 rounded border border-emerald-900">0.25</span>
+            </div>
+            <input id="set-t0-margin" type="range" min="0.05" max="0.80" step="0.05" value="0.25" oninput="document.getElementById('val-t0-margin').textContent = this.value" class="w-full accent-emerald h-1.5 bg-surface-border rounded cursor-pointer">
+            <p class="text-[10px] font-mono text-zinc-500">Escalates if gap between top two candidate logits &lt; &Delta;.</p>
+          </div>
+
+          <div class="space-y-1.5 pt-2 border-t border-surface-border/60">
+            <div class="flex items-center justify-between text-xs font-mono">
+              <span class="text-zinc-300 font-semibold" title="Max allowed nearest-landmark cosine distance d_min = 1 - max cos(q, c) before triggering OOD_MANIFOLD_BYPASS">OOD Distance Tripwire (&delta;<sub>OOD</sub>):</span>
+              <span id="val-t0-ood-dist" class="text-xs font-mono text-accent-emerald font-bold bg-surface-card px-2 py-0.5 rounded border border-emerald-900">0.22</span>
+            </div>
+            <input id="set-t0-ood-dist" type="range" min="0.05" max="0.60" step="0.01" value="0.22" oninput="document.getElementById('val-t0-ood-dist').textContent = Number(this.value).toFixed(2)" class="w-full accent-emerald h-1.5 bg-surface-border rounded cursor-pointer">
+            <p class="text-[10px] font-mono text-zinc-500">Escalates (<code class="text-zinc-400">OOD_MANIFOLD_BYPASS</code>) if nearest landmark cosine distance d<sub>min</sub> &gt; &delta;<sub>OOD</sub>.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── PANEL 4: TIER 1 SETTINGS ─── -->
+      <div id="panel-tier1" class="drawer-panel hidden space-y-4">
+        <div class="flex items-center justify-between">
+          <div class="text-[11px] font-mono text-zinc-400 uppercase tracking-wider font-semibold">
+            Tier 1 Direct Logit Fast-Path
+          </div>
+          <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950 text-accent-cyan border border-cyan-800 font-semibold">&lt; 50ms</span>
+        </div>
+        <p class="text-xs font-mono text-zinc-400 leading-relaxed">
+          Evaluates candidate options in a single forward pass without autoregressive token generation. Fast-path LLM selection and Vision toggling are active in the top header.
+        </p>
+
+        <!-- Context Size & VRAM Footprint -->
+        <div class="bg-obsidian rounded-xl p-3.5 border border-surface-border space-y-2">
+          <span class="text-[11px] font-mono text-zinc-300 font-semibold uppercase tracking-wider block">Context Window (n_ctx)</span>
+          <input type="number" id="inp-context-size" min="512" max="131072" step="512" value="8192" oninput="onModelOrContextChange()" class="w-full text-xs font-mono bg-surface-card text-zinc-200 border border-surface-border rounded-lg px-2.5 py-1.5 text-center focus:outline-none focus:border-cyan-700">
+          <div id="vram-est-label" class="text-[10px] font-mono text-accent-cyan truncate"></div>
+          <p class="text-[10px] font-mono text-zinc-500">Higher context allocations consume more KV cache memory in VRAM.</p>
+        </div>
+
+        <!-- Tier 1 Engine Actions -->
+        <div class="bg-obsidian rounded-xl p-3.5 border border-surface-border space-y-2.5">
+          <span class="text-[11px] font-mono text-zinc-300 font-semibold uppercase tracking-wider block">Backbone Management</span>
+          <p class="text-[10px] font-mono text-zinc-400 leading-relaxed">
+            Configure model selection and vision in the top header, or trigger a reload with your updated context size here:
+          </p>
+          <button type="button" onclick="applyConfigAndReload()" class="w-full py-2 px-3 rounded-lg bg-surface-card hover:bg-cyan-950/40 text-accent-cyan border border-surface-border hover:border-cyan-800 text-xs font-mono font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            <span>Apply Context &amp; Reload</span>
+          </button>
+          <button type="button" onclick="unloadActiveLLM()" class="w-full py-1.5 px-3 rounded-lg text-rose-300 hover:text-rose-200 border border-rose-900/60 bg-rose-950/40 hover:bg-rose-900/40 text-xs font-mono transition-colors flex items-center justify-center gap-1 cursor-pointer">
+            Unload LLM from VRAM
+          </button>
+        </div>
+      </div>
+
+      <!-- ─── PANEL 5: TIER 2 SETTINGS ─── -->
+      <div id="panel-tier2" class="drawer-panel hidden space-y-4">
+        <div class="flex items-center justify-between">
+          <div class="text-[11px] font-mono text-zinc-400 uppercase tracking-wider font-semibold">
+            Tier 2 CoT Verification
+          </div>
+          <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-950 text-accent-amber border border-amber-800 font-semibold">Deep Reasoning</span>
+        </div>
+        <p class="text-xs font-mono text-zinc-400 leading-relaxed">
+          Autoregressive scratchpad generation triggered whenever confidence is below calibrated threshold.
+        </p>
+
+        <!-- CoT Confidence Trigger Threshold -->
+        <div class="bg-obsidian rounded-xl p-3.5 border border-surface-border space-y-2">
+          <div class="flex items-center justify-between text-xs font-mono">
+            <span class="text-zinc-300 font-semibold">CoT Confidence Trigger:</span>
+            <div class="flex items-center gap-1">
+              <input id="set-cot-thresh-input" type="number" min="1" max="99" step="1" value="50" oninput="onCotThresholdInputChange(this.value)" class="w-14 bg-surface-card text-accent-amber border border-surface-border rounded px-2 py-0.5 text-xs font-mono text-center font-bold focus:outline-none focus:border-amber-500">
+              <span class="text-zinc-500 text-xs font-mono">%</span>
+            </div>
+          </div>
+          <p class="text-[10px] font-mono text-zinc-500">Queries scoring below this probability escalate to Tier 2 scratchpad.</p>
+        </div>
+
+        <!-- Sampling Temp & Fallback Tokens -->
+        <div class="grid grid-cols-2 gap-3">
+          <div class="bg-obsidian rounded-xl p-3.5 border border-surface-border space-y-1.5">
+            <span class="text-[11px] font-mono text-zinc-400 block">Sampling Temp:</span>
+            <input id="set-temp" type="number" min="0.0" max="2.0" step="0.05" value="0.00" class="w-full bg-surface-card text-zinc-200 border border-surface-border rounded px-2 py-1 text-xs font-mono text-right focus:outline-none focus:border-cyan-700">
+            <p class="text-[10px] font-mono text-zinc-500">0.00 = Deterministic</p>
+          </div>
+          <div class="bg-obsidian rounded-xl p-3.5 border border-surface-border space-y-1.5">
+            <span class="text-[11px] font-mono text-zinc-400 block">Max Fallback Tokens:</span>
+            <input id="set-max-tokens" type="number" min="16" max="2048" step="16" value="256" class="w-full bg-surface-card text-zinc-200 border border-surface-border rounded px-2 py-1 text-xs font-mono text-right focus:outline-none focus:border-cyan-700">
+            <p class="text-[10px] font-mono text-zinc-500">Reasoning token limit</p>
+          </div>
+        </div>
+
+        <!-- CoT Verification Prompt Prefix -->
+        <div class="bg-obsidian rounded-xl p-3.5 border border-surface-border space-y-2">
+          <div class="flex items-center justify-between text-xs font-mono">
+            <span class="text-zinc-300 font-semibold">Verification Prompt Prefix:</span>
+            <button type="button" onclick="resetCotPrompt()" class="text-[10px] font-mono text-zinc-500 hover:text-accent-cyan transition-colors cursor-pointer">Reset</button>
+          </div>
+          <textarea id="set-cot-prompt" rows="3" class="w-full bg-surface-card text-zinc-200 border border-surface-border rounded-lg p-2.5 text-xs font-mono focus:outline-none focus:border-cyan-700 resize-y leading-relaxed" placeholder="Verify"></textarea>
+          <p class="text-[10px] font-mono text-zinc-500">Prepended to the scratchpad generation during verification.</p>
+        </div>
+
+        <button type="button" id="btn-save-settings" onclick="saveActiveSettings()" class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-accent-cyan to-accent-emerald text-black font-semibold text-xs font-mono tracking-wider uppercase hover:opacity-90 transition-all cursor-pointer shadow-lg">
+          Save Settings
+        </button>
+      </div>
+
+      <!-- ─── PANEL 6: BENCHMARK TESTS ─── -->
+      <div id="panel-tests" class="drawer-panel hidden space-y-4">
+        <div class="flex items-center justify-between">
+          <div class="text-[11px] font-mono text-zinc-400 uppercase tracking-wider font-semibold">
+            Benchmark Tests &amp; Evaluation
+          </div>
+          <span id="test-count-badge" class="text-[10px] font-mono px-2 py-0.5 rounded bg-surface border border-surface-border text-zinc-400">Loading...</span>
+        </div>
+        <p class="text-xs font-mono text-zinc-400">
+          Run individual decision benchmark cases or execute the entire test battery sequentially.
+        </p>
+
+        <!-- Test Selector & Runner -->
+        <div class="bg-obsidian rounded-xl p-3.5 border border-surface-border space-y-3">
+          <label for="test-select" class="text-[11px] font-mono text-zinc-300 font-semibold uppercase tracking-wider block">Select Test Case</label>
+          <div class="relative">
+            <select id="test-select" onchange="onSelectTest()" class="w-full text-xs font-mono bg-surface-card text-zinc-200 border border-surface-border rounded-lg px-3 py-2.5 focus:outline-none focus:border-cyan-700 cursor-pointer appearance-none truncate pr-8">
+              <option value="">Loading tests…</option>
+            </select>
+            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-zinc-400">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </div>
+          </div>
+
+          <!-- Test Stressor & Expected -->
+          <div id="test-info" class="hidden text-[11px] font-mono text-zinc-400 bg-surface-card rounded-lg p-2.5 border border-surface-border/60 flex items-center justify-between gap-2">
+            <span id="test-stressor" class="truncate"></span>
+            <span id="test-expected" class="text-accent-cyan shrink-0 font-semibold"></span>
+          </div>
+
+          <!-- Buttons -->
+          <div class="flex items-center gap-2 pt-1">
+            <button id="btn-load-test-composer" onclick="onSelectTest(); closeAllDrawers();" class="flex-grow py-2.5 px-3 rounded-lg bg-surface border border-surface-border hover:border-cyan-700 text-xs font-mono text-zinc-200 hover:text-accent-cyan transition-all cursor-pointer text-center">
+              Load into Composer
+            </button>
+            <button id="btn-test-all" onclick="runAllTests()" title="Execute all benchmark tests sequentially" class="py-2.5 px-4 rounded-lg bg-cyan-950/80 border border-cyan-800 hover:border-cyan-600 text-xs font-mono text-cyan-200 hover:text-white transition-all whitespace-nowrap flex items-center gap-1.5 shadow-sm cursor-pointer">
+              <svg id="icon-test-all" class="w-3.5 h-3.5 text-accent-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              <span id="btn-test-all-label">Test All</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── PANEL 7: ENGINE SETTINGS ─── -->
+      <div id="panel-settings" class="drawer-panel hidden space-y-4">
+        <div class="flex items-center justify-between">
+          <div class="text-[11px] font-mono text-zinc-400 uppercase tracking-wider font-semibold">
+            Advanced Engine Settings
+          </div>
+          <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-surface border border-surface-border text-zinc-400">Core Runtime</span>
+        </div>
+
+        <!-- KV Cache Quantization -->
+        <div class="bg-obsidian rounded-xl p-3.5 border border-surface-border space-y-2">
+          <div class="flex items-center justify-between text-xs font-mono">
+            <span class="text-zinc-300 font-semibold">Quantized KV Cache:</span>
+            <select id="set-kv-cache" onchange="onKvCacheChange(this.value)" class="bg-surface-card text-zinc-200 border border-surface-border rounded px-2.5 py-1 text-xs font-mono focus:outline-none focus:border-cyan-700 cursor-pointer">
+              <option value="F16" selected>FP16 (Native F16 - Default)</option>
+              <option value="Q8_0">Q8_0 (8-bit Quantized)</option>
+              <option value="Q4_0">Q4_0 (4-bit Quantized)</option>
+            </select>
+          </div>
+          <p class="text-[10px] font-mono text-zinc-500">Reduces VRAM consumption on large context windows.</p>
+        </div>
+
+        <!-- Temperature Calibration Card -->
+        <div class="bg-obsidian rounded-xl p-3.5 border border-surface-border space-y-2.5">
+          <div class="flex items-center justify-between text-xs">
+            <div class="flex items-center gap-1.5">
+              <span class="text-zinc-200 font-mono text-xs font-semibold">Temperature Calibration</span>
+              <span id="set-cal-badge" class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-cyan-950 text-accent-cyan border border-cyan-800">Calibrated</span>
+            </div>
+            <label class="flex items-center gap-1.5 cursor-pointer text-zinc-300">
+              <input id="set-calibrator" type="checkbox" checked class="rounded bg-surface-card border-surface-border text-accent-cyan focus:ring-0 h-3.5 w-3.5">
+              <span class="text-[11px] text-zinc-400 font-mono">Platt scaling</span>
+            </label>
+          </div>
+
+          <div class="flex items-center justify-between text-xs pt-0.5">
+            <div class="flex flex-col">
+              <span class="text-zinc-400 font-mono text-[11px]">Calibrated Temp (T):</span>
+              <span id="set-cal-cardinality" class="text-[10px] font-mono text-zinc-500">T₂: - | T₄: - | T₁₀: -</span>
+            </div>
+            <input id="set-calibrated-temp" type="number" min="0.01" max="50.0" step="0.0001" value="1.0000" class="w-24 bg-surface-card text-accent-cyan border border-surface-border rounded px-2 py-1 text-xs font-mono text-right font-bold focus:outline-none focus:border-cyan-700" title="Global Platt temperature">
+          </div>
+
+          <div id="set-cal-details-row" class="flex items-center justify-between text-[10px] font-mono text-zinc-500 pt-1.5 border-t border-surface-border/50">
+            <span id="set-cal-metrics">Brier: - • ECE: -</span>
+            <span id="set-cal-source" class="truncate max-w-[170px]" title="model-calibration.json">model-calibration.json</span>
+          </div>
+        </div>
+
+        <!-- Security & Debiasing -->
+        <div class="bg-obsidian rounded-xl p-3.5 border border-surface-border space-y-3">
+          <span class="text-[11px] font-mono text-zinc-300 font-semibold uppercase tracking-wider block">Security &amp; Integrity</span>
+          <label class="flex items-center gap-2 cursor-pointer text-xs text-zinc-300 hover:text-white transition-colors">
+            <input id="set-cyclic-debias" type="checkbox" class="rounded bg-surface-card border-surface-border text-accent-cyan focus:ring-0 h-3.5 w-3.5">
+            <span>Cyclic Position Debiasing</span>
+          </label>
+          <div class="flex items-center gap-2 text-xs text-zinc-300 flex-wrap pt-1 border-t border-surface-border/50">
+            <label class="flex items-center gap-2 cursor-pointer hover:text-white transition-colors">
+              <input id="set-escalate-enable" type="checkbox" onchange="onEscalateToggle()" class="rounded bg-surface-card border-surface-border text-accent-cyan focus:ring-0 h-3.5 w-3.5">
+              <span>Flag for Human Review if Confidence &lt;</span>
+            </label>
+            <div class="flex items-center gap-1">
+              <input id="set-escalate-val" type="number" min="1" max="99" step="1" value="70" class="w-14 bg-surface-card text-zinc-200 border border-surface-border rounded px-1.5 py-0.5 text-xs font-mono text-center focus:outline-none focus:border-cyan-700">
+              <span class="text-zinc-500 font-mono text-xs">%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── PANEL 8: HELP & ARCHITECTURE ─── -->
+      <div id="panel-help" class="drawer-panel hidden space-y-4">
+        <div class="flex items-center justify-between">
+          <div class="text-[11px] font-mono text-zinc-400 uppercase tracking-wider font-semibold">
+            Gevva0 Architecture &amp; Guide
+          </div>
+          <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950 text-accent-cyan border border-cyan-800 font-semibold">v0.1.0</span>
+        </div>
+
+        <div class="bg-obsidian rounded-xl p-4 border border-surface-border space-y-3">
+          <h3 class="text-xs font-mono font-bold text-white uppercase tracking-wider">Multi-Tier Decision Gateway</h3>
+          <p class="text-xs font-mono text-zinc-400 leading-relaxed">
+            Gevva0 routes decisions through specialized tiers to deliver sub-50ms logit-scored classifications without wasting compute on unnecessary autoregressive token generation:
+          </p>
+          <ul class="text-xs font-mono text-zinc-300 space-y-2 pl-2">
+            <li class="flex items-start gap-2">
+              <span class="text-purple-400 font-bold shrink-0">Tier -1:</span>
+              <span><strong>Heuristic Rules</strong> (&lt;0.05ms): Deterministic regex and keyword matching without model invocation.</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-accent-emerald font-bold shrink-0">Tier 0:</span>
+              <span><strong>Embedding Early Exit</strong> (&lt;3ms): Gemma-2 768D absorbing Markov chain for high-margin prototype classification. We plot the meaning of your words onto a high-dimensional concept map and let probability naturally flow across nearby examples into final decision buckets using a network random walk. If the flow drains decisively into a single choice with near-zero uncertainty, the system locks the answer in under 3 milliseconds without ever waking up an LLM.</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-accent-cyan font-bold shrink-0">Tier 1:</span>
+              <span><strong>Direct Logit Fast-Path</strong> (&lt;50ms): Single forward pass evaluating candidate option tokens directly from output logits. Evaluates candidate token log-probabilities directly from `llm.scores[llm.n_tokens - 1]`. Marginalizes over bare and space-prefixed tokens (`logsumexp(logit(" A"), logit("A"))`) to capture true prior distributions without running an autoregressive decoding loop.</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-accent-amber font-bold shrink-0">Tier 2:</span>
+              <span><strong>CoT Verification</strong>: Autoregressive verification scratchpad invoked only when calibrated confidence is low.</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="bg-obsidian rounded-xl p-4 border border-surface-border space-y-2.5">
+          <h3 class="text-xs font-mono font-bold text-white uppercase tracking-wider">Keyboard Shortcuts</h3>
+          <div class="space-y-1.5 text-xs font-mono">
+            <div class="flex items-center justify-between py-1 border-b border-surface-border/50">
+              <span class="text-zinc-400">Execute Inference</span>
+              <kbd class="px-2 py-0.5 rounded bg-surface border border-surface-border text-accent-cyan">Ctrl + Enter</kbd>
+            </div>
+            <div class="flex items-center justify-between py-1 border-b border-surface-border/50">
+              <span class="text-zinc-400">Paste Screenshot</span>
+              <kbd class="px-2 py-0.5 rounded bg-surface border border-surface-border text-accent-cyan">Ctrl + V</kbd>
+            </div>
+            <div class="flex items-center justify-between py-1">
+              <span class="text-zinc-400">Close Slide Drawer</span>
+              <kbd class="px-2 py-0.5 rounded bg-surface border border-surface-border text-zinc-300">Esc</kbd>
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-2">
+          <a href="/docs" target="_blank" class="w-full py-2.5 px-4 rounded-xl bg-surface hover:bg-cyan-950/40 text-accent-cyan border border-surface-border hover:border-cyan-800 text-xs font-mono transition-all flex items-center justify-center gap-2 shadow-sm">
+            <span>Explore API Endpoints Documentation</span>
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </aside>
+
+  <!-- ========================================================= -->
+  <!-- HEADER (CLEAN: LLM LOADER, VISION & ACTIVE DOT ONLY)      -->
+  <!-- ========================================================= -->
+  <header class="sticky top-0 z-20 backdrop-blur-md bg-obsidian/90 border-b border-surface-border">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-3">
+      <!-- Left: Logo & Nav -->
+      <div class="flex items-center space-x-3 shrink-0">
+        <h1 class="text-sm font-bold text-white flex items-center gap-2 font-mono">
+          <span class="text-accent-cyan tracking-tight text-base font-extrabold">Gevva0</span>
+        </h1>
+
+        <!-- Mode Nav Pills -->
+        <nav class="hidden sm:flex items-center space-x-1 ml-3 pl-3 border-l border-surface-border">
+          <a href="/ui/index.html" class="px-2.5 py-1 text-xs font-medium rounded-md bg-cyan-950/80 text-cyan-300 border border-cyan-800/80 shadow-sm flex items-center gap-1.5" title="Sub-50ms Logit Scoring Decision Gateway">
+            <span>⚡</span> Decide
+          </a>
+          <a href="/ui/chat.html" class="px-2.5 py-1 text-xs font-medium rounded-md text-zinc-400 hover:text-zinc-200 hover:bg-surface-card/60 transition-colors flex items-center gap-1.5" title="Autoregressive Text & JSON Generation">
+            <span>💬</span> Chat
+          </a>
+        </nav>
+
+        
+      </div>
+
+
+      
+
+      <!-- Right: LLM Loader Controls + Vision Checkbox + Active Dot -->
+      <div class="flex items-center gap-2 sm:gap-2.5 min-w-0">
+        <!-- Active Status Dot -->
+        <div id="health-dot" class="flex items-center gap-1.5 text-[11px] font-mono text-zinc-400 pl-4 shrink-0" title="System Status">
+          <span class="relative flex h-2 w-2"><span class="relative inline-flex rounded-full h-2 w-2 bg-zinc-600"></span></span>
+          <span class="text-zinc-500">Checking...</span>
+        </div>
+        <!-- Model Select Dropdown for Models Folder -->
+        <div class="relative min-w-0">
+          <select id="model-select" onchange="onModelOrContextChange()" class="text-xs font-mono bg-surface-card text-zinc-200 border border-surface-border rounded-lg pl-3 pr-8 py-1.5 focus:outline-none focus:border-cyan-700 cursor-pointer max-w-[190px] sm:max-w-[280px] md:max-w-[340px] truncate" title="Select LLM model from models/ folder">
+            <option value="">Loading models…</option>
+          </select>
+        </div>
+
+        <!-- Vision Checkbox -->
+        <label class="flex items-center gap-1.5 text-xs font-mono text-zinc-300 hover:text-white cursor-pointer select-none px-2 py-1 rounded-lg bg-surface-card/70 border border-surface-border transition-colors shrink-0" title="Enable multimodal vision projection (mmproj)">
+          <input type="checkbox" id="chk-vision" class="rounded bg-surface border-surface-border text-accent-cyan focus:ring-0 h-3.5 w-3.5 cursor-pointer">
+          <span class="text-[11px] font-medium">Vision</span>
+        </label>
+
+        <!-- Load / Reload Button -->
+        <button id="btn-reload" onclick="applyConfigAndReload()" title="Load or switch LLM model" class="py-1.5 px-3 rounded-lg bg-cyan-950/80 hover:bg-cyan-900 text-accent-cyan border border-cyan-800 hover:border-cyan-600 text-xs font-mono font-semibold transition-all flex items-center gap-1.5 shadow-sm cursor-pointer shrink-0">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          <span id="btn-reload-text">Load LLM</span>
+        </button>
+
+        <!-- Unload Button (dynamically displayed when LLM loaded) -->
+        <button id="btn-unload" onclick="unloadActiveLLM()" title="Unload active LLM from VRAM" class="hidden py-1.5 px-2.5 rounded-lg text-rose-300 hover:text-rose-200 border border-rose-900/60 bg-rose-950/40 hover:bg-rose-900/40 text-xs font-mono transition-colors items-center gap-1 cursor-pointer shrink-0">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          <span class="hidden md:inline">Unload</span>
+        </button>
+
+       
+
+        <!-- Hidden elements to maintain 100% ID compatibility with scripts -->
+        <span id="hdr-status-rules" class="hidden" style="display:none !important;"></span>
+        <span id="hdr-rules-file-text" class="hidden" style="display:none !important;"></span>
+        <span id="hdr-status-tier0" class="hidden" style="display:none !important;"></span>
+        <span id="hdr-status-llm" class="hidden" style="display:none !important;"></span>
+        <span id="hdr-llm-text" class="hidden" style="display:none !important;"></span>
+        <span id="vision-status-badge" class="hidden" style="display:none !important;"></span>
+        <span id="hdr-status-unloaded" class="hidden" style="display:none !important;"></span>
+        <select id="rules-select" class="hidden" style="display:none !important;"></select>
+        <button id="btn-reload-rules" class="hidden" style="display:none !important;"></button>
+        <span id="hdr-tier0-badge" class="hidden" style="display:none !important;"></span>
+        <button id="btn-hdr-tier0" class="hidden" style="display:none !important;"></button>
+        <div id="no-model-banner" class="hidden" style="display:none !important;"></div>
+        <div id="no-model-banner-text" class="hidden" style="display:none !important;"></div>
       </div>
     </div>
   </header>
 
-  <!-- Main -->
+  <!-- ========================================================= -->
+  <!-- MAIN WORKSPACE                                            -->
+  <!-- ========================================================= -->
   <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full">
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-      <!-- Left Panel: Input -->
-      <div class="lg:col-span-5 space-y-4">
+      <!-- ===================================================== -->
+      <!-- LEFT PANEL: MODERN AI CHAT INFERENCE COMPOSER         -->
+      <!-- ===================================================== -->
+      <div class="lg:col-span-6 space-y-4">
 
-        <!-- LLM & Routing Settings (Collapsible Accordion) -->
-        <details id="routing-options-accordion" class="rounded-xl border border-surface-border bg-surface-card shadow-sm group overflow-hidden">
-          <summary class="p-3.5 cursor-pointer flex items-center justify-between select-none hover:bg-surface-hover/30 transition-colors list-none">
+        <!-- Modern Chat Composer Card -->
+        <div id="chat-composer-card" class="rounded-2xl border border-surface-border bg-surface-card p-4 shadow-xl space-y-3 transition-all" ondragover="onComposerDragOver(event)" ondragleave="onComposerDragLeave(event)" ondrop="onComposerDrop(event)">
+
+          <!-- Composer Header & Quick Status -->
+          <div class="flex items-center justify-between pb-1 border-b border-surface-border/50">
             <div class="flex items-center gap-2">
-              <svg class="w-3.5 h-3.5 text-zinc-400 group-open:rotate-90 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-              </svg>
-              <span class="text-[11px] font-mono text-zinc-300 uppercase tracking-wider font-semibold">Settings</span>
-            </div>
-            <div class="flex items-center gap-2">
-              <span id="routing-summary-badge" class="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950 text-accent-cyan border border-cyan-800">Fast-Path Only</span>
-              <span class="text-[10px] text-zinc-500 font-mono group-open:hidden">expand</span>
-              <span class="text-[10px] text-zinc-500 font-mono hidden group-open:inline">collapse</span>
-            </div>
-          </summary>
-
-          <div class="p-4 pt-3 space-y-4 border-t border-surface-border/40">
-            <!-- Routing Policy -->
-            <div class="space-y-2">
-              <div class="text-[11px] font-mono text-zinc-400 uppercase tracking-wider flex items-center justify-between">
-                <span>Routing Policy</span>
-                <span id="policy-desc" class="text-[10px] text-accent-cyan font-mono">Fast-path / CoT verify</span>
+              <div class="w-6 h-6 rounded-lg bg-cyan-950/80 text-accent-cyan border border-cyan-800 flex items-center justify-center text-xs">
+                💬
               </div>
-              <div class="grid grid-cols-3 gap-2">
-                <label class="flex flex-col items-center justify-center p-2 rounded-lg bg-obsidian border border-surface-border cursor-pointer hover:border-accent-cyan/60 transition-all text-center group has-[:checked]:border-accent-cyan has-[:checked]:bg-cyan-950/20">
-                  <input type="radio" name="routing_policy" value="fast_path" checked class="sr-only" onchange="onRoutingPolicyChange(this.value)">
-                  <span class="text-xs font-semibold text-zinc-200 group-hover:text-accent-cyan group-has-[:checked]:text-accent-cyan">Fast-Path Only</span>
-                  <span class="text-[10px] font-mono text-zinc-500 group-has-[:checked]:text-cyan-400">Direct Only</span>
-                </label>
-                <label class="flex flex-col items-center justify-center p-2 rounded-lg bg-obsidian border border-surface-border cursor-pointer hover:border-accent-cyan/60 transition-all text-center group has-[:checked]:border-accent-cyan has-[:checked]:bg-cyan-950/20">
-                  <input type="radio" name="routing_policy" value="balanced" class="sr-only" onchange="onRoutingPolicyChange(this.value)">
-                  <span class="text-xs font-semibold text-zinc-200 group-hover:text-accent-cyan group-has-[:checked]:text-accent-cyan">Balanced (50%)</span>
-                  <span class="text-[10px] font-mono text-zinc-500 group-has-[:checked]:text-cyan-400">&lt; 50% CoT</span>
-                </label>
-                <label class="flex flex-col items-center justify-center p-2 rounded-lg bg-obsidian border border-surface-border cursor-pointer hover:border-accent-cyan/60 transition-all text-center group has-[:checked]:border-accent-cyan has-[:checked]:bg-cyan-950/20">
-                  <input type="radio" name="routing_policy" value="always_verify" class="sr-only" onchange="onRoutingPolicyChange(this.value)">
-                  <span class="text-xs font-semibold text-zinc-200 group-hover:text-accent-cyan group-has-[:checked]:text-accent-cyan">Always Verify</span>
-                  <span class="text-[10px] font-mono text-zinc-500 group-has-[:checked]:text-cyan-400">100% CoT</span>
-                </label>
-              </div>
+              <span class="text-xs font-mono font-bold text-white uppercase tracking-wider">Inference Query Composer</span>
             </div>
-
-            <!-- Security & Integrity -->
-            <div class="space-y-2.5 pt-2 border-t border-surface-border/60">
-              <div class="text-[11px] font-mono text-zinc-400 uppercase tracking-wider">Security &amp; Integrity</div>
-              <div class="space-y-2">
-                <label class="flex items-center gap-2 cursor-pointer text-xs text-zinc-300 hover:text-white transition-colors">
-                  <input id="set-cyclic-debias" type="checkbox" class="rounded bg-obsidian border-surface-border text-accent-cyan focus:ring-0 h-3.5 w-3.5">
-                  <span>Cyclic Position Debiasing</span>
-                </label>
-                <div class="flex items-center gap-2 text-xs text-zinc-300 flex-wrap">
-                  <label class="flex items-center gap-2 cursor-pointer hover:text-white transition-colors">
-                    <input id="set-escalate-enable" type="checkbox" onchange="onEscalateToggle()" class="rounded bg-obsidian border-surface-border text-accent-cyan focus:ring-0 h-3.5 w-3.5">
-                    <span>Flag for Human Review if Confidence &lt;</span>
-                  </label>
-                  <div class="flex items-center gap-1">
-                    <input id="set-escalate-val" type="number" min="1" max="99" step="1" value="70" class="w-14 bg-obsidian text-zinc-200 border border-surface-border rounded px-1.5 py-0.5 text-xs font-mono text-center focus:outline-none focus:border-accent-cyan">
-                    <span class="text-zinc-500 font-mono text-xs">%</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Advanced Engine Parameters (Collapsible) -->
-            <details class="pt-2 border-t border-surface-border/60 group/adv">
-              <summary class="text-[11px] font-mono text-zinc-400 hover:text-accent-cyan cursor-pointer uppercase tracking-wider flex items-center justify-between py-1 select-none list-none">
-                <span>▸ Advanced Engine Parameters</span>
-                <span class="text-[10px] text-zinc-600 font-mono group-open/adv:hidden">show</span>
-                <span class="text-[10px] text-zinc-600 font-mono hidden group-open/adv:inline">hide</span>
-              </summary>
-              <div class="mt-3 space-y-3 pl-1">
-                <div class="flex items-center justify-between text-xs">
-                  <span class="text-zinc-400 font-mono text-[11px]">Temperature (T):</span>
-                  <input id="set-temp" type="number" min="0.0" max="2.0" step="0.05" value="0.00" class="w-20 bg-obsidian text-zinc-200 border border-surface-border rounded px-2 py-1 text-xs font-mono text-right focus:outline-none focus:border-accent-cyan">
-                </div>
-                <div class="flex items-center justify-between text-xs">
-                  <span class="text-zinc-400 font-mono text-[11px]">Max Fallback Tokens:</span>
-                  <input id="set-max-tokens" type="number" min="16" max="2048" step="16" value="256" class="w-20 bg-obsidian text-zinc-200 border border-surface-border rounded px-2 py-1 text-xs font-mono text-right focus:outline-none focus:border-accent-cyan">
-                </div>
-                <div class="flex items-center justify-between text-xs">
-                  <span class="text-zinc-400 font-mono text-[11px]">Quantized KV Cache:</span>
-                  <select id="set-kv-cache" onchange="onKvCacheChange(this.value)" class="bg-obsidian text-zinc-200 border border-surface-border rounded px-2 py-1 text-xs font-mono focus:outline-none focus:border-accent-cyan cursor-pointer">
-                    <option value="F16" selected>FP16 (Native F16 - Default)</option>
-                    <option value="Q8_0">Q8_0 (8-bit Quantized)</option>
-                    <option value="Q4_0">Q4_0 (4-bit Quantized)</option>
-                  </select>
-                </div>
-                <div class="flex items-center justify-between text-xs pt-1">
-                  <span class="text-zinc-400 font-mono text-[11px]">Temperature Calibration:</span>
-                  <label class="flex items-center gap-1.5 cursor-pointer text-zinc-300">
-                    <input id="set-calibrator" type="checkbox" checked class="rounded bg-obsidian border-surface-border text-accent-cyan focus:ring-0 h-3.5 w-3.5">
-                    <span class="text-[11px] text-zinc-500 font-mono">Platt scaling</span>
-                  </label>
-                </div>
-                <div class="space-y-1.5 pt-2 border-t border-surface-border/40">
-                  <div class="flex items-center justify-between text-xs">
-                    <span class="text-zinc-400 font-mono text-[11px]">CoT Verification Prompt:</span>
-                    <button type="button" onclick="resetCotPrompt()" class="text-[10px] font-mono text-zinc-500 hover:text-accent-cyan transition-colors" title="Reset to default CoT prompt">Reset</button>
-                  </div>
-                  <textarea id="set-cot-prompt" rows="3" class="w-full bg-obsidian text-zinc-200 border border-surface-border rounded p-2 text-xs font-mono focus:outline-none focus:border-accent-cyan resize-y leading-relaxed" placeholder="Analysis: First calculate..."></textarea>
-                  <div class="flex items-center justify-between text-[10px] text-zinc-500 font-mono">
-                    <span>Prefix prepended to CoT scratchpad during verification</span>
-                    <button type="button" id="btn-save-settings" onclick="saveActiveSettings()" class="hover:text-accent-cyan transition-colors font-semibold">Save Settings</button>
-                  </div>
-                </div>
-              </div>
-            </details>
+            <button onclick="openDrawer('flow')" class="text-[10px] font-mono text-zinc-400 hover:text-accent-cyan flex items-center gap-1 transition-colors">
+              <span>Routing Pipeline</span>
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            </button>
           </div>
-        </details>
 
-        <!-- Example Tests -->
-        <details id="example-tests-accordion" class="rounded-xl border border-surface-border bg-surface-card shadow-sm group overflow-hidden">
-          <summary class="p-3.5 cursor-pointer flex items-center justify-between select-none hover:bg-surface-hover/30 transition-colors list-none">
-            <div class="flex items-center gap-2">
-              <svg class="w-3.5 h-3.5 text-zinc-400 group-open:rotate-90 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-              </svg>
-              <span class="text-[11px] font-mono text-zinc-300 uppercase tracking-wider font-semibold">Example Tests</span>
-            </div>
-            <div class="flex items-center gap-2">
-              <span id="test-count-badge" class="text-[10px] font-mono text-zinc-500"></span>
-              <span class="text-[10px] text-zinc-500 font-mono group-open:hidden">expand</span>
-              <span class="text-[10px] text-zinc-500 font-mono hidden group-open:inline">collapse</span>
-            </div>
-          </summary>
+          <!-- ATTACHMENT PREVIEW TRAY (SHOWN ABOVE THE CONTEXT TEXTBOX) -->
+          <div id="composer-attachments" class="hidden flex flex-wrap gap-2 pt-1">
+            <!-- Dynamically populated attachment chips (image, files) -->
+          </div>
 
-          <div class="p-4 pt-3 space-y-3 border-t border-surface-border/40">
-            <div class="flex items-center gap-2">
-              <div class="relative flex-grow">
-                <select id="test-select" onchange="onSelectTest()" class="w-full text-xs font-mono bg-obsidian text-zinc-200 border border-surface-border rounded-lg px-3 py-2.5 focus:outline-none focus:border-accent-cyan cursor-pointer appearance-none truncate pr-8" title="Select Example Test">
-                  <option value="">Loading tests…</option>
-                </select>
-                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-zinc-400">
-                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                </div>
+          <!-- Context Input (Chat Prompt Area) -->
+          <div class="space-y-1.5">
+            <label for="inp-context" class="block text-[10px] font-mono text-zinc-400 uppercase tracking-wider">
+              Context / Input Data
+            </label>
+            <textarea id="inp-context" rows="9" placeholder="Paste context text, question, or document query here... (Drag &amp; drop text files or paste screenshots with Ctrl+V)" class="w-full rounded-xl bg-obsidian border border-surface-border p-3.5 text-xs font-mono text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-accent-cyan resize-y leading-relaxed transition-all shadow-inner"></textarea>
+          </div>
+
+          <!-- Candidate Options Box -->
+          <div class="space-y-2 pt-1">
+            <div class="flex items-center justify-between">
+              <label for="inp-options" class="text-[10px] font-mono text-zinc-400 uppercase tracking-wider">
+                Candidate Options
+                <span class="text-zinc-600 normal-case ml-1 font-mono">A: label, B: label, ...</span>
+              </label>
+              <!-- Quick Preset Pills -->
+              <div class="flex items-center gap-1">
+                <button type="button" onclick="setOptionsPreset('binary')" class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-obsidian text-zinc-400 hover:text-accent-cyan border border-surface-border hover:border-cyan-800 transition-colors" title="Set binary Yes/No options">Yes/No</button>
+                <button type="button" onclick="setOptionsPreset('threat')" class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-obsidian text-zinc-400 hover:text-accent-cyan border border-surface-border hover:border-cyan-800 transition-colors" title="Set security threat level options">Threat</button>
+                <button type="button" onclick="setOptionsPreset('intent')" class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-obsidian text-zinc-400 hover:text-accent-cyan border border-surface-border hover:border-cyan-800 transition-colors" title="Set customer service intent options">Intent</button>
               </div>
-              <button id="btn-test-all" onclick="runAllTests()" title="Execute all benchmark tests sequentially" class="px-3 py-2.5 rounded-lg bg-obsidian border border-surface-border hover:border-accent-cyan text-xs font-mono text-zinc-200 hover:text-accent-cyan transition-all whitespace-nowrap flex items-center gap-1.5 shadow-sm">
-                <svg id="icon-test-all" class="w-3.5 h-3.5 text-accent-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                <span id="btn-test-all-label">Test All</span>
+            </div>
+            <textarea id="inp-options" rows="6" placeholder="A: Billing Inquiry&#10;B: Technical Bug&#10;C: Churn Risk" class="w-full rounded-xl bg-obsidian border border-surface-border p-3 text-xs font-mono text-zinc-200 resize-y leading-relaxed focus:outline-none focus:border-accent-cyan shadow-inner"></textarea>
+          </div>
+
+          <!-- Bottom Action Toolbar -->
+          <div class="flex items-center justify-between pt-2 border-t border-surface-border/50">
+            <!-- Left attachment triggers -->
+            <div class="flex items-center gap-1.5">
+              <!-- Attach Image (Camera icon) -->
+              <input type="file" id="file-image-input" accept="image/*" class="hidden" onchange="onFileSelected(this.files)">
+              <button type="button" onclick="document.getElementById('file-image-input').click()" class="p-2 rounded-lg bg-obsidian text-zinc-400 hover:text-accent-cyan hover:bg-surface border border-surface-border hover:border-cyan-800 transition-all cursor-pointer flex items-center gap-1.5 text-xs font-mono" title="Attach Image for mmproj Vision (Ctrl+V supported)">
+                <svg class="w-4 h-4 text-accent-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                <span class="hidden sm:inline text-[11px]">Image</span>
+              </button>
+
+              <!-- Attach Text Document / File (Paperclip icon) -->
+              <input type="file" id="file-doc-input" accept=".txt,.json,.csv,.md,.py,.log,text/*" class="hidden" onchange="onDocFileSelected(this.files)">
+              <button type="button" onclick="document.getElementById('file-doc-input').click()" class="p-2 rounded-lg bg-obsidian text-zinc-400 hover:text-accent-cyan hover:bg-surface border border-surface-border hover:border-cyan-800 transition-all cursor-pointer flex items-center gap-1.5 text-xs font-mono" title="Attach document or dataset (.txt, .json, .csv, .md)">
+                <svg class="w-4 h-4 text-zinc-400 hover:text-accent-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+                </svg>
+                <span class="hidden sm:inline text-[11px]">File</span>
+              </button>
+
+              <!-- Clear composer button -->
+              <button type="button" onclick="clearComposer()" class="p-2 rounded-lg text-zinc-500 hover:text-rose-400 hover:bg-rose-950/30 transition-colors cursor-pointer text-xs font-mono" title="Clear Context &amp; Attachments">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
               </button>
             </div>
-            <div id="test-info" class="hidden text-[11px] font-mono text-zinc-400 bg-obsidian/70 rounded-lg p-2.5 border border-surface-border/60 flex items-center justify-between gap-2">
-              <span id="test-stressor" class="truncate"></span>
-              <span id="test-expected" class="text-accent-cyan shrink-0 font-semibold"></span>
-            </div>
-          </div>
-        </details>
 
-        <!-- Visual Input / Multimodal Projector (mmproj) -->
-        <div id="vision-card" class="rounded-xl border border-surface-border bg-surface-card p-4 space-y-3">
-          <div class="flex items-center justify-between">
+            <!-- Right submit button -->
             <div class="flex items-center gap-2">
-              <svg class="w-4 h-4 text-accent-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-              <label class="text-[11px] font-mono text-zinc-300 uppercase tracking-wider font-semibold">Visual Image Query (Zero-Chunking OCR)</label>
-            </div>
-            <span id="vision-card-badge" class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950 text-accent-emerald border border-emerald-800">Vision</span>
-          </div>
-
-
-          <!-- Dropzone -->
-          <div id="image-dropzone" onclick="document.getElementById('file-image-input').click()" ondragover="onImageDragOver(event)" ondragleave="onImageDragLeave(event)" ondrop="onImageDrop(event)" class="border-2 border-dashed border-surface-border hover:border-accent-cyan/60 rounded-lg p-3 text-center cursor-pointer transition-all bg-obsidian/50 group">
-            <input type="file" id="file-image-input" accept="image/*" class="hidden" onchange="onFileSelected(this.files)">
-            <div id="dropzone-empty" class="py-2 space-y-1">
-              <svg class="w-6 h-6 mx-auto text-zinc-500 group-hover:text-accent-cyan transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-              <p class="text-[11px] font-mono text-zinc-400"><span class="text-accent-cyan font-semibold">Click to upload</span> or drag image here</p>
-              <p class="text-[10px] font-mono text-zinc-500">Supports clipboard paste (<span class="text-zinc-400">Ctrl+V</span>)</p>
-            </div>
-            <!-- Preview Container -->
-            <div id="dropzone-preview" class="hidden flex items-center justify-between gap-3 p-1">
-              <div class="flex items-center gap-2.5 overflow-hidden">
-                <img id="img-preview" src="" alt="Query image" class="w-16 h-12 object-cover rounded border border-surface-border shrink-0 shadow-sm">
-                <div class="text-left truncate">
-                  <div id="img-name" class="text-xs font-mono text-zinc-200 truncate">image.png</div>
-                  <div id="img-meta" class="text-[10px] font-mono text-accent-cyan">Attached to decision query</div>
-                </div>
-              </div>
-              <button type="button" onclick="clearSelectedImage(event)" class="p-1.5 rounded-lg bg-surface hover:bg-rose-950/50 text-zinc-400 hover:text-accent-rose border border-surface-border hover:border-rose-800 transition-colors shrink-0" title="Remove image">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+              <span class="text-[10px] font-mono text-zinc-500 hidden xl:inline">Ctrl+Enter</span>
+              <button id="btn-submit" onclick="submitDecision()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-accent-cyan to-accent-emerald text-black font-semibold text-xs font-mono tracking-wider uppercase hover:opacity-95 active:scale-95 transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                <span>G0</span>
               </button>
             </div>
           </div>
         </div>
 
-        <!-- Context -->
-        <div class="rounded-xl border border-surface-border bg-surface-card p-4 space-y-3">
-          <label class="block text-[11px] font-mono text-zinc-400 uppercase tracking-wider">Context / Input Data</label>
-          <textarea id="inp-context" rows="6" placeholder="Paste the text you want classified..." class="w-full rounded-lg bg-obsidian border border-surface-border p-3 text-xs font-mono text-zinc-200 resize-y leading-relaxed"></textarea>
+        <!-- Hidden legacy dropzone containers kept so scripts never encounter null pointer exceptions -->
+        <div id="image-dropzone" class="hidden">
+          <div id="dropzone-empty" class="hidden"></div>
+          <div id="dropzone-preview" class="hidden">
+            <img id="img-preview" src="" alt="Query image" class="hidden">
+            <span id="img-name" class="hidden"></span>
+          </div>
         </div>
-
-        <!-- Options -->
-        <div class="rounded-xl border border-surface-border bg-surface-card p-4 space-y-3">
-          <label class="block text-[11px] font-mono text-zinc-400 uppercase tracking-wider">Candidate Options
-            <span class="text-zinc-600 normal-case ml-1">A: label, B: label, ...</span>
-          </label>
-          <textarea id="inp-options" rows="3" placeholder="A: Billing Inquiry, B: Technical Bug, C: Churn Risk" class="w-full rounded-lg bg-obsidian border border-surface-border p-3 text-xs font-mono text-zinc-200 resize-y leading-relaxed"></textarea>
-        </div>
-
-        <!-- Submit -->
-        <button id="btn-submit" onclick="submitDecision()" class="w-full px-5 py-3 rounded-xl bg-gradient-to-r from-accent-cyan to-accent-emerald text-black font-semibold text-xs tracking-wider uppercase hover:opacity-90 transition-all shadow-lg flex items-center justify-center gap-2">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-          Execute Inference
-        </button>
       </div>
 
       <!-- Right Panel: Results -->
-      <div class="lg:col-span-7 space-y-4">
+      <div class="lg:col-span-6 space-y-4">
 
         <!-- Results Card -->
         <div class="rounded-xl border border-surface-border bg-surface-card p-5 space-y-4">
@@ -357,7 +1095,23 @@
 
           <!-- Decision outcome -->
           <div id="res-decision" class="hidden space-y-4">
+            <!-- Escalation from Tier 0 notification if applicable -->
+            <div id="res-tier0-escalation" class="hidden p-3 rounded-lg border border-amber-500/40 bg-amber-950/20 text-xs font-mono space-y-1">
+              <div class="flex items-center justify-between">
+                <span class="text-accent-amber font-bold flex items-center gap-1.5">
+                  <svg class="w-3.5 h-3.5 text-accent-amber" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+                  Escalated from Tier 0 Early Exit
+                </span>
+                <span id="res-tier0-reason" class="text-[10px] px-1.5 py-0.5 rounded bg-amber-900/50 text-amber-200 border border-amber-700/60 font-semibold"></span>
+              </div>
+              <div id="res-tier0-metrics" class="text-[11px] text-zinc-400"></div>
+            </div>
+
             <div class="p-4 rounded-lg bg-obsidian border border-surface-border space-y-3">
+              <div class="flex justify-between items-center">
+                <span class="text-[11px] text-zinc-400 font-mono">Execution Tier</span>
+                <span id="res-tier-badge" class="text-xs font-bold font-mono px-2 py-0.5 rounded bg-emerald-950 text-accent-emerald border border-emerald-800">⚡ Tier 0: Early Exit</span>
+              </div>
               <div class="flex justify-between items-center">
                 <span class="text-[11px] text-zinc-400 font-mono">Decision</span>
                 <span id="res-label" class="text-sm font-bold font-mono text-white"></span>
@@ -443,12 +1197,432 @@
   <!-- Footer -->
   <footer class="border-t border-surface-border bg-obsidian/90 py-4 mt-6">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between text-[10px] text-zinc-600 font-mono">
-      <span>Project Gevva0 • Gemma 4 26B-A4B MoE</span>
+      <span id="footer-model-label">Gevva0: Calibrated Decision Engine</span>
       <span>Local inference • No API egress</span>
     </div>
   </footer>
 
 <script>
+// ─── Drawer System (Slide-out Menus) ─────────────────────────
+let activeDrawerId = null;
+
+const DRAWER_CONFIG = {
+  'flow': {
+    title: 'Flow of Inference: Routing',
+    subtitle: 'Multi-Tier Pipeline & CoT Thresholds',
+    icon: '<svg class="w-4 h-4 text-accent-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>'
+  },
+  'tier-1': {
+    title: 'Tier -1 Heuristic Rules',
+    subtitle: 'Zero-Compute Gateway (< 0.05ms)',
+    icon: '<svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>'
+  },
+  'tier0': {
+    title: 'Tier 0 Embedding Router',
+    subtitle: 'Gemma-2 768D Absorbing Markov Chain (< 3ms)',
+    icon: '<svg class="w-4 h-4 text-accent-emerald" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/></svg>'
+  },
+  'tier1': {
+    title: 'Tier 1 Direct Logits',
+    subtitle: 'Fast-Path Logit Scoring (< 50ms)',
+    icon: '<svg class="w-4 h-4 text-accent-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>'
+  },
+  'tier2': {
+    title: 'Tier 2 CoT Verification',
+    subtitle: 'Deep Reasoning Verification Scratchpad',
+    icon: '<svg class="w-4 h-4 text-accent-amber" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>'
+  },
+  'tests': {
+    title: 'Benchmark Tests',
+    subtitle: 'Stress Test Suite & Runner',
+    icon: '<svg class="w-4 h-4 text-accent-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>'
+  },
+  'settings': {
+    title: 'Advanced Engine Settings',
+    subtitle: 'KV-Cache, Calibration & Debiasing',
+    icon: '<svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>'
+  },
+  'help': {
+    title: 'Architecture & Guide',
+    subtitle: 'Sub-50ms Logit Decision Gateway',
+    icon: '<svg class="w-4 h-4 text-accent-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
+  }
+};
+
+function openDrawer(panelId) {
+  if (!panelId) return;
+  activeDrawerId = panelId;
+
+  // Set header icon, title, subtitle
+  const meta = DRAWER_CONFIG[panelId] || { title: 'Settings', subtitle: '', icon: '⚙' };
+  const titleEl = document.getElementById('drawer-title');
+  const subEl = document.getElementById('drawer-subtitle');
+  const iconEl = document.getElementById('drawer-icon-box');
+  if (titleEl) titleEl.textContent = meta.title;
+  if (subEl) subEl.textContent = meta.subtitle;
+  if (iconEl) iconEl.innerHTML = meta.icon;
+
+  // Toggle visible panel
+  document.querySelectorAll('.drawer-panel').forEach(p => p.classList.add('hidden'));
+  const targetPanel = document.getElementById(`panel-${panelId}`);
+  if (targetPanel) targetPanel.classList.remove('hidden');
+
+  // Highlight corresponding rail button
+  document.querySelectorAll('[id^="btn-rail-"]').forEach(btn => {
+    btn.classList.remove('rail-btn-active');
+  });
+  const railBtn = document.getElementById(`btn-rail-${panelId}`);
+  if (railBtn) railBtn.classList.add('rail-btn-active');
+
+  // Open drawer & show backdrop
+  const drawer = document.getElementById('side-drawer');
+  const backdrop = document.getElementById('drawer-backdrop');
+  if (drawer) drawer.classList.add('drawer-open');
+  if (backdrop) backdrop.classList.remove('hidden');
+
+  if (panelId === 'flow') {
+    updateFlowPipelineUI();
+  }
+}
+
+function closeAllDrawers() {
+  activeDrawerId = null;
+  const drawer = document.getElementById('side-drawer');
+  const backdrop = document.getElementById('drawer-backdrop');
+  if (drawer) drawer.classList.remove('drawer-open');
+  if (backdrop) backdrop.classList.add('hidden');
+
+  document.querySelectorAll('[id^="btn-rail-"]').forEach(btn => {
+    btn.classList.remove('rail-btn-active');
+  });
+}
+
+function toggleDrawer(panelId) {
+  if (activeDrawerId === panelId) {
+    closeAllDrawers();
+  } else {
+    openDrawer(panelId);
+  }
+}
+
+// Close drawer on Escape key
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    closeAllDrawers();
+  }
+});
+
+// ─── Flow of Inference Live Pipeline Visualizer ─────────────
+function onTier1ToggleChange(isEnabled) {
+  const badge = document.getElementById('tier-1-toggle-status');
+  if (badge) {
+    if (isEnabled) {
+      badge.textContent = 'Active';
+      badge.className = 'text-[10px] font-mono px-2 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-800 font-semibold';
+    } else {
+      badge.textContent = 'Bypassed';
+      badge.className = 'text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-800 text-zinc-500 border border-zinc-700 font-semibold';
+    }
+  }
+  updateFlowPipelineUI();
+}
+
+function updateFlowPipelineUI() {
+  const policyRadios = document.getElementsByName('routing_policy');
+  let selectedPolicy = 'early_exit';
+  for (const r of policyRadios) {
+    if (r.checked) { selectedPolicy = r.value; break; }
+  }
+
+  // 1. Tier -1 (Enabled vs Bypassed)
+  const chkRules = document.getElementById('chk-enable-tier-1');
+  const isRulesEnabled = chkRules ? chkRules.checked : true;
+  const nodeTier1Rule = document.getElementById('flow-node-tier-1');
+  const dotTier1Rule = document.getElementById('flow-tier-1-dot');
+  const titleTier1Rule = document.getElementById('flow-tier-1-title');
+  const badgeTier1Rule = document.getElementById('flow-tier-1-badge');
+  const fileTier1 = document.getElementById('flow-tier-1-file');
+
+  if (isRulesEnabled) {
+    if (nodeTier1Rule) {
+      nodeTier1Rule.className = 'rounded-xl border border-purple-500/80 bg-obsidian p-3.5 space-y-2 transition-all shadow-[0_0_15px_rgba(168,85,247,0.18)]';
+    }
+    if (dotTier1Rule) dotTier1Rule.className = 'w-2 h-2 rounded-full bg-purple-400 animate-pulse';
+    if (titleTier1Rule) titleTier1Rule.className = 'text-xs font-mono font-bold text-purple-300';
+    if (badgeTier1Rule) {
+      badgeTier1Rule.textContent = '< 0.05ms';
+      badgeTier1Rule.className = 'text-[10px] font-mono px-1.5 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-800 font-semibold';
+    }
+    if (fileTier1 && currentRulesData) {
+      const count = (currentRulesData.rules || []).length;
+      fileTier1.textContent = `${currentRulesData.active_file || 'default.json'} (${count} rules)`;
+    }
+  } else {
+    if (nodeTier1Rule) {
+      nodeTier1Rule.className = 'rounded-xl border border-surface-border/60 bg-obsidian/60 p-3.5 space-y-2 transition-all tier-node-bypassed';
+    }
+    if (dotTier1Rule) dotTier1Rule.className = 'w-2 h-2 rounded-full bg-zinc-600';
+    if (titleTier1Rule) titleTier1Rule.className = 'text-xs font-mono font-bold text-zinc-400';
+    if (badgeTier1Rule) {
+      badgeTier1Rule.textContent = 'Bypassed / Disabled';
+      badgeTier1Rule.className = 'text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-500 border border-zinc-700 font-semibold';
+    }
+    if (fileTier1) {
+      fileTier1.textContent = 'Rules Gateway Bypassed';
+    }
+  }
+
+  // 2. Tier 0 (Active if early_exit AND isTier0Loaded)
+  const nodeTier0 = document.getElementById('flow-node-tier0');
+  const dotTier0 = document.getElementById('flow-tier0-dot');
+  const titleTier0 = document.getElementById('flow-tier0-title');
+  const badgeTier0 = document.getElementById('flow-tier0-status-badge');
+  const modelTier0 = document.getElementById('flow-tier0-model');
+
+  if (selectedPolicy === 'early_exit') {
+    if (isTier0Loaded) {
+      if (nodeTier0) nodeTier0.className = 'rounded-xl border border-emerald-500/80 bg-obsidian p-3.5 space-y-2 transition-all shadow-[0_0_15px_rgba(16,185,129,0.2)]';
+      if (dotTier0) dotTier0.className = 'w-2 h-2 rounded-full bg-accent-emerald animate-pulse';
+      if (titleTier0) titleTier0.className = 'text-xs font-mono font-bold text-accent-emerald';
+      const t0Name = currentTier0Details.model_name || 'Embedding';
+      const t0Dim = currentTier0Details.dimension ? `${currentTier0Details.dimension}D` : '768D';
+      const t0Label = `${t0Name} ${t0Dim}`;
+
+      if (badgeTier0) {
+        badgeTier0.textContent = 'Active (< 3ms)';
+        badgeTier0.className = 'text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-950 text-accent-emerald border border-emerald-800 font-semibold';
+      }
+      if (modelTier0) modelTier0.textContent = `${t0Label} (RTX Ready)`;
+    } else {
+      const t0Name = currentTier0Details.model_name || 'Embedding';
+      const t0Dim = currentTier0Details.dimension ? `${currentTier0Details.dimension}D` : '768D';
+      const t0Label = `${t0Name} ${t0Dim}`;
+
+      if (nodeTier0) nodeTier0.className = 'rounded-xl border border-amber-800/70 bg-obsidian p-3.5 space-y-2 transition-all opacity-80';
+      if (dotTier0) dotTier0.className = 'w-2 h-2 rounded-full bg-amber-400';
+      if (titleTier0) titleTier0.className = 'text-xs font-mono font-bold text-amber-300';
+      if (badgeTier0) {
+        badgeTier0.textContent = 'Unloaded (Skipped)';
+        badgeTier0.className = 'text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-800 font-semibold';
+      }
+      if (modelTier0) modelTier0.textContent = `${t0Label} (Unloaded)`;
+    }
+  } else {
+    const t0Name = currentTier0Details.model_name || 'Embedding';
+    const t0Dim = currentTier0Details.dimension ? `${currentTier0Details.dimension}D` : '768D';
+    const t0Label = `${t0Name} ${t0Dim}`;
+
+    // Bypassed by policy
+    if (nodeTier0) nodeTier0.className = 'rounded-xl border border-surface-border/60 bg-obsidian/60 p-3.5 space-y-2 transition-all tier-node-bypassed';
+    if (dotTier0) dotTier0.className = 'w-2 h-2 rounded-full bg-zinc-600';
+    if (titleTier0) titleTier0.className = 'text-xs font-mono font-bold text-zinc-400';
+    if (badgeTier0) {
+      badgeTier0.textContent = 'Bypassed by Policy';
+      badgeTier0.className = 'text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-500 border border-zinc-700 font-semibold';
+    }
+    if (modelTier0) modelTier0.textContent = `${t0Label} (Bypassed)`;
+  }
+
+  // 3. Tier 1 (Active for early_exit, fast_path, balanced)
+  const nodeTier1LLM = document.getElementById('flow-node-tier1');
+  const dotTier1 = document.getElementById('flow-tier1-dot');
+  const modelTier1 = document.getElementById('flow-tier1-model');
+  const isTier1Active = selectedPolicy !== 'always_verify';
+
+  const activeModelObj = availableModels.find(m => m.path === currentActiveModel || m.filename === currentActiveModel);
+  const activeModelName = activeModelObj ? (activeModelObj.label || activeModelObj.friendly_name) : (currentActiveModel ? currentActiveModel.split('/').pop().replace(/\.gguf$/i, '') : 'No LLM Loaded');
+
+  if (isTier1Active) {
+    if (nodeTier1LLM) nodeTier1LLM.className = 'rounded-xl border border-accent-cyan/80 bg-obsidian p-3.5 space-y-2 transition-all shadow-[0_0_15px_rgba(6,182,212,0.2)]';
+    if (dotTier1) dotTier1.className = 'w-2 h-2 rounded-full bg-accent-cyan animate-pulse';
+    if (modelTier1) modelTier1.textContent = activeModelName;
+  } else {
+    if (nodeTier1LLM) nodeTier1LLM.className = 'rounded-xl border border-surface-border/60 bg-obsidian/60 p-3.5 space-y-2 transition-all tier-node-bypassed';
+    if (dotTier1) dotTier1.className = 'w-2 h-2 rounded-full bg-zinc-600';
+    if (modelTier1) modelTier1.textContent = `${activeModelName} (Bypassed)`;
+  }
+
+  // CoT Threshold Slider Sync
+  const cotValInput = document.getElementById('set-cot-thresh-input');
+  const cotSlider = document.getElementById('flow-cot-thresh-slider');
+  const cotDisplay = document.getElementById('flow-cot-val-display');
+  const threshVal = cotValInput ? parseInt(cotValInput.value, 10) || 50 : 50;
+  if (cotSlider) cotSlider.value = threshVal;
+  if (cotDisplay) cotDisplay.textContent = `${threshVal}%`;
+
+  // 4. Tier 2 (Active for always_verify, balanced, early_exit)
+  const nodeTier2 = document.getElementById('flow-node-tier2');
+  const dotTier2 = document.getElementById('flow-tier2-dot');
+  const modelTier2 = document.getElementById('flow-tier2-model');
+  const isTier2Active = selectedPolicy !== 'fast_path';
+
+  if (isTier2Active) {
+    if (nodeTier2) nodeTier2.className = 'rounded-xl border border-accent-amber/80 bg-obsidian p-3.5 space-y-2 transition-all shadow-[0_0_15px_rgba(245,158,11,0.2)]';
+    if (dotTier2) dotTier2.className = 'w-2 h-2 rounded-full bg-accent-amber animate-pulse';
+    if (modelTier2) modelTier2.textContent = activeModelName;
+  } else {
+    if (nodeTier2) nodeTier2.className = 'rounded-xl border border-surface-border/60 bg-obsidian/60 p-3.5 space-y-2 transition-all tier-node-bypassed';
+    if (dotTier2) dotTier2.className = 'w-2 h-2 rounded-full bg-zinc-600';
+    if (modelTier2) modelTier2.textContent = `${activeModelName} (Bypassed)`;
+  }
+}
+
+function onCotSliderChange(val) {
+  const cotInput = document.getElementById('set-cot-thresh-input');
+  if (cotInput) cotInput.value = val;
+  const cotDisplay = document.getElementById('flow-cot-val-display');
+  if (cotDisplay) cotDisplay.textContent = `${val}%`;
+  onCotThresholdInputChange(val);
+}
+
+// ─── Header Badges Updater ─────────────────────────────────
+function updateHeaderBadges(healthData) {
+  // Header maintains a clean, minimal design per specification:
+  // Only the LLM dropdown, Vision checkbox, and active status dot are visible in the header.
+  // Tier 0, Tier -1 rules, and other tier-specific configurations remain inside their slide-out drawers.
+}
+
+// ─── Modern AI Chat Composer & Attachments ─────────────────
+let attachedDoc = null; // { name: string, size: string, content: string }
+
+function onDocFileSelected(files) {
+  if (!files || files.length === 0) return;
+  const file = files[0];
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const text = e.target.result;
+    attachedDoc = {
+      name: file.name,
+      size: formatFileSize(file.size),
+      content: text
+    };
+    const contextInput = document.getElementById('inp-context');
+    if (contextInput) {
+      if (!contextInput.value.trim()) {
+        contextInput.value = text;
+      } else {
+        contextInput.value = contextInput.value + '\n\n' + text;
+      }
+    }
+    renderAttachments();
+  };
+  reader.readAsText(file);
+}
+
+function clearSelectedDoc(e) {
+  if (e) e.stopPropagation();
+  attachedDoc = null;
+  const fileInput = document.getElementById('file-doc-input');
+  if (fileInput) fileInput.value = '';
+  renderAttachments();
+}
+
+function renderAttachments() {
+  const container = document.getElementById('composer-attachments');
+  if (!container) return;
+
+  const chips = [];
+
+  if (selectedImageBase64) {
+    chips.push(`
+      <div class="flex items-center gap-2 bg-obsidian border border-cyan-800/80 rounded-xl p-1.5 pr-2.5 text-xs font-mono shadow-md">
+        <img src="${selectedImageBase64}" class="w-8 h-8 object-cover rounded-lg border border-surface-border">
+        <div class="truncate max-w-[150px]">
+          <span class="text-zinc-200 font-semibold truncate block">${escapeHtml(selectedImageName || 'image.png')}</span>
+          <span class="text-[10px] text-accent-cyan font-mono">Image attached</span>
+        </div>
+        <button type="button" onclick="clearSelectedImage(event)" class="ml-1 p-1 rounded-md hover:bg-rose-950/60 text-zinc-400 hover:text-accent-rose transition-colors cursor-pointer" title="Remove image">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+    `);
+  }
+
+  if (attachedDoc) {
+    chips.push(`
+      <div class="flex items-center gap-2 bg-obsidian border border-surface-border rounded-xl p-1.5 pr-2.5 text-xs font-mono shadow-md">
+        <div class="w-8 h-8 rounded-lg bg-surface flex items-center justify-center text-accent-cyan shrink-0">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        </div>
+        <div class="truncate max-w-[150px]">
+          <span class="text-zinc-200 font-semibold truncate block">${escapeHtml(attachedDoc.name)}</span>
+          <span class="text-[10px] text-zinc-500 font-mono">${escapeHtml(attachedDoc.size)}</span>
+        </div>
+        <button type="button" onclick="clearSelectedDoc(event)" class="ml-1 p-1 rounded-md hover:bg-rose-950/60 text-zinc-400 hover:text-accent-rose transition-colors cursor-pointer" title="Remove document">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+    `);
+  }
+
+  if (chips.length > 0) {
+    container.innerHTML = chips.join('');
+    container.classList.remove('hidden');
+  } else {
+    container.innerHTML = '';
+    container.classList.add('hidden');
+  }
+}
+
+function clearComposer() {
+  const inpContext = document.getElementById('inp-context');
+  const inpOptions = document.getElementById('inp-options');
+  if (inpContext) inpContext.value = '';
+  if (inpOptions) inpOptions.value = '';
+  clearSelectedImage();
+  clearSelectedDoc();
+}
+
+function setOptionsPreset(type) {
+  const inpOptions = document.getElementById('inp-options');
+  if (!inpOptions) return;
+  if (type === 'binary') {
+    inpOptions.value = 'A: Yes\nB: No';
+  } else if (type === 'threat') {
+    inpOptions.value = 'A: Safe Informational Query\nB: Suspicious / Phishing Threat\nC: Adversarial Injection / Harmful Request';
+  } else if (type === 'intent') {
+    inpOptions.value = 'A: Technical Bug / Defect\nB: Billing / Fee Reversal Inquiry\nC: Churn Risk / Account Cancellation\nD: Product Feature Request';
+  }
+}
+
+function formatFileSize(bytes) {
+  if (!bytes || bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+}
+
+function onComposerDragOver(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  const card = document.getElementById('chat-composer-card');
+  if (card) card.classList.add('composer-dropzone-active');
+}
+
+function onComposerDragLeave(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  const card = document.getElementById('chat-composer-card');
+  if (card) card.classList.remove('composer-dropzone-active');
+}
+
+function onComposerDrop(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  const card = document.getElementById('chat-composer-card');
+  if (card) card.classList.remove('composer-dropzone-active');
+
+  if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+    const file = e.dataTransfer.files[0];
+    if (file.type.startsWith('image/')) {
+      onFileSelected([file]);
+    } else {
+      onDocFileSelected([file]);
+    }
+  }
+}
+
 // ─── Example Tests & Presets ──────────────────────────────
 let exampleTests = [];
 let currentSelectedTest = null;
@@ -600,6 +1774,7 @@ function loadTestByIndex(idx) {
   if (!test) return Promise.resolve(null);
 
   currentSelectedTest = test;
+  clearSelectedDoc();
 
   // Format context: if test.question exists, append it clearly
   let contextVal = test.context || '';
@@ -718,6 +1893,7 @@ function setImagePreview(dataUrl, name) {
 
   hideEl('dropzone-empty');
   showEl('dropzone-preview');
+  renderAttachments();
 }
 
 function clearSelectedImage(e) {
@@ -732,6 +1908,7 @@ function clearSelectedImage(e) {
 
   hideEl('dropzone-preview');
   showEl('dropzone-empty');
+  renderAttachments();
 }
 
 // Global Clipboard Paste Listener (Ctrl+V)
@@ -767,10 +1944,114 @@ window.addEventListener('paste', (e) => {
 // ─── LLM & Routing Settings ─────────────────────────────────
 let cachedBalancedThreshold = 0.50;
 
+function onCotThresholdInputChange(val) {
+  let num = parseInt(val, 10);
+  if (isNaN(num)) num = 50;
+  num = Math.max(1, Math.min(99, num));
+  cachedBalancedThreshold = num / 100.0;
+  const titleEl = document.getElementById('lbl-balanced-title');
+  const descEl = document.getElementById('lbl-balanced-desc');
+  if (titleEl) titleEl.textContent = `⚖️ Balanced Tier 1 to Tier 2`;
+  if (descEl) descEl.textContent = `Tier 2 iff < ${num}% Confidence`;
+
+  // Sync Flow connector slider and display
+  const flowSlider = document.getElementById('flow-cot-thresh-slider');
+  const flowDisplay = document.getElementById('flow-cot-val-display');
+  if (flowSlider && flowSlider.value != num) flowSlider.value = num;
+  if (flowDisplay) flowDisplay.textContent = `${num}%`;
+
+  const policyRadios = document.getElementsByName('routing_policy');
+  let selectedPolicy = 'balanced';
+  for (const r of policyRadios) {
+    if (r.checked) { selectedPolicy = r.value; break; }
+  }
+  if (selectedPolicy === 'balanced') {
+    onRoutingPolicyChange('balanced');
+  } else {
+    updateFlowPipelineUI();
+  }
+}
+
+function updateCalibrationSettingsUI(info) {
+  if (!info) return;
+
+  const badge = document.getElementById('set-cal-badge');
+  const tempInput = document.getElementById('set-calibrated-temp');
+  const cardinEl = document.getElementById('set-cal-cardinality');
+  const metricsEl = document.getElementById('set-cal-metrics');
+  const sourceEl = document.getElementById('set-cal-source');
+  const cotInput = document.getElementById('set-cot-thresh-input');
+
+  const isCal = !!info.has_calibration || !!info.calibrated;
+  const temp = info.temperature !== undefined ? info.temperature : info.calibrated_temperature;
+  const cotThresh = info.cot_threshold;
+  const temps = info.temperatures || info.calibrated_temperatures || {};
+  const meta = info.metadata || info.calibration_metadata || {};
+  const src = info.calibration_path || (isCal ? 'model-calibration.json' : 'No calibration profile');
+
+  // 1. Badge
+  if (badge) {
+    if (isCal) {
+      badge.textContent = 'Calibrated';
+      badge.className = 'text-[10px] font-mono px-1.5 py-0.2 rounded bg-cyan-950 text-accent-cyan border border-cyan-800';
+    } else {
+      badge.textContent = 'Uncalibrated';
+      badge.className = 'text-[10px] font-mono px-1.5 py-0.2 rounded bg-amber-950/60 text-accent-amber border border-amber-800';
+    }
+  }
+
+  // 2. Calibrated Temperature Textbox
+  if (tempInput && temp !== undefined && temp !== null) {
+    tempInput.value = Number(temp).toFixed(4);
+  }
+
+  // 3. CoT Threshold Textbox (loaded from calibration json)
+  if (cotThresh !== undefined && cotThresh !== null) {
+    const pct = Math.round(Number(cotThresh) * 100);
+    if (cotInput) cotInput.value = pct;
+    onCotThresholdInputChange(pct);
+  }
+
+  // 4. Cardinality Temperatures
+  if (cardinEl) {
+    const entries = Object.entries(temps);
+    if (entries.length > 0) {
+      cardinEl.textContent = entries.map(([k, v]) => `T${k}: ${Number(v).toFixed(2)}`).join(' | ');
+      cardinEl.title = `Cardinality Scaling Temperatures: ${entries.map(([k, v]) => `T_${k}=${v}`).join(', ')}`;
+    } else {
+      cardinEl.textContent = isCal && temp ? `Global T: ${Number(temp).toFixed(2)}` : 'None (Uncalibrated)';
+      cardinEl.title = '';
+    }
+  }
+
+  // 5. Metrics (Brier, ECE)
+  if (metricsEl) {
+    const brier = meta.calibrated_brier !== undefined ? Number(meta.calibrated_brier).toFixed(4) : null;
+    const ece = meta.calibrated_ece !== undefined ? Number(meta.calibrated_ece).toFixed(4) : null;
+    if (brier !== null || ece !== null) {
+      metricsEl.textContent = `Brier: ${brier || '-'} • ECE: ${ece || '-'}`;
+    } else {
+      metricsEl.textContent = isCal ? 'Brier: Fitted' : 'No calibration battery fitted';
+    }
+  }
+
+  // 6. Source path
+  if (sourceEl) {
+    sourceEl.textContent = src.split('/').pop();
+    sourceEl.title = src;
+  }
+}
+
 function onRoutingPolicyChange(policy) {
   const descEl = document.getElementById('policy-desc');
   const badgeEl = document.getElementById('routing-summary-badge');
-  if (policy === 'fast_path') {
+  if (policy === 'early_exit') {
+    if (descEl) descEl.textContent = 'Tier 0 Markov exit (<3ms), fallback to Tier 1 & 2';
+    if (badgeEl) {
+      badgeEl.textContent = '⚡ Tier 0 Early Exit';
+      badgeEl.className = 'text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950 text-accent-emerald border border-emerald-800';
+    }
+  } else if (policy === 'fast_path') {
     if (descEl) descEl.textContent = 'Direct logits only (no CoT)';
     if (badgeEl) {
       badgeEl.textContent = 'Fast-Path Only';
@@ -790,6 +2071,7 @@ function onRoutingPolicyChange(policy) {
       badgeEl.className = 'text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 border border-zinc-700';
     }
   }
+  updateFlowPipelineUI();
 }
 
 function onEscalateToggle() {
@@ -801,7 +2083,7 @@ function onEscalateToggle() {
   }
 }
 
-const DEFAULT_COT_PROMPT = "Analysis: First calculate the exact sliding window cutoff timestamp and evaluate which log entries fall strictly inside it: ";
+const DEFAULT_COT_PROMPT = "Verify each option against the context: ";
 let defaultCotPrompt = DEFAULT_COT_PROMPT;
 
 function resetCotPrompt() {
@@ -815,6 +2097,11 @@ async function saveActiveSettings() {
   if (btn) btn.textContent = 'Saving...';
   try {
     const settings = getDecisionSettings();
+    const cotThreshInput = document.getElementById('set-cot-thresh-input');
+    const cotThreshVal = cotThreshInput ? (parseFloat(cotThreshInput.value) || 50) / 100.0 : cachedBalancedThreshold;
+    const calTempInput = document.getElementById('set-calibrated-temp');
+    const calTempVal = calTempInput ? (parseFloat(calTempInput.value) || 1.0) : 1.0;
+
     const resp = await fetch('/v1/config/switch', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -822,7 +2109,9 @@ async function saveActiveSettings() {
         kv_cache: settings.kv_cache,
         cot_prompt: settings.cot_prompt,
         cot_temp: settings.cot_temp,
-        max_cot_tokens: settings.max_cot_tokens
+        max_cot_tokens: settings.max_cot_tokens,
+        cot_threshold: cotThreshVal,
+        temperature: calTempVal
       })
     });
     if (!resp.ok) {
@@ -861,19 +2150,29 @@ async function onKvCacheChange(newVal) {
 
 function getDecisionSettings() {
   const policyRadios = document.getElementsByName('routing_policy');
-  let selectedPolicy = 'balanced';
+  let selectedPolicy = 'early_exit';
   for (const r of policyRadios) {
     if (r.checked) { selectedPolicy = r.value; break; }
   }
 
-  let confThreshold = 0.50;
+  const cotThreshInput = document.getElementById('set-cot-thresh-input');
+  const cotThreshVal = cotThreshInput ? (parseFloat(cotThreshInput.value) || 50) / 100.0 : cachedBalancedThreshold;
+
+  let confThreshold = cotThreshVal;
   if (selectedPolicy === 'fast_path') {
     confThreshold = 0.0;
   } else if (selectedPolicy === 'always_verify') {
     confThreshold = 1.0;
   } else {
-    confThreshold = cachedBalancedThreshold;
+    confThreshold = cotThreshVal;
   }
+
+  const t0EntropyInput = document.getElementById('set-t0-entropy');
+  const tier0Entropy = t0EntropyInput ? parseFloat(t0EntropyInput.value) : 0.65;
+  const t0MarginInput = document.getElementById('set-t0-margin');
+  const tier0Margin = t0MarginInput ? parseFloat(t0MarginInput.value) : 0.25;
+  const t0OodDistInput = document.getElementById('set-t0-ood-dist');
+  const tier0OodDist = t0OodDistInput ? parseFloat(t0OodDistInput.value) : 0.22;
 
   const escalateEnabled = document.getElementById('set-escalate-enable').checked;
   const escalateValRaw = parseFloat(document.getElementById('set-escalate-val').value);
@@ -889,8 +2188,16 @@ function getDecisionSettings() {
   const cotPrompt = cotPromptEl ? cotPromptEl.value.trim() : '';
   const kvEl = document.getElementById('set-kv-cache');
   const kvCache = kvEl ? kvEl.value : 'F16';
+  const chkRules = document.getElementById('chk-enable-tier-1');
+  const enableRules = chkRules ? chkRules.checked : true;
 
   return {
+    routing_policy: selectedPolicy,
+    enable_rules: enableRules,
+    early_exit: selectedPolicy === 'early_exit',
+    tier0_entropy_threshold: tier0Entropy,
+    tier0_margin_threshold: tier0Margin,
+    tier0_landmark_distance_threshold: tier0OodDist,
     confidence_threshold: confThreshold,
     escalate_threshold: escalateThreshold,
     cyclic_debias: cyclicDebias,
@@ -908,18 +2215,40 @@ async function loadSettingsDefaults() {
     if (!resp.ok) return;
     const defaults = await resp.json();
 
-    if (defaults.balanced_threshold !== undefined) {
-      cachedBalancedThreshold = defaults.balanced_threshold;
+    if (defaults.cot_threshold !== undefined) {
+      cachedBalancedThreshold = defaults.cot_threshold;
+      const cotInput = document.getElementById('set-cot-thresh-input');
+      if (cotInput) cotInput.value = Math.round(defaults.cot_threshold * 100);
+      onCotThresholdInputChange(Math.round(defaults.cot_threshold * 100));
     }
 
     const policyRadios = document.getElementsByName('routing_policy');
-    const targetPolicy = defaults.routing_policy || 'balanced';
+    const targetPolicy = defaults.early_exit ? 'early_exit' : (defaults.routing_policy || 'early_exit');
     for (const r of policyRadios) {
       if (r.value === targetPolicy) {
         r.checked = true;
       }
     }
     onRoutingPolicyChange(targetPolicy);
+
+    if (defaults.tier0_entropy_threshold !== undefined) {
+      const entInput = document.getElementById('set-t0-entropy');
+      const entVal = document.getElementById('val-t0-entropy');
+      if (entInput) entInput.value = defaults.tier0_entropy_threshold;
+      if (entVal) entVal.textContent = defaults.tier0_entropy_threshold;
+    }
+    if (defaults.tier0_margin_threshold !== undefined) {
+      const marInput = document.getElementById('set-t0-margin');
+      const marVal = document.getElementById('val-t0-margin');
+      if (marInput) marInput.value = defaults.tier0_margin_threshold;
+      if (marVal) marVal.textContent = defaults.tier0_margin_threshold;
+    }
+    if (defaults.tier0_landmark_distance_threshold !== undefined) {
+      const oodInput = document.getElementById('set-t0-ood-dist');
+      const oodVal = document.getElementById('val-t0-ood-dist');
+      if (oodInput) oodInput.value = defaults.tier0_landmark_distance_threshold;
+      if (oodVal) oodVal.textContent = Number(defaults.tier0_landmark_distance_threshold).toFixed(2);
+    }
 
     const cyclicEl = document.getElementById('set-cyclic-debias');
     if (cyclicEl && defaults.cyclic_debias !== undefined) {
@@ -959,6 +2288,9 @@ async function loadSettingsDefaults() {
     if (cotPromptEl) {
       cotPromptEl.value = defaults.cot_prompt || defaultCotPrompt;
     }
+
+    // Load calibration settings from defaults into Settings UI
+    updateCalibrationSettingsUI(defaults);
   } catch (err) {
     console.warn('Could not load /v1/config/defaults:', err);
   }
@@ -1008,6 +2340,7 @@ function setMode(text, color) {
     amber:  'bg-amber-950 text-accent-amber border-amber-800',
     violet: 'bg-violet-950 text-accent-violet border-violet-800',
     red:    'bg-rose-950 text-accent-rose border-rose-800',
+    emerald:'bg-emerald-950 text-accent-emerald border-emerald-800',
     idle:   'bg-surface text-zinc-500 border-surface-border',
   };
   el.className = `text-[11px] font-mono px-2 py-0.5 rounded border ${colorMap[color] || colorMap.idle}`;
@@ -1065,7 +2398,8 @@ async function copyAllHistory() {
     const dur = h.result.duration_ms !== undefined ? h.result.duration_ms : (h.result.latency_ms !== undefined ? h.result.latency_ms : 0);
     const conf = ((h.result.confidence || 0) * 100).toFixed(1);
     const match = h.expected ? ` [Exp: ${h.expected} | ${h.letter === h.expected ? 'PASS' : 'FAIL'}]` : '';
-    let block = `[${idx + 1}] ${time}${title}\nDecision: [${h.letter}] ${text}\nConfidence: ${conf}% | Latency: ${dur.toFixed(0)}ms | Mode: ${h.result.mode}${match}\nContext: ${h.context.replace(/\r?\n+/g, ' ')}`;
+    const tierTag = h.result.tier !== undefined ? `Tier ${h.result.tier}` : (h.result.mode === 'tier0_early_exit' ? 'Tier 0' : 'Tier 1');
+    let block = `[${idx + 1}] ${time}${title}\nDecision: [${h.letter}] ${text}\nConfidence: ${conf}% | Latency: ${dur.toFixed(0)}ms | Mode: ${h.result.mode} (${tierTag})${match}\nContext: ${h.context.replace(/\r?\n+/g, ' ')}`;
     if (h.result.evidence) {
       block += `\nEvidence Quote: "${h.result.evidence.quote}"\nOperational Rationale: ${h.result.evidence.rationale}`;
     }
@@ -1102,13 +2436,16 @@ function renderHistory() {
     return;
   }
   list.innerHTML = history.map((h, idx) => {
+    const isTier0 = h.result.tier === 0 || h.result.mode === 'tier0_early_exit';
     const modeColors = {
+      tier0_early_exit: 'text-accent-emerald',
       fast_path: 'text-accent-cyan',
       cot_verified: 'text-accent-amber',
       cyclic_debiased: 'text-accent-violet',
-      error: 'text-accent-rose'
+      error: 'text-accent-rose',
+      skipped: 'text-zinc-500'
     };
-    const modeColor = modeColors[h.result.mode] || 'text-zinc-400';
+    const modeColor = isTier0 ? 'text-accent-emerald' : (modeColors[h.result.mode] || 'text-zinc-400');
     const snippet = h.context.length > 70 ? h.context.substring(0, 70) + '…' : h.context;
     const time = h.ts.toLocaleTimeString();
     const dur = h.result.duration_ms !== undefined ? h.result.duration_ms : (h.result.latency_ms !== undefined ? h.result.latency_ms : 0);
@@ -1119,13 +2456,17 @@ function renderHistory() {
       ? `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold font-mono ${
           h.letter === '!'
             ? 'bg-rose-950 text-accent-rose border border-rose-800'
+            : h.letter === 'SKIP'
+            ? 'bg-zinc-800 text-zinc-400 border border-zinc-700'
+            : isTier0
+            ? 'bg-emerald-950 text-accent-emerald border border-emerald-800'
             : 'bg-cyan-950 text-accent-cyan border border-cyan-800'
         } shrink-0">[${escapeHtml(h.letter)}]</span>`
       : '';
 
     // Expected Ground Truth badge
     let matchBadge = '';
-    if (h.expected && h.letter && h.letter !== '!') {
+    if (h.expected && h.letter && h.letter !== '!' && h.letter !== 'SKIP') {
       const isMatch = h.letter === h.expected;
       matchBadge = `
         <span class="text-[10px] font-mono px-1.5 py-0.5 rounded border shrink-0 ${
@@ -1263,9 +2604,39 @@ function escapeHtml(s) {
     .replace(/'/g, '&#039;');
 }
 
+// ─── Model state & Validation ───────────────────────────────
+let isModelLoaded = false;
+let isVisionLoaded = false;
+let currentActiveModel = null;
+
+function showNoModelError(customMsg) {
+  const msg = customMsg || "Please select and load an LLM model in the header first.";
+  hideEl('res-loading');
+  hideEl('res-empty');
+  hideEl('res-decision');
+  hideEl('res-cot-box');
+  hideEl('res-evidence-box');
+  hideEl('res-evidence-trigger-container');
+  showEl('res-error');
+  const errText = document.getElementById('res-error-text');
+  if (errText) errText.textContent = msg;
+  setMode('No Model Loaded', 'red');
+
+  const modelSelect = document.getElementById('model-select');
+  if (modelSelect) {
+    modelSelect.focus();
+    modelSelect.classList.add('ring-2', 'ring-cyan-400');
+    setTimeout(() => modelSelect.classList.remove('ring-2', 'ring-cyan-400'), 2500);
+  }
+}
+
 // ─── Sequential "Test All" ──────────────────────────────────
 async function runAllTests() {
   if (isRunningAllTests) return;
+  if (!isModelLoaded) {
+    showNoModelError("Please load a model first before running tests.");
+    return;
+  }
   if (!exampleTests || exampleTests.length === 0) {
     alert("No example tests available to run.");
     return;
@@ -1289,6 +2660,29 @@ async function runAllTests() {
   try {
     for (let i = 0; i < total; i++) {
       const test = exampleTests[i];
+      const hasImage = !!(test.image || test.images || (Array.isArray(test.images) && test.images.length > 0) || test.image_path);
+
+      // If neither Tier 1 Vision nor Tier 0 Multimodal is loaded, Skip tests with Image attachments
+      const t0SupportsVision = isTier0Loaded && currentTier0Details && currentTier0Details.supports_vision;
+      if (!isVisionLoaded && !t0SupportsVision && hasImage) {
+        select.value = String(i);
+        if (btnLabel) btnLabel.textContent = `Skipped ${i + 1}/${total} (Vision required)…`;
+        addToHistory(test.context || '', {
+          decision: 'Skipped (Vision not loaded)',
+          decision_text: 'Skipped: Test has image attachment but Vision is not loaded in Tier 0 or Tier 1',
+          confidence: 0,
+          duration_ms: 0,
+          mode: 'skipped'
+        }, {
+          letter: 'SKIP',
+          title: test.title || test.test_id,
+          expected: test.expected_ground_truth
+        });
+        setMode(`Skipped ${test.title || test.test_id} (No Vision)`, 'amber');
+        await new Promise(r => setTimeout(r, 120));
+        continue;
+      }
+
       if (btnLabel) btnLabel.textContent = `Testing ${i + 1}/${total}…`;
 
       // Select and load test into inputs (await image if test has image attached)
@@ -1318,12 +2712,17 @@ async function runAllTests() {
         const payload = {
           context: contextVal,
           options: options,
+          enable_rules: settings.enable_rules,
           confidence_threshold: settings.confidence_threshold,
           escalate_threshold: settings.escalate_threshold,
           cyclic_debias: settings.cyclic_debias,
           cot_temp: settings.cot_temp,
           max_cot_tokens: settings.max_cot_tokens,
-          use_calibrator: settings.use_calibrator
+          use_calibrator: settings.use_calibrator,
+          early_exit: settings.early_exit,
+          tier0_entropy_threshold: settings.tier0_entropy_threshold,
+          tier0_margin_threshold: settings.tier0_margin_threshold,
+          tier0_landmark_distance_threshold: settings.tier0_landmark_distance_threshold
         };
         if (settings.cot_prompt) {
           payload.cot_prompt = settings.cot_prompt;
@@ -1391,8 +2790,14 @@ async function submitDecision() {
   const contextVal = document.getElementById('inp-context').value.trim();
   const optionsRaw = document.getElementById('inp-options').value.trim();
 
+
   if (!contextVal && !selectedImageBase64) {
     alert('Please enter context text or select/upload an image.');
+    return;
+  }
+  const t0SupportsVision = isTier0Loaded && currentTier0Details && currentTier0Details.supports_vision;
+  if (selectedImageBase64 && !isVisionLoaded && !t0SupportsVision) {
+    alert('Vision is not loaded. Please select an ONNX Multimodal Embedding model in Tier 0 or check "Vision" on Tier 1 LLM.');
     return;
   }
   if (!optionsRaw) { alert('Please enter candidate options.'); return; }
@@ -1421,12 +2826,17 @@ async function submitDecision() {
     const payload = {
       context: contextVal,
       options: options,
+      enable_rules: settings.enable_rules,
       confidence_threshold: settings.confidence_threshold,
       escalate_threshold: settings.escalate_threshold,
       cyclic_debias: settings.cyclic_debias,
       cot_temp: settings.cot_temp,
       max_cot_tokens: settings.max_cot_tokens,
-      use_calibrator: settings.use_calibrator
+      use_calibrator: settings.use_calibrator,
+      early_exit: settings.early_exit,
+      tier0_entropy_threshold: settings.tier0_entropy_threshold,
+      tier0_margin_threshold: settings.tier0_margin_threshold,
+      tier0_landmark_distance_threshold: settings.tier0_landmark_distance_threshold
     };
     if (settings.cot_prompt) {
       payload.cot_prompt = settings.cot_prompt;
@@ -1535,9 +2945,90 @@ function renderResult(data, contextVal, meta) {
   showEl('res-decision');
 
   // Mode badge
-  const modeLabelMap = { fast_path: 'Fast Path', cot_verified: 'CoT Verified', cyclic_debiased: 'Cyclic Debiased', error: 'Error' };
-  const modeColorMap = { fast_path: 'cyan', cot_verified: 'amber', cyclic_debiased: 'violet', error: 'red' };
+  const modeLabelMap = {
+    'tier-1_rule_exit': '⚡ Tier -1: Rule Exit',
+    tier0_early_exit: '⚡ Tier 0: Early Exit',
+    tier0_escalated_no_model: '⚠️ Tier 0 Escalated (No LLM)',
+    fast_path: 'Tier 1: Fast Path',
+    cot_verified: 'Tier 2: CoT Verified',
+    cyclic_debiased: 'Cyclic Debiased',
+    forced_move: 'Forced Move',
+    error: 'Error'
+  };
+  const modeColorMap = {
+    'tier-1_rule_exit': 'violet',
+    tier0_early_exit: 'emerald',
+    tier0_escalated_no_model: 'amber',
+    fast_path: 'cyan',
+    cot_verified: 'amber',
+    cyclic_debiased: 'violet',
+    forced_move: 'cyan',
+    error: 'red'
+  };
   setMode(modeLabelMap[data.mode] || data.mode, modeColorMap[data.mode] || 'cyan');
+
+  // Execution Tier Badge & Escalation Banner
+  const tierBadge = document.getElementById('res-tier-badge');
+  const t0EscBanner = document.getElementById('res-tier0-escalation');
+  const t0ReasonEl = document.getElementById('res-tier0-reason');
+  const t0MetricsEl = document.getElementById('res-tier0-metrics');
+
+  const tier = data.tier !== undefined ? data.tier : (data.mode === 'tier-1_rule_exit' ? -1 : (data.mode === 'tier0_early_exit' ? 0 : (data.mode === 'cot_verified' ? 2 : 1)));
+  if (tierBadge) {
+    if (tier === -1 || data.mode === 'tier-1_rule_exit') {
+      tierBadge.textContent = '⚡ Tier -1: Heuristic Rule Match (< 0.05ms)';
+      tierBadge.className = 'text-xs font-bold font-mono px-2 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-800';
+    } else if (tier === 0) {
+      if (data.mode === 'tier0_escalated_no_model') {
+        tierBadge.textContent = 'Tier 0: Escalated (LLM Unloaded)';
+        tierBadge.className = 'text-xs font-bold font-mono px-2 py-0.5 rounded bg-amber-950 text-accent-amber border border-amber-800';
+      } else {
+        tierBadge.textContent = '⚡ Tier 0: Topological Early Exit';
+        tierBadge.className = 'text-xs font-bold font-mono px-2 py-0.5 rounded bg-emerald-950 text-accent-emerald border border-emerald-800';
+      }
+    } else if (tier === 1) {
+      tierBadge.textContent = 'Tier 1: Direct Logits (Fast-Path)';
+      tierBadge.className = 'text-xs font-bold font-mono px-2 py-0.5 rounded bg-cyan-950 text-accent-cyan border border-cyan-800';
+    } else if (tier === 2) {
+      tierBadge.textContent = 'Tier 2: CoT Verification';
+      tierBadge.className = 'text-xs font-bold font-mono px-2 py-0.5 rounded bg-amber-950 text-accent-amber border border-amber-800';
+    } else {
+      tierBadge.textContent = `Tier ${tier}`;
+      tierBadge.className = 'text-xs font-bold font-mono px-2 py-0.5 rounded bg-surface text-zinc-300 border border-surface-border';
+    }
+  }
+
+  if (t0EscBanner) {
+    if (data.mode === 'tier0_escalated_no_model') {
+      t0EscBanner.classList.remove('hidden');
+      if (t0ReasonEl) t0ReasonEl.textContent = data.tier0_escalation_reason || 'AMBIGUITY';
+      if (t0MetricsEl) {
+        t0MetricsEl.innerHTML = `
+          <div class="text-amber-200 font-semibold mb-1">Escalated from Tier 0: ${escapeHtml(data.tier0_escalation_reason || 'Ambiguity')}</div>
+          <div class="text-zinc-400">LLM model is not loaded in VRAM. Query was not evaluated by Tier 1/2.</div>
+          <button onclick="document.getElementById('btn-reload').scrollIntoView({behavior:'smooth'}); document.getElementById('btn-reload').focus();" class="mt-2 text-[10px] font-mono px-2 py-0.5 rounded bg-amber-900/60 text-amber-200 border border-amber-700/80 hover:bg-amber-800 transition-colors">
+            Load LLM Model ↑
+          </button>
+        `;
+      }
+    } else if (data.tier0_escalation_reason) {
+      t0EscBanner.classList.remove('hidden');
+      if (t0ReasonEl) t0ReasonEl.textContent = data.tier0_escalation_reason;
+      if (t0MetricsEl && data.tier0_metrics) {
+        const m = data.tier0_metrics;
+        const entStr = m.entropy !== undefined ? `Entropy H: ${Number(m.entropy).toFixed(3)}` : '';
+        const marStr = m.margin !== undefined ? `Margin Δ: ${Number(m.margin).toFixed(3)}` : '';
+        const dMinStr = m.d_min !== undefined ? `OOD Dist d_min: ${Number(m.d_min).toFixed(3)}${m.delta_ood !== undefined ? ` (δ_OOD: ${Number(m.delta_ood).toFixed(2)})` : ''}` : '';
+        const oodStr = m.max_similarity !== undefined ? `Similarity: ${Number(m.max_similarity).toFixed(3)}` : '';
+        t0MetricsEl.textContent = `Tripwires: ${[entStr, marStr, dMinStr, oodStr].filter(Boolean).join(' • ')} (Escalated to Tier ${tier})`;
+      } else if (t0MetricsEl) {
+        t0MetricsEl.textContent = `Tripwire breached. Escalated to Tier ${tier}.`;
+      }
+    } else {
+      t0EscBanner.classList.add('hidden');
+    }
+  }
+
 
   // Decision with Candidate Letter badge
   const displayDecisionText = data.decision_text || (options && letter ? options[letter] : data.decision);
@@ -1549,8 +3040,11 @@ function renderResult(data, contextVal, meta) {
   currentDecisionImage = meta.image || selectedImageBase64 || null;
 
   const labelEl = document.getElementById('res-label');
+  const letterBadgeClass = tier === 0
+    ? 'bg-emerald-950 text-accent-emerald border-emerald-800'
+    : 'bg-cyan-950 text-accent-cyan border-cyan-800';
   if (displayLetter && displayLetter !== '!') {
-    labelEl.innerHTML = `<span class="px-2 py-0.5 rounded text-xs font-bold font-mono bg-cyan-950 text-accent-cyan border border-cyan-800 mr-2">[${escapeHtml(displayLetter)}]</span><span>${escapeHtml(displayDecisionText)}</span>`;
+    labelEl.innerHTML = `<span class="px-2 py-0.5 rounded text-xs font-bold font-mono ${letterBadgeClass} border mr-2">[${escapeHtml(displayLetter)}]</span><span>${escapeHtml(displayDecisionText)}</span>`;
   } else {
     labelEl.textContent = displayDecisionText;
   }
@@ -1642,6 +3136,7 @@ let availableModels = [];
 async function loadModelsAndConfig() {
   const modelSelect = document.getElementById('model-select');
   const ctxInput = document.getElementById('inp-context-size');
+  const chkVision = document.getElementById('chk-vision');
 
   try {
     const resp = await fetch('/v1/models');
@@ -1653,20 +3148,40 @@ async function loadModelsAndConfig() {
     availableModels.forEach(m => {
       const opt = document.createElement('option');
       opt.value = m.path;
-      // Drop Down 1 label format: Gemma 4 26B (14gb)
-      opt.textContent = m.label || `${m.friendly_name} (${m.size_gb})`;
+      // Drop Down label format: Name (size) without Calibrated bullet
+      const cleanName = m.friendly_name || m.filename || m.path;
+      opt.textContent = m.size_gb ? `${cleanName} (${m.size_gb})` : cleanName;
       opt.title = `${m.filename} • ${m.size_gb} on disk`;
-      if (m.path === data.active_model || m.filename === data.active_model) {
+      if (data.active_model && (m.path === data.active_model || m.filename === data.active_model)) {
         opt.selected = true;
       }
       modelSelect.appendChild(opt);
     });
 
+    if (!data.active_model && availableModels.length > 0) {
+      // Pre-select smallest model or first model if no model loaded
+      const defaultModel = availableModels.find(m => m.path === data.smallest_model) || availableModels[0];
+      if (defaultModel) {
+        modelSelect.value = defaultModel.path;
+      }
+    }
+
     if (data.active_n_ctx && ctxInput) {
       ctxInput.value = data.active_n_ctx;
     }
 
+    if (chkVision && !chkVision.dataset.userToggled) {
+      if (data.active_model) {
+        chkVision.checked = !!data.has_vision;
+      } else {
+        const sel = availableModels.find(m => m.path === modelSelect.value);
+        chkVision.checked = !!(sel && sel.mmproj_path);
+      }
+    }
+
     updateVramEstimate();
+    updateHeaderBadges();
+    updateFlowPipelineUI();
   } catch (err) {
     console.warn('Failed to load /v1/models:', err);
     modelSelect.innerHTML = '<option value="">Models unavailable</option>';
@@ -1675,6 +3190,24 @@ async function loadModelsAndConfig() {
 
 function onModelOrContextChange() {
   updateVramEstimate();
+  const modelSelect = document.getElementById('model-select');
+  const chkVision = document.getElementById('chk-vision');
+  const btnText = document.getElementById('btn-reload-text');
+  if (modelSelect) {
+    const selectedPath = modelSelect.value;
+    const selectedModel = availableModels.find(m => m.path === selectedPath || m.filename === selectedPath);
+    if (selectedModel) {
+      if (chkVision && !chkVision.dataset.userToggled) {
+        chkVision.checked = !!selectedModel.mmproj_path;
+      }
+      if (btnText && (!isModelLoaded || currentActiveModel !== selectedModel.path)) {
+        btnText.textContent = selectedModel.has_calibration ? 'Load Model' : 'Calibrate & Load';
+      }
+      // Instantly reflect selected model's calibration in Settings controls
+      updateCalibrationSettingsUI(selectedModel);
+    }
+  }
+  updateFlowPipelineUI();
 }
 
 function updateVramEstimate() {
@@ -1706,15 +3239,19 @@ function updateVramEstimate() {
 
   vramLabel.textContent = `(est ${totalEstGb.toFixed(1)} GB VRAM)`;
   vramLabel.title = `Estimated VRAM breakdown:\n• Weights: ${modelGb.toFixed(1)} GB\n• KV Cache: ${kvCacheGb.toFixed(1)} GB\n• CUDA Overhead: ${cudaOverheadGb} GB`;
+
 }
 
 async function applyConfigAndReload() {
   const modelSelect = document.getElementById('model-select');
   const ctxInput = document.getElementById('inp-context-size');
+  const chkVision = document.getElementById('chk-vision');
   const btn = document.getElementById('btn-reload');
+  const btnText = document.getElementById('btn-reload-text');
 
   const selectedPath = modelSelect.value;
   const nCtx = parseInt(ctxInput.value, 10);
+  const visionChecked = chkVision ? chkVision.checked : false;
 
   if (!selectedPath) {
     alert('Please select a model.');
@@ -1726,16 +3263,16 @@ async function applyConfigAndReload() {
   }
 
   const selectedModel = availableModels.find(m => m.path === selectedPath) || { label: selectedPath };
-
-  if (!confirm(`Switch to "${selectedModel.label}" with context size ${nCtx.toLocaleString()} tokens and reload?\n\nThis will briefly reload the model in memory.`)) {
-    return;
-  }
+  const isUncalibrated = !selectedModel.has_calibration;
 
   btn.disabled = true;
   modelSelect.disabled = true;
   ctxInput.disabled = true;
-  const origHTML = btn.innerHTML;
-  btn.innerHTML = '<div class="loading-ring" style="width:12px;height:12px;border-width:2px"></div> Reloading…';
+  if (chkVision) chkVision.disabled = true;
+  const origText = btnText ? btnText.textContent : 'Reload';
+  if (btnText) {
+    btnText.textContent = isUncalibrated ? 'Calibrating & Loading…' : 'Loading…';
+  }
   btn.classList.add('opacity-60');
 
   try {
@@ -1744,7 +3281,8 @@ async function applyConfigAndReload() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model_path: selectedPath,
-        n_ctx: nCtx
+        n_ctx: nCtx,
+        vision: visionChecked
       })
     });
 
@@ -1754,34 +3292,109 @@ async function applyConfigAndReload() {
     }
 
     const data = await resp.json();
-    await Promise.all([checkHealth(), loadModelsAndConfig()]);
+    await Promise.all([checkHealth(), loadModelsAndConfig(), loadSettingsDefaults()]);
 
-    btn.innerHTML = '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Done';
+    if (btnText) {
+      btnText.textContent = data.calibrated ? 'Loaded & Calibrated!' : 'Loaded!';
+    }
     btn.classList.remove('opacity-60');
     btn.classList.add('text-accent-emerald', 'border-emerald-700');
     setTimeout(() => {
-      btn.innerHTML = origHTML;
+      if (btnText) btnText.textContent = 'Reload';
       btn.classList.remove('text-accent-emerald', 'border-emerald-700');
-    }, 2000);
+    }, 2500);
   } catch (err) {
-    alert('Model reload failed: ' + err.message);
-    btn.innerHTML = origHTML;
+    alert('Model load failed: ' + err.message);
+    if (btnText) btnText.textContent = origText;
     btn.classList.remove('opacity-60');
   } finally {
     btn.disabled = false;
     modelSelect.disabled = false;
     ctxInput.disabled = false;
+    if (chkVision) chkVision.disabled = false;
   }
 }
 
 // ─── Health check on load ───────────────────────────────────
+let isTier0Loaded = false;
+let currentRulesData = null;
+
 async function checkHealth() {
   const dot = document.getElementById('health-dot');
+  const banner = document.getElementById('no-model-banner');
+  const bannerText = document.getElementById('no-model-banner-text');
+  const btnReloadText = document.getElementById('btn-reload-text');
+  const btnUnload = document.getElementById('btn-unload');
+  const vBadge = document.getElementById('vision-status-badge');
+  const chkVision = document.getElementById('chk-vision');
+
   try {
     const resp = await fetch('/health');
     if (!resp.ok) throw new Error();
     const data = await resp.json();
-    const vBadge = document.getElementById('vision-status-badge');
+
+    isModelLoaded = !!data.llm_loaded;
+    isTier0Loaded = !!data.embedding_loaded;
+    isVisionLoaded = !!data.has_vision;
+    currentActiveModel = data.model;
+
+    // Update Tier 0 UI indicators
+    updateTier0UI(data.embedding_loaded);
+
+    // Update LLM Unload Button visibility
+    if (btnUnload) {
+      if (isModelLoaded) {
+        btnUnload.classList.remove('hidden');
+        btnUnload.classList.add('inline-flex');
+      } else {
+        btnUnload.classList.add('hidden');
+        btnUnload.classList.remove('inline-flex');
+      }
+    }
+
+    if (banner) banner.classList.add('hidden');
+
+    if (!isModelLoaded) {
+      const footerEl = document.getElementById('footer-model-label');
+      if (footerEl) footerEl.textContent = 'Gevva0: Fast-Path Decision Gateway';
+      if (vBadge) {
+        vBadge.classList.add('hidden');
+        vBadge.classList.remove('flex');
+      }
+      updateCalibrationSettingsUI(null);
+      if (btnReloadText) btnReloadText.textContent = 'Load LLM';
+
+      dot.title = 'Ready (Select and load LLM in header)';
+      dot.innerHTML = `
+        <span class="relative flex h-2 w-2">
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-zinc-500"></span>
+        </span>
+        <span class="text-zinc-400">No LLM Loaded</span>
+      `;
+      updateHeaderBadges(data);
+      updateFlowPipelineUI();
+      return false;
+    }
+
+    // LLM is loaded
+    const footerEl = document.getElementById('footer-model-label');
+    if (footerEl) {
+      const mName = data.friendly_name || (data.model ? data.model.split('/').pop().replace(/\.gguf$/i, '') : 'LLM');
+      footerEl.textContent = `Gevva0: ${mName}`;
+    }
+    if (btnReloadText) btnReloadText.textContent = 'Reload LLM';
+
+    dot.title = `Active: ${data.model || 'LLM'}`;
+    dot.innerHTML = `
+      <span class="relative flex h-2 w-2">
+        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+        <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+      </span>
+      <span class="text-accent-emerald font-semibold">Active</span>
+    `;
+
+    // Update calibration under Settings
+    updateCalibrationSettingsUI(data);
 
     if (vBadge) {
       if (data.has_vision) {
@@ -1792,34 +3405,707 @@ async function checkHealth() {
         vBadge.classList.remove('flex');
       }
     }
-    dot.title = `Model: ${data.model || 'Unknown'} | ctx: ${data.n_ctx || '-'} | T: ${data.temperature ? data.temperature.toFixed(4) : '-'}`;
-    dot.innerHTML = `
-      <span class="relative flex h-2 w-2">
-        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-        <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-      </span>
-      Loaded
-    `;
+    if (chkVision && !chkVision.dataset.userToggled) {
+      chkVision.checked = !!data.has_vision;
+    }
+
+    updateHeaderBadges(data);
+    updateFlowPipelineUI();
+    return true;
   } catch (err) {
+    isModelLoaded = false;
+    isTier0Loaded = false;
+    currentActiveModel = null;
+    if (banner) banner.classList.add('hidden');
+    if (btnUnload) {
+      btnUnload.classList.add('hidden');
+      btnUnload.classList.remove('inline-flex');
+    }
     console.warn('Health check failed:', err);
     dot.title = 'Offline';
     dot.innerHTML = `
-      <span class="relative flex h-2 w-2">
-        <span class="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
-      </span>
-      Offline
+      <span class="relative flex h-2 w-2"><span class="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span></span>
+      <span class="text-rose-400">Offline</span>
     `;
+    updateHeaderBadges();
+    updateFlowPipelineUI();
+    return false;
+  }
+}
+
+// ─── Tier 0 Lifecycle ───────────────────────────────────────
+let availableTier0Models = [];
+let currentTier0Details = {
+  dimension: 768,
+  model_name: 'Embedding',
+  backend: 'transformers',
+  model_path: null,
+};
+
+async function loadTier0Models() {
+  try {
+    const resp = await fetch('/v1/tier0/models');
+    if (resp.ok) {
+      const data = await resp.json();
+      availableTier0Models = data.models || [];
+      renderTier0ModelDropdown();
+    }
+  } catch (e) {
+    console.warn('Could not load tier0 models:', e);
+  }
+}
+
+function renderTier0ModelDropdown() {
+  const sel = document.getElementById('tier0-model-select');
+  if (!sel) return;
+  const currentVal = sel.value;
+  sel.innerHTML = '';
+
+  const autoOpt = document.createElement('option');
+  autoOpt.value = '';
+  autoOpt.textContent = 'Default (Auto-detect)';
+  sel.appendChild(autoOpt);
+
+  availableTier0Models.forEach(m => {
+    const opt = document.createElement('option');
+    opt.value = m.path;
+    opt.textContent = m.label || `${m.friendly_name} (${m.size_gb}) • ${m.format.toUpperCase()}`;
+    if (
+      currentTier0Details.model_path &&
+      (m.path === currentTier0Details.model_path ||
+        currentTier0Details.model_path.includes(m.filename))
+    ) {
+      opt.selected = true;
+    }
+    sel.appendChild(opt);
+  });
+
+  if (currentVal && Array.from(sel.options).some(o => o.value === currentVal)) {
+    sel.value = currentVal;
+  }
+}
+
+function getTier0SelectedModalities() {
+  const chkV = document.getElementById('chk-tier0-vision');
+  const chkA = document.getElementById('chk-tier0-audio');
+  return {
+    vision: chkV ? chkV.checked : true,
+    audio: chkA ? chkA.checked : true,
+  };
+}
+
+async function onTier0ModalityCheckboxChange() {
+  const sel = document.getElementById('tier0-model-select');
+  const selectedModelPath = sel ? sel.value : null;
+  const { vision, audio } = getTier0SelectedModalities();
+
+  if (isTier0Loaded) {
+    const btnCard = document.getElementById('btn-tier0-load-ui');
+    if (btnCard) btnCard.textContent = 'Reloading…';
+    try {
+      const res = await fetch('/v1/tier0/load', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model_path: selectedModelPath || undefined,
+          vision: vision,
+          audio: audio,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ detail: res.statusText }));
+        throw new Error(err.detail || `HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      isTier0Loaded = !!data.loaded;
+      updateTier0UI(isTier0Loaded, data);
+      await checkHealth();
+    } catch (e) {
+      alert('Failed to update Tier 0 modality configuration: ' + e.message);
+      updateTier0UI(isTier0Loaded);
+    }
+  }
+}
+
+async function onTier0ModelSelectChange() {
+  const sel = document.getElementById('tier0-model-select');
+  if (!sel || !sel.value) return;
+  const { vision, audio } = getTier0SelectedModalities();
+  if (isTier0Loaded) {
+    const btnCard = document.getElementById('btn-tier0-load-ui');
+    if (btnCard) btnCard.textContent = 'Switching…';
+    try {
+      const res = await fetch('/v1/tier0/load', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model_path: sel.value,
+          vision: vision,
+          audio: audio,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ detail: res.statusText }));
+        throw new Error(err.detail || `HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      isTier0Loaded = !!data.loaded;
+      updateTier0UI(isTier0Loaded, data);
+      await checkHealth();
+    } catch (e) {
+      alert('Failed to switch Tier 0 embedding model: ' + e.message);
+      updateTier0UI(isTier0Loaded);
+    }
+  }
+}
+
+async function checkTier0Status() {
+  try {
+    const resp = await fetch('/v1/tier0/status');
+    if (resp.ok) {
+      const data = await resp.json();
+      isTier0Loaded = !!data.loaded;
+      updateTier0UI(isTier0Loaded, data);
+      renderTier0ModelDropdown();
+    }
+  } catch (e) {
+    console.warn('Could not check tier0 status:', e);
+  }
+}
+
+async function toggleTier0Engine() {
+  const btnHdr = document.getElementById('btn-hdr-tier0');
+  const btnCard = document.getElementById('btn-tier0-load-ui');
+  const sel = document.getElementById('tier0-model-select');
+  const selectedModelPath = sel ? sel.value : null;
+  const wasLoaded = isTier0Loaded;
+  const endpoint = wasLoaded ? '/v1/tier0/unload' : '/v1/tier0/load';
+
+  if (btnHdr) btnHdr.textContent = wasLoaded ? 'Unloading…' : 'Loading…';
+  if (btnCard) btnCard.textContent = wasLoaded ? 'Unloading…' : 'Loading…';
+
+  try {
+    const opts = { method: 'POST' };
+    if (!wasLoaded) {
+      const { vision, audio } = getTier0SelectedModalities();
+      opts.headers = { 'Content-Type': 'application/json' };
+      opts.body = JSON.stringify({
+        model_path: selectedModelPath || undefined,
+        vision: vision,
+        audio: audio,
+      });
+    }
+    const res = await fetch(endpoint, opts);
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: res.statusText }));
+      throw new Error(err.detail || `HTTP ${res.status}`);
+    }
+    const data = await res.json();
+    isTier0Loaded = !!data.loaded;
+    updateTier0UI(isTier0Loaded, data);
+    await checkHealth();
+  } catch (e) {
+    alert('Tier 0 action failed: ' + e.message);
+  } finally {
+    updateTier0UI(isTier0Loaded);
+  }
+}
+
+function updateTier0UI(loaded, details) {
+  isTier0Loaded = !!loaded;
+  if (details) {
+    if (details.dimension) currentTier0Details.dimension = details.dimension;
+    if (details.model_name) currentTier0Details.model_name = details.model_name;
+    if (details.backend) currentTier0Details.backend = details.backend;
+    if (details.model_path) currentTier0Details.model_path = details.model_path;
+    if (details.supports_vision !== undefined) currentTier0Details.supports_vision = details.supports_vision;
+    if (details.supports_audio !== undefined) currentTier0Details.supports_audio = details.supports_audio;
+    if (details.enable_vision !== undefined) {
+      const chkV = document.getElementById('chk-tier0-vision');
+      if (chkV) chkV.checked = details.enable_vision;
+    }
+    if (details.enable_audio !== undefined) {
+      const chkA = document.getElementById('chk-tier0-audio');
+      if (chkA) chkA.checked = details.enable_audio;
+    }
+    if (details.modalities) currentTier0Details.modalities = details.modalities;
   }
 
+  const dim = currentTier0Details.dimension || 768;
+  const modelName = currentTier0Details.model_name || 'Embedding';
+  const backend = (currentTier0Details.backend || 'transformers').toUpperCase();
+  const modalities = currentTier0Details.modalities || ['text'];
+  const modalityLabel = modalities.map(m => m.charAt(0).toUpperCase() + m.slice(1)).join('/');
+
+  const hdrBadge = document.getElementById('hdr-tier0-badge');
+  const hdrBtn = document.getElementById('btn-hdr-tier0');
+  const cardBadge = document.getElementById('tier0-status-badge');
+  const cardBtn = document.getElementById('btn-tier0-load-ui');
+  const subLabel = document.getElementById('tier0-model-sub-label');
+  const descText = document.getElementById('tier0-desc-text');
+  const modBox = document.getElementById('tier0-modalities-box');
+
+  if (modBox) {
+    const sel = document.getElementById('tier0-model-select');
+    const curPath = sel ? sel.value : '';
+    const selModel = availableTier0Models.find(m => m.path === curPath);
+    const isMultimodalCapable = !selModel || (selModel.has_vision || selModel.has_audio || selModel.format === 'onnx');
+    modBox.style.display = isMultimodalCapable ? 'flex' : 'none';
+  }
+
+  if (subLabel) {
+    subLabel.textContent = `${dim}D • ${backend} (${modalityLabel}) • ${modelName}`;
+  }
+  if (descText) {
+    descText.textContent = `Embeds multimodal query (${modalityLabel}) into ${dim}D vector space (${modelName}). Evaluates Shannon entropy and classification margins against prototype landmarks in under 3 milliseconds.`;
+  }
+
+  if (loaded) {
+    const count = (details && details.landmarks_count) || 1000;
+    const activeMods = [];
+    if (currentTier0Details.supports_vision) activeMods.push('Vision');
+    if (currentTier0Details.supports_audio) activeMods.push('Audio');
+    const modPill = activeMods.length > 0 ? ` • ${activeMods.join('/')}` : ' (Text-Only)';
+
+    if (hdrBadge) {
+      hdrBadge.textContent = `T0: ${dim}D Ready${modPill}`;
+      hdrBadge.className = 'text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-950 text-accent-emerald border border-emerald-800';
+    }
+    if (hdrBtn) hdrBtn.textContent = 'Unload T0';
+    if (cardBadge) {
+      cardBadge.textContent = `RTX Ready (${dim}D • ${count} Landmarks${modPill})`;
+      cardBadge.className = 'text-[10px] font-mono px-1.5 py-0.2 rounded bg-emerald-950 text-accent-emerald border border-emerald-800';
+    }
+    if (cardBtn) {
+      cardBtn.textContent = 'Unload Embedding';
+      cardBtn.className = 'text-[10px] font-mono px-2 py-0.5 rounded border border-rose-900/60 bg-rose-950/40 text-rose-300 hover:text-rose-200 cursor-pointer';
+    }
+  } else {
+    if (hdrBadge) {
+      hdrBadge.textContent = 'T0: Off (Skipped)';
+      hdrBadge.className = 'text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 border border-zinc-700';
+    }
+    if (hdrBtn) hdrBtn.textContent = 'Load T0';
+    if (cardBadge) {
+      cardBadge.textContent = 'Standby (Unloaded)';
+      cardBadge.className = 'text-[10px] font-mono px-1.5 py-0.2 rounded bg-zinc-800 text-zinc-400 border border-zinc-700';
+    }
+    if (cardBtn) {
+      cardBtn.textContent = 'Load Embedding';
+      cardBtn.className = 'text-[10px] font-mono px-2 py-0.5 rounded border border-emerald-800 bg-emerald-950/60 text-accent-emerald hover:text-white cursor-pointer';
+    }
+  }
+  updateHeaderBadges();
+  updateFlowPipelineUI();
+}
+
+// ─── LLM Unload ─────────────────────────────────────────────
+async function unloadActiveLLM() {
+  if (!confirm('Unload active LLM from VRAM?')) return;
+  const btn = document.getElementById('btn-unload');
+  if (btn) btn.textContent = 'Unloading…';
+  try {
+    const res = await fetch('/v1/models/unload', { method: 'POST' });
+    if (!res.ok) throw new Error('Unload failed');
+    await Promise.all([checkHealth(), loadModelsAndConfig()]);
+  } catch (e) {
+    alert('Unload failed: ' + e.message);
+  } finally {
+    if (btn) btn.textContent = 'Unload LLM';
+  }
+}
+
+// ─── Tier -1 Rules Management ───────────────────────────────
+async function loadRoutingRules() {
+  try {
+    const res = await fetch('/v1/rules');
+    if (!res.ok) return;
+    const data = await res.json();
+    currentRulesData = data;
+
+    const hdrSelect = document.getElementById('rules-select');
+    const cardSelect = document.getElementById('card-rules-select');
+    const files = data.files || [];
+
+    const optionsHtml = files.map(f => {
+      const isSel = f.filename === data.active_file ? 'selected' : '';
+      return `<option value="${escapeHtml(f.filename)}" ${isSel}>${escapeHtml(f.filename)} (${f.rule_count} rules)</option>`;
+    }).join('');
+
+    if (hdrSelect) hdrSelect.innerHTML = optionsHtml;
+    if (cardSelect) cardSelect.innerHTML = optionsHtml;
+
+    renderRulesTable(data.rules || [], data.active_file);
+    updateHeaderBadges();
+    updateFlowPipelineUI();
+  } catch (e) {
+    console.warn('Could not load routing rules:', e);
+  }
+}
+
+async function onRuleFileChange(filename) {
+  if (!filename) return;
+  try {
+    const res = await fetch('/v1/rules/select', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ filename: filename })
+    });
+    if (!res.ok) throw new Error('Failed to switch rule file');
+    await loadRoutingRules();
+  } catch (e) {
+    alert('Error selecting rule file: ' + e.message);
+  }
+}
+
+async function reloadRulesFromDisk() {
+  try {
+    const res = await fetch('/v1/config/rules/reload', { method: 'POST' });
+    if (!res.ok) throw new Error('Failed to reload rules');
+    const data = await res.json();
+    await loadRoutingRules();
+    alert(`Successfully hot-reloaded ${data.loaded_rules} rules from ${data.active_file}!`);
+  } catch (e) {
+    alert('Failed to reload rules: ' + e.message);
+  }
+}
+
+let editingRuleIndex = -1;
+
+function onRuleActionSelectChange(action) {
+  const decInput = document.getElementById('inp-rule-decision');
+  if (!decInput) return;
+  if (action === 'DIRECT_EXIT') {
+    decInput.placeholder = 'Target Letter/Label (Required for DIRECT_EXIT)';
+    decInput.classList.add('border-purple-800');
+  } else {
+    decInput.placeholder = 'e.g. Legal, Billing, A (Optional)';
+    decInput.classList.remove('border-purple-800');
+  }
+}
+
+function renderRulesTable(rules, activeFile) {
+  const container = document.getElementById('rules-table-body');
+  const countBadge = document.getElementById('rules-count-badge');
+  if (countBadge) {
+    countBadge.textContent = `${rules.length} Active Rules`;
+  }
+  if (!container) return;
+
+  if (!rules || rules.length === 0) {
+    container.innerHTML = '<div class="text-zinc-500 text-xs font-mono py-2">No rules loaded in active profile.</div>';
+    return;
+  }
+
+  const actionColors = {
+    FORCE_COT: 'bg-amber-950/80 text-amber-300 border-amber-800/80',
+    SKIP_TIER0: 'bg-sky-950/80 text-sky-300 border-sky-800/80',
+    FORCE_TIER0: 'bg-emerald-950/80 text-emerald-300 border-emerald-800/80',
+    DIRECT_EXIT: 'bg-purple-950/80 text-purple-300 border-purple-800/80',
+    EVALUATE_ALL: 'bg-zinc-800 text-zinc-400 border-zinc-700'
+  };
+
+  container.innerHTML = rules.map((r, index) => {
+    const actClass = actionColors[r.action] || 'bg-zinc-800 text-zinc-300 border-zinc-700';
+    const conds = r.conditions || {};
+    const condList = [];
+    if (conds.min_words) condList.push(`min words: ${conds.min_words}`);
+    if (conds.max_words) condList.push(`max words: ${conds.max_words}`);
+    if (conds.keywords_any && conds.keywords_any.length) condList.push(`any: [${conds.keywords_any.slice(0, 3).join(', ')}${conds.keywords_any.length > 3 ? '...' : ''}]`);
+    if (conds.keywords_all && conds.keywords_all.length) condList.push(`all: [${conds.keywords_all.slice(0, 3).join(', ')}${conds.keywords_all.length > 3 ? '...' : ''}]`);
+    if (conds.regex_match) condList.push(`regex: /${conds.regex_match.slice(0, 25)}.../`);
+    const condStr = condList.join(' • ') || 'None (all)';
+
+    const isEditing = (editingRuleIndex === index);
+    const borderClass = isEditing ? 'border-accent-cyan ring-1 ring-cyan-700 bg-cyan-950/10' : 'border-surface-border/60 bg-obsidian/90';
+
+    return `
+      <div class="p-2.5 rounded-lg ${borderClass} border flex flex-col gap-1.5 text-xs font-mono transition-all">
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center gap-1.5 font-semibold text-zinc-200 truncate min-w-0">
+            <span class="text-[10px] px-1 py-0.2 rounded bg-zinc-800 text-zinc-400 border border-zinc-700 shrink-0 font-bold">P${r.priority ?? 1}</span>
+            <span class="truncate">${escapeHtml(r.name)}</span>
+          </div>
+          <div class="flex items-center gap-1 shrink-0">
+            <span class="text-[10px] px-1.5 py-0.5 rounded border font-bold ${actClass}">${r.action}${r.decision ? ' → ' + escapeHtml(r.decision) : ''}</span>
+            <button type="button" onclick="editRule(${index})" title="Edit rule" class="p-1 rounded text-zinc-400 hover:text-accent-cyan hover:bg-surface-card border border-transparent hover:border-surface-border transition-colors cursor-pointer">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+            </button>
+            <button type="button" onclick="deleteRule(${index})" title="Delete rule" class="p-1 rounded text-zinc-400 hover:text-rose-400 hover:bg-rose-950/40 border border-transparent hover:border-rose-900/60 transition-colors cursor-pointer">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+            </button>
+          </div>
+        </div>
+        ${r.description ? `<p class="text-[11px] text-zinc-400 leading-relaxed">${escapeHtml(r.description)}</p>` : ''}
+        <div class="text-[10px] text-zinc-500 pt-0.5 truncate">${escapeHtml(condStr)}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function editRule(index) {
+  if (!currentRulesData || !currentRulesData.rules || !currentRulesData.rules[index]) return;
+  const r = currentRulesData.rules[index];
+  editingRuleIndex = index;
+
+  const titleEl = document.getElementById('rule-editor-title');
+  const cancelBtn = document.getElementById('btn-cancel-rule-edit');
+  const saveLabel = document.getElementById('btn-save-rule-label');
+
+  if (titleEl) titleEl.innerHTML = `<span>✏️</span> Edit Rule: <span class="text-accent-cyan truncate max-w-[200px]">${escapeHtml(r.name)}</span>`;
+  if (cancelBtn) cancelBtn.classList.remove('hidden');
+  if (saveLabel) saveLabel.textContent = 'Update Rule in .json';
+
+  const nameInput = document.getElementById('inp-rule-name');
+  const actSelect = document.getElementById('sel-rule-action');
+  const decInput = document.getElementById('inp-rule-decision');
+  const kwInput = document.getElementById('inp-rule-keywords');
+  const regexInput = document.getElementById('inp-rule-regex');
+  const minInput = document.getElementById('inp-rule-min-words');
+  const maxInput = document.getElementById('inp-rule-max-words');
+  const prioInput = document.getElementById('inp-rule-priority');
+  const descInput = document.getElementById('inp-rule-desc');
+
+  if (nameInput) nameInput.value = r.name || '';
+  if (actSelect) {
+    actSelect.value = r.action || 'FORCE_COT';
+    onRuleActionSelectChange(actSelect.value);
+  }
+  if (decInput) decInput.value = r.decision || '';
+  if (prioInput) prioInput.value = r.priority !== undefined ? r.priority : 1;
+  if (descInput) descInput.value = r.description || '';
+
+  const conds = r.conditions || {};
+  if (kwInput) {
+    const kws = conds.keywords_any || conds.keywords_all || [];
+    kwInput.value = Array.isArray(kws) ? kws.join(', ') : '';
+  }
+  const anyRadio = document.querySelector('input[name="rule_keyword_mode"][value="any"]');
+  const allRadio = document.querySelector('input[name="rule_keyword_mode"][value="all"]');
+  if (conds.keywords_all && allRadio) {
+    allRadio.checked = true;
+  } else if (anyRadio) {
+    anyRadio.checked = true;
+  }
+
+  if (regexInput) regexInput.value = conds.regex_match || '';
+  if (minInput) minInput.value = (conds.min_words !== undefined && conds.min_words > 0) ? conds.min_words : '';
+  if (maxInput) maxInput.value = (conds.max_words !== undefined && conds.max_words < 999999) ? conds.max_words : '';
+
+  const card = document.getElementById('rule-editor-card');
+  if (card) card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  renderRulesTable(currentRulesData.rules, currentRulesData.active_file);
+}
+
+function cancelRuleEdit() {
+  editingRuleIndex = -1;
+  const titleEl = document.getElementById('rule-editor-title');
+  const cancelBtn = document.getElementById('btn-cancel-rule-edit');
+  const saveLabel = document.getElementById('btn-save-rule-label');
+
+  if (titleEl) titleEl.innerHTML = '<span>➕</span> Add Heuristic Rule';
+  if (cancelBtn) cancelBtn.classList.add('hidden');
+  if (saveLabel) saveLabel.textContent = 'Add Rule to .json';
+
+  const nameInput = document.getElementById('inp-rule-name');
+  const actSelect = document.getElementById('sel-rule-action');
+  const decInput = document.getElementById('inp-rule-decision');
+  const kwInput = document.getElementById('inp-rule-keywords');
+  const regexInput = document.getElementById('inp-rule-regex');
+  const minInput = document.getElementById('inp-rule-min-words');
+  const maxInput = document.getElementById('inp-rule-max-words');
+  const prioInput = document.getElementById('inp-rule-priority');
+  const descInput = document.getElementById('inp-rule-desc');
+
+  if (nameInput) nameInput.value = '';
+  if (actSelect) {
+    actSelect.value = 'FORCE_COT';
+    onRuleActionSelectChange('FORCE_COT');
+  }
+  if (decInput) decInput.value = '';
+  if (kwInput) kwInput.value = '';
+  if (regexInput) regexInput.value = '';
+  if (minInput) minInput.value = '';
+  if (maxInput) maxInput.value = '';
+  if (prioInput) prioInput.value = '1';
+  if (descInput) descInput.value = '';
+
+  const anyRadio = document.querySelector('input[name="rule_keyword_mode"][value="any"]');
+  if (anyRadio) anyRadio.checked = true;
+
+  if (currentRulesData && currentRulesData.rules) {
+    renderRulesTable(currentRulesData.rules, currentRulesData.active_file);
+  }
+}
+
+async function saveRuleForm() {
+  const nameInput = document.getElementById('inp-rule-name');
+  const actSelect = document.getElementById('sel-rule-action');
+  const decInput = document.getElementById('inp-rule-decision');
+  const kwInput = document.getElementById('inp-rule-keywords');
+  const regexInput = document.getElementById('inp-rule-regex');
+  const minInput = document.getElementById('inp-rule-min-words');
+  const maxInput = document.getElementById('inp-rule-max-words');
+  const prioInput = document.getElementById('inp-rule-priority');
+  const descInput = document.getElementById('inp-rule-desc');
+  const saveBtn = document.getElementById('btn-save-rule');
+
+  const name = (nameInput ? nameInput.value : '').trim();
+  if (!name) {
+    alert('Please enter a Rule Name.');
+    if (nameInput) nameInput.focus();
+    return;
+  }
+
+  const action = actSelect ? actSelect.value : 'FORCE_COT';
+  const decision = (decInput ? decInput.value : '').trim();
+  const desc = (descInput ? descInput.value : '').trim();
+  const priority = prioInput ? parseInt(prioInput.value, 10) || 1 : 1;
+
+  if (action === 'DIRECT_EXIT' && !decision) {
+    if (!confirm('DIRECT_EXIT rules usually require a target decision (e.g. Legal, Decline, A). Save without a decision?')) {
+      if (decInput) decInput.focus();
+      return;
+    }
+  }
+
+  const conditions = {};
+  const kwRaw = kwInput ? kwInput.value.trim() : '';
+  if (kwRaw) {
+    const kws = kwRaw.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+    if (kws.length > 0) {
+      const mode = (document.querySelector('input[name="rule_keyword_mode"]:checked') || {}).value || 'any';
+      if (mode === 'all') conditions.keywords_all = kws;
+      else conditions.keywords_any = kws;
+    }
+  }
+
+  const regex = regexInput ? regexInput.value.trim() : '';
+  if (regex) conditions.regex_match = regex;
+
+  const minWords = minInput ? parseInt(minInput.value, 10) : 0;
+  if (!isNaN(minWords) && minWords > 0) conditions.min_words = minWords;
+
+  const maxWords = maxInput ? parseInt(maxInput.value, 10) : 0;
+  if (!isNaN(maxWords) && maxWords > 0) conditions.max_words = maxWords;
+
+  const ruleObj = {
+    name: name,
+    description: desc,
+    action: action,
+    priority: priority,
+    conditions: conditions
+  };
+  if (decision) ruleObj.decision = decision;
+
+  let currentRules = (currentRulesData && Array.isArray(currentRulesData.rules)) ? [...currentRulesData.rules] : [];
+  const activeFile = (currentRulesData && currentRulesData.active_file) ? currentRulesData.active_file : 'routing_rules.json';
+
+  if (editingRuleIndex >= 0 && editingRuleIndex < currentRules.length) {
+    currentRules[editingRuleIndex] = ruleObj;
+  } else {
+    currentRules.push(ruleObj);
+  }
+
+  currentRules.sort((a, b) => (a.priority ?? 99) - (b.priority ?? 99));
+
+  if (saveBtn) {
+    saveBtn.disabled = true;
+    saveBtn.classList.add('opacity-60');
+  }
+
+  try {
+    const payload = {
+      filename: activeFile,
+      data: {
+        version: (currentRulesData && currentRulesData.version) || '1.0',
+        default_action: (currentRulesData && currentRulesData.default_action) || 'EVALUATE_ALL',
+        rules: currentRules
+      }
+    };
+
+    const res = await fetch('/v1/rules/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: res.statusText }));
+      throw new Error(err.detail || `HTTP ${res.status}`);
+    }
+
+    await loadRoutingRules();
+    cancelRuleEdit();
+  } catch (err) {
+    alert('Failed to save rule: ' + err.message);
+  } finally {
+    if (saveBtn) {
+      saveBtn.disabled = false;
+      saveBtn.classList.remove('opacity-60');
+    }
+  }
+}
+
+async function deleteRule(index) {
+  if (!currentRulesData || !currentRulesData.rules || !currentRulesData.rules[index]) return;
+  const r = currentRulesData.rules[index];
+  const activeFile = currentRulesData.active_file || 'routing_rules.json';
+
+  if (!confirm(`Delete rule "${r.name}" from ${activeFile}?`)) return;
+
+  const currentRules = [...currentRulesData.rules];
+  currentRules.splice(index, 1);
+
+  try {
+    const payload = {
+      filename: activeFile,
+      data: {
+        version: currentRulesData.version || '1.0',
+        default_action: currentRulesData.default_action || 'EVALUATE_ALL',
+        rules: currentRules
+      }
+    };
+
+    const res = await fetch('/v1/rules/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) throw new Error('Delete failed: ' + res.statusText);
+
+    if (editingRuleIndex === index) {
+      cancelRuleEdit();
+    } else if (editingRuleIndex > index) {
+      editingRuleIndex--;
+    }
+
+    await loadRoutingRules();
+  } catch (err) {
+    alert('Failed to delete rule: ' + err.message);
+  }
 }
 
 // ─── Init ───────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
+  const chkVisionEl = document.getElementById('chk-vision');
+  if (chkVisionEl) {
+    chkVisionEl.addEventListener('change', () => {
+      chkVisionEl.dataset.userToggled = 'true';
+    });
+  }
   loadExampleTests();
   checkHealth();
+  checkTier0Status();
+  loadTier0Models();
+  loadRoutingRules();
   loadModelsAndConfig();
   loadSettingsDefaults();
+  updateFlowPipelineUI();
+  updateHeaderBadges();
 });
+
 
 // Allow Ctrl+Enter to submit
 document.addEventListener('keydown', e => {

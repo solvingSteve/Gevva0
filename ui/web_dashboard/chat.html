@@ -76,27 +76,22 @@
         <div>
           <h1 class="text-sm font-bold text-white flex items-center gap-2">
             Gevva0
-            <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-violet-950 text-accent-violet border border-violet-800 font-mono">Generative Studio</span>
           </h1>
         </div>
 
         <!-- Mode Nav Pills -->
         <nav class="hidden md:flex items-center space-x-1 ml-4 pl-4 border-l border-surface-border">
           <a href="/ui/index.html" class="px-2.5 py-1 text-xs font-medium rounded-md text-zinc-400 hover:text-zinc-200 hover:bg-surface-card/60 transition-colors flex items-center gap-1.5" title="Sub-50ms Logit Scoring Decision Gateway">
-            <span>⚡</span> Decisions
+            <span>⚡</span> Decide
           </a>
           <a href="/ui/chat.html" class="px-2.5 py-1 text-xs font-medium rounded-md bg-violet-950/80 text-violet-300 border border-violet-800/80 shadow-sm flex items-center gap-1.5" title="Autoregressive Text & JSON Generation">
-            <span>💬</span> Generative Studio
+            <span>💬</span> Chat
           </a>
         </nav>
       </div>
 
       <!-- Right Header Status Items -->
       <div class="flex items-center gap-3">
-        <div id="vram-shared-badge" class="hidden sm:flex items-center gap-1.5 text-[10px] font-mono text-zinc-400 bg-surface-card border border-surface-border px-2.5 py-1 rounded-full">
-          <span class="w-1.5 h-1.5 rounded-full bg-accent-violet animate-pulse"></span>
-          <span>Shared VRAM Engine</span>
-        </div>
         <div id="vision-status-badge" class="hidden items-center gap-1.5 text-[11px] font-mono text-accent-emerald bg-emerald-950/60 border border-emerald-800/80 px-2 py-0.5 rounded-full shadow-sm">
           <span class="w-1.5 h-1.5 rounded-full bg-accent-emerald animate-pulse"></span>
           Vision Active
@@ -109,10 +104,22 @@
           <span class="text-zinc-500">Model:</span>
           <span id="active-model-name" class="text-zinc-200 truncate max-w-[140px]">loading...</span>
         </div>
-        <a href="/docs" target="_blank" class="text-[11px] font-mono text-zinc-400 hover:text-accent-violet transition-colors px-2 py-1 rounded border border-surface-border bg-surface-card">API Docs</a>
+        <a href="/docs" target="_blank" class="text-[11px] font-mono text-zinc-400 hover:text-accent-violet transition-colors px-2 py-1 rounded border border-surface-border bg-surface-card">?</a>
       </div>
     </div>
   </header>
+
+  <!-- Top Notification: No Models Loaded Banner -->
+  <div id="no-model-banner" class="hidden bg-amber-950/80 border-b border-amber-800/90 px-4 py-2.5 text-xs font-mono text-amber-200 shadow-md">
+    <div class="max-w-7xl mx-auto flex items-center justify-between gap-3">
+      <div class="flex items-center gap-2">
+        <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xs shrink-0">⚠</span>
+        <span class="font-bold text-amber-300">No model loaded.</span>
+        <span class="text-amber-200/90">Please load a model from the Decisions tab first.</span>
+      </div>
+      <a href="/ui/index.html" class="text-[11px] underline text-cyan-300 hover:text-white shrink-0 font-medium">Switch to Decisions →</a>
+    </div>
+  </div>
 
   <!-- Main Content Layout -->
   <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full">
@@ -259,7 +266,7 @@ client = OpenAI(
     api_key="not-needed"
 )
 resp = client.chat.completions.create(
-    model="gemma-4-26B",
+    model="model",
     messages=[{"role": "user", "content": "Hello!"}]
 )</pre>
           </div>
@@ -300,7 +307,7 @@ resp = client.chat.completions.create(
               </div>
               <h2 class="text-base font-bold text-white">Gevva0 Generative Playground</h2>
               <p class="text-xs text-zinc-400 max-w-md mx-auto">
-                Running alongside Gevva0's 15ms Decision Engine on shared Gemma 4 weights in VRAM. Ask questions, generate technical documents, or extract structured JSON.
+                Running alongside Gevva0's 15ms Decision Engine on shared LLM weights in VRAM. Ask questions, generate technical documents, or extract structured JSON.
               </p>
               <div class="flex flex-wrap items-center justify-center gap-2 pt-2">
                 <button onclick="sendQuickPrompt('What is the difference between direct token logit scoring and traditional autoregressive generation?')" class="text-[11px] font-mono bg-surface hover:bg-surface-hover text-zinc-300 border border-surface-border hover:border-violet-700 px-3 py-1.5 rounded-full transition-colors">
@@ -394,11 +401,28 @@ resp = client.chat.completions.create(
       resetSystemPrompt();
     });
 
+    let isModelLoaded = false;
+    let currentActiveModel = null;
+
     function checkHealthAndModel() {
       fetch('/health')
         .then(r => r.json())
         .then(data => {
           const dot = document.getElementById('health-dot');
+          const banner = document.getElementById('no-model-banner');
+          if (data.status === 'no_model_loaded' || !data.model) {
+            isModelLoaded = false;
+            currentActiveModel = null;
+            dot.innerHTML = `<span class="relative flex h-2 w-2"><span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span></span> No models loaded`;
+            dot.className = 'flex items-center gap-1.5 text-[11px] font-mono text-amber-400';
+            if (banner) banner.classList.remove('hidden');
+            const modelNameEl = document.getElementById('active-model-name');
+            if (modelNameEl) modelNameEl.textContent = 'None';
+            return;
+          }
+          isModelLoaded = true;
+          currentActiveModel = data.model;
+          if (banner) banner.classList.add('hidden');
           if (data.status === 'ok') {
             dot.innerHTML = `<span class="relative flex h-2 w-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-accent-emerald"></span></span> Ready`;
             dot.className = 'flex items-center gap-1.5 text-[11px] font-mono text-accent-emerald';
@@ -414,6 +438,10 @@ resp = client.chat.completions.create(
           }
         })
         .catch(() => {
+          isModelLoaded = false;
+          currentActiveModel = null;
+          const banner = document.getElementById('no-model-banner');
+          if (banner) banner.classList.remove('hidden');
           const dot = document.getElementById('health-dot');
           dot.innerHTML = `<span class="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span> Offline`;
           dot.className = 'flex items-center gap-1.5 text-[11px] font-mono text-rose-400';
@@ -463,7 +491,7 @@ resp = client.chat.completions.create(
     }
 
     function resetSystemPrompt() {
-      document.getElementById('system-prompt').value = "You are a helpful, knowledgeable, and accurate AI assistant running locally on Gemma 4.";
+      document.getElementById('system-prompt').value = "You are a helpful, knowledgeable, and accurate AI assistant running locally.";
     }
 
     function applyPreset(name) {
@@ -554,6 +582,15 @@ resp = client.chat.completions.create(
       // Hide welcome
       const welcome = document.getElementById('welcome-message');
       if (welcome) welcome.remove();
+
+      if (!isModelLoaded) {
+        appendUserMessage(text, attachedImageBase64);
+        inputEl.value = '';
+        inputEl.style.height = 'auto';
+        const bubble = createAssistantMessageBubble();
+        bubble.querySelector('.content-body').innerHTML = `<div class="text-amber-400 text-xs font-mono bg-amber-950/40 p-2.5 rounded border border-amber-800">⚠ No model loaded. Please switch to the <a href="/ui/index.html" class="underline text-cyan-300 hover:text-white">Decisions tab</a> and load a model first.</div>`;
+        return;
+      }
 
       inputEl.value = '';
       inputEl.style.height = 'auto';
@@ -778,7 +815,7 @@ resp = client.chat.completions.create(
         <div class="max-w-[90%] bg-surface border border-surface-border rounded-2xl rounded-tl-none px-4 py-3 shadow-sm w-full">
           <div class="text-[10px] font-mono text-accent-cyan font-semibold mb-2 flex items-center justify-between">
             <span class="flex items-center gap-1.5">
-              <span class="w-2 h-2 rounded-full bg-accent-violet"></span> Gemma 4
+              <span class="w-2 h-2 rounded-full bg-accent-violet"></span> ${currentActiveModel ? escapeHtml(currentActiveModel.replace(/\\/g, '/').split('/').pop().replace(/\.gguf$/i, '')) : 'LLM'}
             </span>
           </div>
           <div class="content-body text-xs text-zinc-200 prose-custom">
@@ -816,6 +853,12 @@ resp = client.chat.completions.create(
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
     }
+
+    window.addEventListener('beforeunload', () => {
+      if (activeAbortController) {
+        try { activeAbortController.abort(); } catch {}
+      }
+    });
   </script>
 </body>
 </html>

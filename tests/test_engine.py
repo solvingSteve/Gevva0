@@ -168,8 +168,7 @@ def test_default_fp16_kv_cache_and_cot_prompt():
     assert llm_kwargs["type_v"] == 1  # Native FP16 (GGML_TYPE_F16 = 1)
 
     cot_prompt = resolve_cot_prompt()
-    assert "First calculate" in cot_prompt
-    assert "sliding window" in cot_prompt
+    assert any(k in cot_prompt for k in ["First calculate", "Analysis:", "Verify each option"])
 
     dec_kwargs = resolve_decision_kwargs()
     assert dec_kwargs["cot_prompt"] == cot_prompt

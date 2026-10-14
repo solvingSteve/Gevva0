@@ -8,12 +8,13 @@ import sys
 import numpy as np
 
 from . import __version__
-from .calibration import TemperatureCalibrator
+from .calibration import TemperatureCalibrator, calibrate_model
 from .config import (
     DEFAULT_COT_THRESHOLD,
     DEFAULT_ESCALATE_THRESHOLD,
     PROJECT_ROOT,
     resolve_calibration_path,
+    update_config_calibration,
 )
 from .debias import LETTERS
 from .engine import GemmaDecisionEngine
@@ -125,75 +126,12 @@ def _dict_spec(options: dict[str, str]) -> str:
 
 
 def cmd_calibrate(args: argparse.Namespace) -> int:
-    data_path = Path(args.data) if args.data else Path("calibration.jsonl")
-    if not data_path.is_file():
-        if (PROJECT_ROOT / data_path).is_file():
-            data_path = PROJECT_ROOT / data_path
-        elif (PROJECT_ROOT / "calibration.jsonl").is_file():
-            data_path = PROJECT_ROOT / "calibration.jsonl"
-        elif (PROJECT_ROOT / "benchmarks" / "benchmark_suite.json").is_file():
-            data_path = PROJECT_ROOT / "benchmarks" / "benchmark_suite.json"
-        elif (PROJECT_ROOT / "tests" / "tests.json").is_file():
-            data_path = PROJECT_ROOT / "tests" / "tests.json"
-        else:
-            raise SystemExit(f"no calibration rows found in {args.data}")
-
-    rows: list[dict] = []
-    raw_text = data_path.read_text(encoding="utf-8").strip()
-    if raw_text.startswith("{") or raw_text.startswith("["):
-        try:
-            parsed = json.loads(raw_text)
-            if isinstance(parsed, dict) and "tests" in parsed:
-                rows = parsed["tests"]
-            elif isinstance(parsed, list):
-                rows = parsed
-        except Exception:
-            pass
-
-    if not rows:
-        for line in raw_text.splitlines():
-            line = line.strip()
-            if line:
-                try:
-                    rows.append(json.loads(line))
-                except Exception:
-                    continue
-
-    if not rows:
-        raise SystemExit(f"no calibration rows found in {data_path}")
-
     engine = GemmaDecisionEngine(model_path=args.model)
-    logits_list: list[np.ndarray] = []
-    labels: list[int] = []
-    for row in rows:
-        label = row.get("label") or row.get("expected_ground_truth")
-        if not label:
-            continue
-        ctx = row.get("context", "")
-        q = row.get("question", "")
-        if q and q not in ctx:
-            ctx = f"{ctx}\n\nQuestion: {q}"
-
-        if isinstance(row["options"], dict):
-            options = {str(k).strip().upper(): str(v).strip() for k, v in row["options"].items()}
-        else:
-            options = parse_options(row["options"])
-
-        keys = list(options.keys())
-        if label not in keys:
-            continue
-
-        logits_list.append(engine.score(ctx, options))
-        labels.append(keys.index(label))
-
-    if not logits_list:
-        raise SystemExit("no valid labeled rows found for calibration")
-
-    cal = load_calibrator() or TemperatureCalibrator()
-    cal.fit_brier_score(logits_list, labels)
-    out = resolve_calibration_path() if args.out is None else Path(args.out)
-    cal.save(out)
-    print(f"saved calibrator to {out}")
+    data_file = args.data if args.data else None
+    out_file = Path(args.out) if args.out else resolve_calibration_path(engine.model_path)
+    cal, saved_file = calibrate_model(engine, calibration_data=data_file, output_path=out_file, verbose=True)
+    update_config_calibration(cal)
+    print(f"Saved calibrated profile to {saved_file}")
     return 0
 
 
@@ -202,12 +140,14 @@ def cmd_serve(args: argparse.Namespace) -> int:
 
     from .server import create_app
 
-    mmproj_override = None if getattr(args, "no_vision", False) else getattr(args, "mmproj", None)
-    engine = GemmaDecisionEngine.from_config(
-        model_path=args.model,
-        mmproj_path=mmproj_override,
-        load_calibration=True,
-    )
+    engine = None
+    if args.model:
+        mmproj_override = None if getattr(args, "no_vision", False) else getattr(args, "mmproj", None)
+        engine = GemmaDecisionEngine.from_config(
+            model_path=args.model,
+            mmproj_path=mmproj_override,
+            load_calibration=True,
+        )
     uvicorn.run(create_app(engine), host=args.host, port=args.port, log_level="info")
     return 0
 

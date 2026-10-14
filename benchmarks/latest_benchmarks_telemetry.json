@@ -1,0 +1,1045 @@
+{
+  "timestamp": "2026-10-13T17:35:36Z",
+  "total_wall_seconds": 135.46,
+  "model": "Gemma 4 26B-A4B-it Q4_K_XL (K=64 Dynamic Sparse Logit Head) + EmbeddingGemma-2 ONNX",
+  "jevbench": {
+    "fast_path": {
+      "easy_accuracy_pct": 100.0,
+      "standard_accuracy_pct": 95.83,
+      "hard_accuracy_pct": 74.77,
+      "vision_accuracy_pct": 100.0,
+      "overall_text_accuracy_pct": 86.58,
+      "overall_all_accuracy_pct": 87.08,
+      "capability_score": 85.93,
+      "intelligence_score": 81.78,
+      "ece": 0.083,
+      "mean_tvd": 0.3474,
+      "calibration_score": 74.33,
+      "speed_score_raw": 95.78,
+      "speed_score_gpu_adjusted": 88.17,
+      "cost_score_local_gpu": 81.94,
+      "cost_score_zero_api": 100.0,
+      "jevbench_score_official_gpu": 81.41,
+      "jevbench_score_raw": 87.35,
+      "latency": {
+        "count": 231,
+        "mean_ms": 78.66,
+        "p50_ms": 37.16,
+        "p95_ms": 264.52,
+        "min_ms": 24.06,
+        "max_ms": 409.48
+      },
+      "tier_telemetry": {
+        "tier_-1": {
+          "count": 0,
+          "share_pct": 0.0,
+          "accuracy_pct": 0.0,
+          "latency": {
+            "count": 0,
+            "mean_ms": 0.0,
+            "p50_ms": 0.0,
+            "p95_ms": 0.0,
+            "min_ms": 0.0,
+            "max_ms": 0.0
+          }
+        },
+        "tier_0": {
+          "count": 0,
+          "share_pct": 0.0,
+          "accuracy_pct": 0.0,
+          "latency": {
+            "count": 0,
+            "mean_ms": 0.0,
+            "p50_ms": 0.0,
+            "p95_ms": 0.0,
+            "min_ms": 0.0,
+            "max_ms": 0.0
+          }
+        },
+        "tier_1": {
+          "count": 240,
+          "share_pct": 100.0,
+          "accuracy_pct": 87.08,
+          "latency": {
+            "count": 240,
+            "mean_ms": 76.97,
+            "p50_ms": 36.14,
+            "p95_ms": 262.84,
+            "min_ms": 24.06,
+            "max_ms": 409.48
+          }
+        },
+        "tier_2": {
+          "count": 0,
+          "share_pct": 0.0,
+          "accuracy_pct": 0.0,
+          "latency": {
+            "count": 0,
+            "mean_ms": 0.0,
+            "p50_ms": 0.0,
+            "p95_ms": 0.0,
+            "min_ms": 0.0,
+            "max_ms": 0.0
+          }
+        }
+      },
+      "family_breakdown": {
+        "easy:extraction": {
+          "count": 12,
+          "accuracy_pct": 100.0,
+          "mean_latency_ms": 31.27,
+          "tier_distribution": {
+            "T1": 12
+          }
+        },
+        "easy:fact": {
+          "count": 12,
+          "accuracy_pct": 100.0,
+          "mean_latency_ms": 31.54,
+          "tier_distribution": {
+            "T1": 12
+          }
+        },
+        "easy:intent": {
+          "count": 12,
+          "accuracy_pct": 100.0,
+          "mean_latency_ms": 33.89,
+          "tier_distribution": {
+            "T1": 12
+          }
+        },
+        "easy:tool_selection": {
+          "count": 12,
+          "accuracy_pct": 100.0,
+          "mean_latency_ms": 33.7,
+          "tier_distribution": {
+            "T1": 12
+          }
+        },
+        "hard:adversarial": {
+          "count": 6,
+          "accuracy_pct": 100.0,
+          "mean_latency_ms": 44.31,
+          "tier_distribution": {
+            "T1": 6
+          }
+        },
+        "hard:ambiguous": {
+          "count": 7,
+          "accuracy_pct": 100.0,
+          "mean_latency_ms": 66.3,
+          "tier_distribution": {
+            "T1": 7
+          }
+        },
+        "hard:judge_hard": {
+          "count": 17,
+          "accuracy_pct": 82.35,
+          "mean_latency_ms": 43.28,
+          "tier_distribution": {
+            "T1": 17
+          }
+        },
+        "hard:long_policy": {
+          "count": 19,
+          "accuracy_pct": 68.42,
+          "mean_latency_ms": 281.8,
+          "tier_distribution": {
+            "T1": 19
+          }
+        },
+        "hard:multi_hop": {
+          "count": 18,
+          "accuracy_pct": 83.33,
+          "mean_latency_ms": 232.79,
+          "tier_distribution": {
+            "T1": 18
+          }
+        },
+        "hard:probability": {
+          "count": 10,
+          "accuracy_pct": 70.0,
+          "mean_latency_ms": 99.25,
+          "tier_distribution": {
+            "T1": 10
+          }
+        },
+        "hard:routing_hard": {
+          "count": 5,
+          "accuracy_pct": 100.0,
+          "mean_latency_ms": 42.42,
+          "tier_distribution": {
+            "T1": 5
+          }
+        },
+        "hard:temporal_numeric": {
+          "count": 15,
+          "accuracy_pct": 26.67,
+          "mean_latency_ms": 77.89,
+          "tier_distribution": {
+            "T1": 15
+          }
+        },
+        "hard:tradeoff": {
+          "count": 6,
+          "accuracy_pct": 66.67,
+          "mean_latency_ms": 83.43,
+          "tier_distribution": {
+            "T1": 6
+          }
+        },
+        "hard:trap": {
+          "count": 8,
+          "accuracy_pct": 100.0,
+          "mean_latency_ms": 41.63,
+          "tier_distribution": {
+            "T1": 8
+          }
+        },
+        "standard:adequacy": {
+          "count": 12,
+          "accuracy_pct": 83.33,
+          "mean_latency_ms": 31.79,
+          "tier_distribution": {
+            "T1": 12
+          }
+        },
+        "standard:extraction": {
+          "count": 12,
+          "accuracy_pct": 100.0,
+          "mean_latency_ms": 32.36,
+          "tier_distribution": {
+            "T1": 12
+          }
+        },
+        "standard:intent": {
+          "count": 12,
+          "accuracy_pct": 100.0,
+          "mean_latency_ms": 31.45,
+          "tier_distribution": {
+            "T1": 12
+          }
+        },
+        "standard:ordinal": {
+          "count": 12,
+          "accuracy_pct": 100.0,
+          "mean_latency_ms": 34.76,
+          "tier_distribution": {
+            "T1": 12
+          }
+        },
+        "standard:policy": {
+          "count": 12,
+          "accuracy_pct": 91.67,
+          "mean_latency_ms": 32.96,
+          "tier_distribution": {
+            "T1": 12
+          }
+        },
+        "standard:routing": {
+          "count": 12,
+          "accuracy_pct": 100.0,
+          "mean_latency_ms": 35.68,
+          "tier_distribution": {
+            "T1": 12
+          }
+        },
+        "vision:document_routing": {
+          "count": 2,
+          "accuracy_pct": 100.0,
+          "mean_latency_ms": 33.48,
+          "tier_distribution": {
+            "T1": 2
+          }
+        },
+        "vision:expense_audit": {
+          "count": 1,
+          "accuracy_pct": 100.0,
+          "mean_latency_ms": 33.57,
+          "tier_distribution": {
+            "T1": 1
+          }
+        },
+        "vision:physical_security": {
+          "count": 2,
+          "accuracy_pct": 100.0,
+          "mean_latency_ms": 34.66,
+          "tier_distribution": {
+            "T1": 2
+          }
+        },
+        "vision:ui_triage": {
+          "count": 4,
+          "accuracy_pct": 100.0,
+          "mean_latency_ms": 33.49,
+          "tier_distribution": {
+            "T1": 4
+          }
+        }
+      },
+      "rule_hits": {},
+      "tier0_reasons": {}
+    },
+    "cascade": {
+      "easy_accuracy_pct": 100.0,
+      "standard_accuracy_pct": 95.83,
+      "hard_accuracy_pct": 79.28,
+      "vision_accuracy_pct": 100.0,
+      "overall_text_accuracy_pct": 88.74,
+      "overall_all_accuracy_pct": 89.17,
+      "capability_score": 88.18,
+      "intelligence_score": 84.62,
+      "ece": 0.0751,
+      "mean_tvd": 0.3385,
+      "calibration_score": 75.56,
+      "speed_score_raw": 88.04,
+      "speed_score_gpu_adjusted": 81.15,
+      "cost_score_local_gpu": 81.94,
+      "cost_score_zero_api": 100.0,
+      "jevbench_score_official_gpu": 80.75,
+      "jevbench_score_raw": 86.62,
+      "latency": {
+        "count": 231,
+        "mean_ms": 265.61,
+        "p50_ms": 41.37,
+        "p95_ms": 1571.75,
+        "min_ms": 9.81,
+        "max_ms": 1987.58
+      },
+      "tier_telemetry": {
+        "tier_-1": {
+          "count": 0,
+          "share_pct": 0.0,
+          "accuracy_pct": 0.0,
+          "latency": {
+            "count": 0,
+            "mean_ms": 0.0,
+            "p50_ms": 0.0,
+            "p95_ms": 0.0,
+            "min_ms": 0.0,
+            "max_ms": 0.0
+          }
+        },
+        "tier_0": {
+          "count": 12,
+          "share_pct": 5.0,
+          "accuracy_pct": 100.0,
+          "latency": {
+            "count": 12,
+            "mean_ms": 24.63,
+            "p50_ms": 11.18,
+            "p95_ms": 144.69,
+            "min_ms": 9.81,
+            "max_ms": 144.69
+          }
+        },
+        "tier_1": {
+          "count": 187,
+          "share_pct": 77.92,
+          "accuracy_pct": 91.44,
+          "latency": {
+            "count": 187,
+            "mean_ms": 63.57,
+            "p50_ms": 38.85,
+            "p95_ms": 256.49,
+            "min_ms": 24.24,
+            "max_ms": 349.38
+          }
+        },
+        "tier_2": {
+          "count": 41,
+          "share_pct": 17.08,
+          "accuracy_pct": 75.61,
+          "latency": {
+            "count": 41,
+            "mean_ms": 1208.64,
+            "p50_ms": 1355.68,
+            "p95_ms": 1699.72,
+            "min_ms": 380.41,
+            "max_ms": 1987.58
+          }
+        }
+      },
+      "family_breakdown": {
+        "easy:extraction": {
+          "count": 12,
+          "accuracy_pct": 100.0,
+          "mean_latency_ms": 37.62,
+          "tier_distribution": {
+            "T1": 12
+          }
+        },
+        "easy:fact": {
+          "count": 12,
+          "accuracy_pct": 100.0,
+          "mean_latency_ms": 27.57,
+          "tier_distribution": {
+            "T1": 12
+          }
+        },
+        "easy:intent": {
+          "count": 12,
+          "accuracy_pct": 100.0,
+          "mean_latency_ms": 33.34,
+          "tier_distribution": {
+            "T1": 4,
+            "T0": 8
+          }
+        },
+        "easy:tool_selection": {
+          "count": 12,
+          "accuracy_pct": 100.0,
+          "mean_latency_ms": 38.19,
+          "tier_distribution": {
+            "T1": 11,
+            "T0": 1
+          }
+        },
+        "hard:adversarial": {
+          "count": 6,
+          "accuracy_pct": 100.0,
+          "mean_latency_ms": 200.68,
+          "tier_distribution": {
+            "T1": 5,
+            "T2": 1
+          }
+        },
+        "hard:ambiguous": {
+          "count": 7,
+          "accuracy_pct": 100.0,
+          "mean_latency_ms": 130.65,
+          "tier_distribution": {
+            "T1": 6,
+            "T2": 1
+          }
+        },
+        "hard:judge_hard": {
+          "count": 17,
+          "accuracy_pct": 88.24,
+          "mean_latency_ms": 143.36,
+          "tier_distribution": {
+            "T1": 15,
+            "T2": 2
+          }
+        },
+        "hard:long_policy": {
+          "count": 19,
+          "accuracy_pct": 73.68,
+          "mean_latency_ms": 1226.67,
+          "tier_distribution": {
+            "T2": 13,
+            "T1": 6
+          }
+        },
+        "hard:multi_hop": {
+          "count": 18,
+          "accuracy_pct": 83.33,
+          "mean_latency_ms": 482.14,
+          "tier_distribution": {
+            "T2": 4,
+            "T1": 14
+          }
+        },
+        "hard:probability": {
+          "count": 10,
+          "accuracy_pct": 80.0,
+          "mean_latency_ms": 795.6,
+          "tier_distribution": {
+            "T2": 10
+          }
+        },
+        "hard:routing_hard": {
+          "count": 5,
+          "accuracy_pct": 100.0,
+          "mean_latency_ms": 51.21,
+          "tier_distribution": {
+            "T1": 5
+          }
+        },
+        "hard:temporal_numeric": {
+          "count": 15,
+          "accuracy_pct": 33.33,
+          "mean_latency_ms": 593.99,
+          "tier_distribution": {
+            "T1": 8,
+            "T2": 7
+          }
+        },
+        "hard:tradeoff": {
+          "count": 6,
+          "accuracy_pct": 83.33,
+          "mean_latency_ms": 591.62,
+          "tier_distribution": {
+            "T1": 3,
+            "T2": 3
+          }
+        },
+        "hard:trap": {
+          "count": 8,
+          "accuracy_pct": 100.0,
+          "mean_latency_ms": 40.32,
+          "tier_distribution": {
+            "T1": 8
+          }
+        },
+        "standard:adequacy": {
+          "count": 12,
+          "accuracy_pct": 83.33,
+          "mean_latency_ms": 28.52,
+          "tier_distribution": {
+            "T1": 12
+          }
+        },
+        "standard:extraction": {
+          "count": 12,
+          "accuracy_pct": 100.0,
+          "mean_latency_ms": 28.75,
+          "tier_distribution": {
+            "T1": 12
+          }
+        },
+        "standard:intent": {
+          "count": 12,
+          "accuracy_pct": 100.0,
+          "mean_latency_ms": 27.87,
+          "tier_distribution": {
+            "T1": 12
+          }
+        },
+        "standard:ordinal": {
+          "count": 12,
+          "accuracy_pct": 100.0,
+          "mean_latency_ms": 31.37,
+          "tier_distribution": {
+            "T1": 12
+          }
+        },
+        "standard:policy": {
+          "count": 12,
+          "accuracy_pct": 91.67,
+          "mean_latency_ms": 29.17,
+          "tier_distribution": {
+            "T1": 12
+          }
+        },
+        "standard:routing": {
+          "count": 12,
+          "accuracy_pct": 100.0,
+          "mean_latency_ms": 36.04,
+          "tier_distribution": {
+            "T0": 3,
+            "T1": 9
+          }
+        },
+        "vision:document_routing": {
+          "count": 2,
+          "accuracy_pct": 100.0,
+          "mean_latency_ms": 44.59,
+          "tier_distribution": {
+            "T1": 2
+          }
+        },
+        "vision:expense_audit": {
+          "count": 1,
+          "accuracy_pct": 100.0,
+          "mean_latency_ms": 45.69,
+          "tier_distribution": {
+            "T1": 1
+          }
+        },
+        "vision:physical_security": {
+          "count": 2,
+          "accuracy_pct": 100.0,
+          "mean_latency_ms": 40.52,
+          "tier_distribution": {
+            "T1": 2
+          }
+        },
+        "vision:ui_triage": {
+          "count": 4,
+          "accuracy_pct": 100.0,
+          "mean_latency_ms": 41.55,
+          "tier_distribution": {
+            "T1": 4
+          }
+        }
+      },
+      "rule_hits": {
+        "FORCE_COT | Temporal, Rate-Limiting & Financial Arithmetic": 28,
+        "SKIP_TIER0 | Hierarchical Legal & Policy Override": 17,
+        "FORCE_COT | Probabilistic & Statistical Reasoning": 10,
+        "FORCE_COT | Scientific & Reaction Balancing": 2
+      },
+      "tier0_reasons": {
+        "OOD_MANIFOLD_BYPASS": 48,
+        "NON_SEMANTIC_OPTIONS_BYPASS": 117,
+        "EXIT_0": 12,
+        "HIGH_AMBIGUITY": 6
+      }
+    },
+    "rescued_items": [
+      {
+        "id": "hard-opus-a-temporal_numeric-12",
+        "jevbench_tier": "hard",
+        "family": "temporal_numeric",
+        "gold": "B",
+        "fast_pred": "C",
+        "cascade_pred": "B",
+        "resolved_by_tier": 2,
+        "rule_name": "Temporal, Rate-Limiting & Financial Arithmetic",
+        "cot_scratchpad": "1.  **S1 $\\rightarrow$ S2**: End 21:00 (Wed) to Start 07:30 (Thu). Elapsed time: 10 hours 30 minutes. **(Violation 1)**\n2.  **S2 $\\rightarrow$ S3**: End 15:30 (Thu) to Start 06:00 (Fri). Elapsed time: 14 hours 30 minutes. (Compliant)\n3.  **"
+      },
+      {
+        "id": "hard-opus-b-probability-02",
+        "jevbench_tier": "hard",
+        "family": "probability",
+        "gold": "B",
+        "fast_pred": "A",
+        "cascade_pred": "B",
+        "resolved_by_tier": 2,
+        "rule_name": "Probabilistic & Statistical Reasoning",
+        "cot_scratchpad": "1.  **Analyze the new alert's attributes:**\n    *   Alert type: `LAT-CHK`\n    *   Deploy status: A production deploy occurred at 09:52 UTC. The alert fired at 14:07 UTC.\n    *   Time elapsed since deploy: 4 hours and 15 minutes.\n    *   Con"
+      },
+      {
+        "id": "hard-opus-b-tradeoff-08",
+        "jevbench_tier": "hard",
+        "family": "tradeoff",
+        "gold": "B",
+        "fast_pred": "A",
+        "cascade_pred": "B",
+        "resolved_by_tier": 2,
+        "rule_name": "Temporal, Rate-Limiting & Financial Arithmetic",
+        "cot_scratchpad": "1.  **Original Deadline:** Monday, 2026-09-21 23:59.\n2.  **Requested Deadline:** Saturday, 2026-09-26 23:59.\n3.  **Total requested extension duration:** 5 days (120 hours).\n4.  **Instructor Discretion (12.1):** Up to 3 calendar days.\n5.  **"
+      },
+      {
+        "id": "hard-opus-c-long_policy-08",
+        "jevbench_tier": "hard",
+        "family": "long_policy",
+        "gold": "B",
+        "fast_pred": "C",
+        "cascade_pred": "B",
+        "resolved_by_tier": 2,
+        "rule_name": "Temporal, Rate-Limiting & Financial Arithmetic",
+        "cot_scratchpad": "1.  **Identify Base Severity (Impact):**\n    *   **Affected Tenants:** 318 tenants had >5% failure rate.\n    *   **Total Active Tenants:** 4,020.\n    *   **Percentage Affected:** $318 / 4,020 \\approx 7.91\\%$.\n    *   **Enterprise Tenants Af"
+      },
+      {
+        "id": "hard-sol-b-judge_hard-10",
+        "jevbench_tier": "hard",
+        "family": "judge_hard",
+        "gold": "A",
+        "fast_pred": "B",
+        "cascade_pred": "A",
+        "resolved_by_tier": 2,
+        "rule_name": "Temporal, Rate-Limiting & Financial Arithmetic",
+        "cot_scratchpad": "1. **Start Date:** Monday, Nov 24, 2025 (Day 0).\n2. **Holidays:** Thursday, Nov 27 and Friday, Nov 28.\n3. **Business Days Calculation:**\n   - Day 1: Tue Nov 25\n   - Day 2: Wed Nov 26\n   - (Thu Nov 27 - Holiday)\n   - (Fri Nov 28 - Holiday)\n "
+      }
+    ]
+  },
+  "decision_index_03": {
+    "fast_path": {
+      "decision_index_03_score": 56.84,
+      "breadth_skill": 56.84,
+      "overall_accuracy_pct": 67.14,
+      "area_scores": {
+        "knowledge_reasoning": 42.89,
+        "language": 66.83,
+        "retrieval_classification": 64.0,
+        "tools_automation": 55.63,
+        "arts_human_taste": 55.0
+      },
+      "benchmarks": {
+        "9": {
+          "benchmark": 9,
+          "name": "Home appliances",
+          "area": "tools_automation",
+          "count": 50,
+          "metric_kind": "accuracy",
+          "accuracy_pct": 78.0,
+          "raw_score_pct": 78.0,
+          "chance_pct": 11.11,
+          "skill_score": 75.25,
+          "gold_multiplier": 1.0,
+          "mean_latency_ms": 123.01,
+          "tier_distribution": {
+            "T1": 50
+          }
+        },
+        "56": {
+          "benchmark": 56,
+          "name": "PhishNChips phishing decisions",
+          "area": "retrieval_classification",
+          "count": 50,
+          "metric_kind": "accuracy",
+          "accuracy_pct": 82.0,
+          "raw_score_pct": 82.0,
+          "chance_pct": 50.0,
+          "skill_score": 64.0,
+          "gold_multiplier": 1.0,
+          "mean_latency_ms": 43.04,
+          "tier_distribution": {
+            "T1": 50
+          }
+        },
+        "57": {
+          "benchmark": 57,
+          "name": "MMLU-Pro",
+          "area": "knowledge_reasoning",
+          "count": 50,
+          "metric_kind": "accuracy",
+          "accuracy_pct": 50.0,
+          "raw_score_pct": 50.0,
+          "chance_pct": 11.09,
+          "skill_score": 43.76,
+          "gold_multiplier": 1.2,
+          "mean_latency_ms": 39.82,
+          "tier_distribution": {
+            "T1": 50
+          }
+        },
+        "58": {
+          "benchmark": 58,
+          "name": "BBH fixed-option tasks",
+          "area": "knowledge_reasoning",
+          "count": 50,
+          "metric_kind": "accuracy",
+          "accuracy_pct": 60.0,
+          "raw_score_pct": 60.0,
+          "chance_pct": 31.01,
+          "skill_score": 42.02,
+          "gold_multiplier": 1.2,
+          "mean_latency_ms": 36.54,
+          "tier_distribution": {
+            "T1": 50
+          }
+        },
+        "59": {
+          "benchmark": 59,
+          "name": "RAGTruth response-level hallucination",
+          "area": "language",
+          "count": 50,
+          "metric_kind": "f1",
+          "accuracy_pct": 84.0,
+          "raw_score_pct": 84.0,
+          "chance_pct": 51.77,
+          "skill_score": 66.83,
+          "gold_multiplier": 1.0,
+          "mean_latency_ms": 91.11,
+          "tier_distribution": {
+            "T1": 50
+          }
+        },
+        "62": {
+          "benchmark": 62,
+          "name": "When2Call MCQ",
+          "area": "tools_automation",
+          "count": 50,
+          "metric_kind": "accuracy",
+          "accuracy_pct": 52.0,
+          "raw_score_pct": 52.0,
+          "chance_pct": 25.0,
+          "skill_score": 36.0,
+          "gold_multiplier": 1.0,
+          "mean_latency_ms": 103.1,
+          "tier_distribution": {
+            "T1": 50
+          }
+        },
+        "64": {
+          "benchmark": 64,
+          "name": "New Yorker caption matching",
+          "area": "arts_human_taste",
+          "count": 50,
+          "metric_kind": "accuracy",
+          "accuracy_pct": 64.0,
+          "raw_score_pct": 64.0,
+          "chance_pct": 20.0,
+          "skill_score": 55.0,
+          "gold_multiplier": 1.0,
+          "mean_latency_ms": 38.12,
+          "tier_distribution": {
+            "T1": 50
+          }
+        }
+      },
+      "latency": {
+        "count": 350,
+        "mean_ms": 67.82,
+        "p50_ms": 43.64,
+        "p95_ms": 133.29,
+        "min_ms": 31.06,
+        "max_ms": 231.18
+      },
+      "tier_telemetry": {
+        "tier_-1": {
+          "count": 0,
+          "share_pct": 0.0,
+          "accuracy_pct": 0.0,
+          "latency": {
+            "count": 0,
+            "mean_ms": 0.0,
+            "p50_ms": 0.0,
+            "p95_ms": 0.0,
+            "min_ms": 0.0,
+            "max_ms": 0.0
+          }
+        },
+        "tier_0": {
+          "count": 0,
+          "share_pct": 0.0,
+          "accuracy_pct": 0.0,
+          "latency": {
+            "count": 0,
+            "mean_ms": 0.0,
+            "p50_ms": 0.0,
+            "p95_ms": 0.0,
+            "min_ms": 0.0,
+            "max_ms": 0.0
+          }
+        },
+        "tier_1": {
+          "count": 350,
+          "share_pct": 100.0,
+          "accuracy_pct": 67.14,
+          "latency": {
+            "count": 350,
+            "mean_ms": 67.82,
+            "p50_ms": 43.64,
+            "p95_ms": 133.29,
+            "min_ms": 31.06,
+            "max_ms": 231.18
+          }
+        },
+        "tier_2": {
+          "count": 0,
+          "share_pct": 0.0,
+          "accuracy_pct": 0.0,
+          "latency": {
+            "count": 0,
+            "mean_ms": 0.0,
+            "p50_ms": 0.0,
+            "p95_ms": 0.0,
+            "min_ms": 0.0,
+            "max_ms": 0.0
+          }
+        }
+      },
+      "rule_hits": {},
+      "tier0_reasons": {}
+    },
+    "cascade": {
+      "decision_index_03_score": 57.13,
+      "breadth_skill": 57.13,
+      "overall_accuracy_pct": 67.43,
+      "area_scores": {
+        "knowledge_reasoning": 44.02,
+        "language": 66.83,
+        "retrieval_classification": 64.0,
+        "tools_automation": 55.63,
+        "arts_human_taste": 55.0
+      },
+      "benchmarks": {
+        "9": {
+          "benchmark": 9,
+          "name": "Home appliances",
+          "area": "tools_automation",
+          "count": 50,
+          "metric_kind": "accuracy",
+          "accuracy_pct": 78.0,
+          "raw_score_pct": 78.0,
+          "chance_pct": 11.11,
+          "skill_score": 75.25,
+          "gold_multiplier": 1.0,
+          "mean_latency_ms": 133.86,
+          "tier_distribution": {
+            "T1": 50
+          }
+        },
+        "56": {
+          "benchmark": 56,
+          "name": "PhishNChips phishing decisions",
+          "area": "retrieval_classification",
+          "count": 50,
+          "metric_kind": "accuracy",
+          "accuracy_pct": 82.0,
+          "raw_score_pct": 82.0,
+          "chance_pct": 50.0,
+          "skill_score": 64.0,
+          "gold_multiplier": 1.0,
+          "mean_latency_ms": 52.75,
+          "tier_distribution": {
+            "T1": 50
+          }
+        },
+        "57": {
+          "benchmark": 57,
+          "name": "MMLU-Pro",
+          "area": "knowledge_reasoning",
+          "count": 50,
+          "metric_kind": "accuracy",
+          "accuracy_pct": 52.0,
+          "raw_score_pct": 52.0,
+          "chance_pct": 11.09,
+          "skill_score": 46.01,
+          "gold_multiplier": 1.2,
+          "mean_latency_ms": 125.62,
+          "tier_distribution": {
+            "T1": 43,
+            "T2": 7
+          }
+        },
+        "58": {
+          "benchmark": 58,
+          "name": "BBH fixed-option tasks",
+          "area": "knowledge_reasoning",
+          "count": 50,
+          "metric_kind": "accuracy",
+          "accuracy_pct": 60.0,
+          "raw_score_pct": 60.0,
+          "chance_pct": 31.01,
+          "skill_score": 42.02,
+          "gold_multiplier": 1.2,
+          "mean_latency_ms": 59.18,
+          "tier_distribution": {
+            "T2": 2,
+            "T1": 48
+          }
+        },
+        "59": {
+          "benchmark": 59,
+          "name": "RAGTruth response-level hallucination",
+          "area": "language",
+          "count": 50,
+          "metric_kind": "f1",
+          "accuracy_pct": 84.0,
+          "raw_score_pct": 84.0,
+          "chance_pct": 51.77,
+          "skill_score": 66.83,
+          "gold_multiplier": 1.0,
+          "mean_latency_ms": 108.99,
+          "tier_distribution": {
+            "T1": 49,
+            "T2": 1
+          }
+        },
+        "62": {
+          "benchmark": 62,
+          "name": "When2Call MCQ",
+          "area": "tools_automation",
+          "count": 50,
+          "metric_kind": "accuracy",
+          "accuracy_pct": 52.0,
+          "raw_score_pct": 52.0,
+          "chance_pct": 25.0,
+          "skill_score": 36.0,
+          "gold_multiplier": 1.0,
+          "mean_latency_ms": 103.24,
+          "tier_distribution": {
+            "T1": 50
+          }
+        },
+        "64": {
+          "benchmark": 64,
+          "name": "New Yorker caption matching",
+          "area": "arts_human_taste",
+          "count": 50,
+          "metric_kind": "accuracy",
+          "accuracy_pct": 64.0,
+          "raw_score_pct": 64.0,
+          "chance_pct": 20.0,
+          "skill_score": 55.0,
+          "gold_multiplier": 1.0,
+          "mean_latency_ms": 42.74,
+          "tier_distribution": {
+            "T1": 49,
+            "T2": 1
+          }
+        }
+      },
+      "latency": {
+        "count": 350,
+        "mean_ms": 89.48,
+        "p50_ms": 51.75,
+        "p95_ms": 177.3,
+        "min_ms": 27.65,
+        "max_ms": 1324.24
+      },
+      "tier_telemetry": {
+        "tier_-1": {
+          "count": 0,
+          "share_pct": 0.0,
+          "accuracy_pct": 0.0,
+          "latency": {
+            "count": 0,
+            "mean_ms": 0.0,
+            "p50_ms": 0.0,
+            "p95_ms": 0.0,
+            "min_ms": 0.0,
+            "max_ms": 0.0
+          }
+        },
+        "tier_0": {
+          "count": 0,
+          "share_pct": 0.0,
+          "accuracy_pct": 0.0,
+          "latency": {
+            "count": 0,
+            "mean_ms": 0.0,
+            "p50_ms": 0.0,
+            "p95_ms": 0.0,
+            "min_ms": 0.0,
+            "max_ms": 0.0
+          }
+        },
+        "tier_1": {
+          "count": 339,
+          "share_pct": 96.86,
+          "accuracy_pct": 69.03,
+          "latency": {
+            "count": 339,
+            "mean_ms": 71.85,
+            "p50_ms": 51.04,
+            "p95_ms": 138.56,
+            "min_ms": 27.65,
+            "max_ms": 242.79
+          }
+        },
+        "tier_2": {
+          "count": 11,
+          "share_pct": 3.14,
+          "accuracy_pct": 18.18,
+          "latency": {
+            "count": 11,
+            "mean_ms": 632.74,
+            "p50_ms": 544.57,
+            "p95_ms": 1324.24,
+            "min_ms": 392.06,
+            "max_ms": 1324.24
+          }
+        }
+      },
+      "rule_hits": {
+        "FORCE_COT | Temporal, Rate-Limiting & Financial Arithmetic": 4,
+        "SKIP_TIER0 | Nested Boolean & Symbolic Logic": 1,
+        "SKIP_TIER0 | Hierarchical Legal & Policy Override": 1
+      },
+      "tier0_reasons": {
+        "NON_SEMANTIC_OPTIONS_BYPASS": 210,
+        "OOD_MANIFOLD_BYPASS": 133,
+        "HIGH_AMBIGUITY": 1
+      }
+    },
+    "rescued_items": [
+      {
+        "id": "57:473",
+        "benchmark": 57,
+        "benchmark_name": "MMLU-Pro",
+        "area": "knowledge_reasoning",
+        "gold": "D",
+        "fast_pred": "H",
+        "cascade_pred": "D",
+        "resolved_by_tier": 2,
+        "rule_name": null
+      }
+    ]
+  }
+}

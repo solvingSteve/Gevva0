@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Gevva0 - The 4-Tier Cascading Decision Engine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#06080d; --card:rgba(16,20,32,.82); --line:rgba(255,255,255,.08);
+    --txt:#f1f5f9; --dim:#94a3b8; --mute:#64748b;
+    --tm1:#a855f7; --t0:#10b981; --t1:#00f2fe; --t2:#f59e0b; --bad:#f43f5e;
+    --sans:'Inter',system-ui,sans-serif; --mono:'JetBrains Mono',ui-monospace,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:100%;height:100%;background:var(--bg);color:var(--txt);font-family:var(--sans);overflow:hidden;user-select:none}
+  #wrap{position:fixed;inset:0 0 64px 0;display:flex;align-items:center;justify-content:center}
+  #stage{position:relative;width:1280px;height:720px;flex:none;transform-origin:center center;overflow:hidden;border-radius:14px;
+    background:radial-gradient(1200px 600px at 10% -10%,rgba(0,242,254,.10),transparent 60%),radial-gradient(900px 600px at 110% 110%,rgba(168,85,247,.10),transparent 60%),#070a11;
+    box-shadow:0 40px 120px rgba(0,0,0,.7),0 0 0 1px var(--line)}
+  #stage::before{content:"";position:absolute;inset:0;background-image:linear-gradient(to right,rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(to bottom,rgba(255,255,255,.025) 1px,transparent 1px);background-size:40px 40px;pointer-events:none}
+  #ambient{position:absolute;inset:0;pointer-events:none;opacity:.55}
+  .brand{position:absolute;top:22px;left:30px;display:flex;align-items:center;gap:10px;z-index:5;font-family:var(--mono);font-size:12px;color:var(--dim)}
+  .logo{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;font-weight:900;color:#000;font-size:12px;background:linear-gradient(135deg,var(--t1),var(--t0),var(--tm1))}
+  .brand b{color:#fff;font-family:var(--sans);font-size:15px;letter-spacing:-.01em}
+  .tierdots{position:absolute;top:26px;right:30px;display:flex;gap:6px;z-index:5}
+  .tierdots span{font-family:var(--mono);font-size:10px;padding:3px 8px;border-radius:99px;border:1px solid var(--line);color:var(--mute);transition:.4s}
+  .tierdots span.on{color:#000;font-weight:700}
+
+  .scene{position:absolute;inset:0;padding:78px 64px 92px;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;visibility:hidden;transition:opacity .6s ease,visibility .6s}
+  .scene.active{opacity:1;visibility:visible}
+  .r{opacity:0;transform:translateY(16px);transition:opacity .7s cubic-bezier(.16,1,.3,1),transform .7s cubic-bezier(.16,1,.3,1)}
+  .r.show{opacity:1;transform:none}
+  .r.zoom{transform:scale(.9)} .r.zoom.show{transform:none}
+  .r.left{transform:translateX(-30px)} .r.left.show{transform:none}
+
+  .kicker{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;padding:5px 12px;border-radius:99px;border:1px solid;margin-bottom:14px;display:inline-block}
+  h1{font-size:68px;font-weight:900;letter-spacing:-.04em;line-height:1.02;text-align:center}
+  h2{font-size:42px;font-weight:800;letter-spacing:-.03em;line-height:1.08;text-align:center}
+  .sub{color:var(--dim);font-size:18px;line-height:1.5;text-align:center;max-width:860px;margin-top:14px}
+  .grad{background:linear-gradient(90deg,var(--t1),var(--t0) 40%,var(--tm1) 80%);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .mono{font-family:var(--mono)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 20px 50px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.05);backdrop-filter:blur(14px)}
+  .row{display:flex;gap:20px;width:100%}
+  .c-tm1{color:var(--tm1)} .c-t0{color:var(--t0)} .c-t1{color:var(--t1)} .c-t2{color:var(--t2)} .c-bad{color:var(--bad)}
+
+  /* captions */
+  #caption{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);max-width:1040px;width:calc(100% - 120px);text-align:center;font-size:16px;line-height:1.45;color:#e2e8f0;background:rgba(5,7,12,.72);border:1px solid var(--line);padding:9px 18px;border-radius:12px;z-index:6;backdrop-filter:blur(8px);transition:opacity .3s}
+  #caption.hide{opacity:0}
+
+  /* S0 hero */
+  .hero-tiers{display:flex;gap:14px;margin-top:40px}
+  .ht{width:200px;padding:16px;border-radius:16px;text-align:center;border:1px solid var(--line);background:var(--card)}
+  .ht .n{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.1em}
+  .ht .v{font-family:var(--mono);font-size:24px;font-weight:700;margin:6px 0 2px}
+  .ht .d{font-size:12px;color:var(--mute)}
+
+  /* S1 trilemma */
+  .lane{display:grid;grid-template-columns:250px 1fr 120px;align-items:center;gap:16px;padding:14px 18px;border-bottom:1px solid var(--line)}
+  .lane:last-child{border-bottom:none}
+  .lane .nm{font-weight:700;font-size:15px} .lane .nm small{display:block;color:var(--mute);font-weight:500;font-size:12px;margin-top:2px}
+  .track{height:14px;border-radius:99px;background:rgba(255,255,255,.05);position:relative;overflow:hidden}
+  .fill{position:absolute;inset:0 auto 0 0;border-radius:99px;width:0}
+  .lane .ms{font-family:var(--mono);font-weight:700;text-align:right;font-size:15px}
+  .tri{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;width:100%;margin-top:18px}
+  .tri .card{padding:16px 18px} .tri h4{font-size:14px;margin-bottom:6px} .tri p{font-size:13px;color:var(--dim);line-height:1.45}
+
+  /* S2 cascade */
+  #cascadeCanvas{width:1150px;height:360px;display:block}
+  .exitstats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;width:1150px;margin-top:6px}
+  .es{padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--card)}
+  .es .k{font-family:var(--mono);font-size:11px;letter-spacing:.08em} .es .v{font-family:var(--mono);font-size:26px;font-weight:700;margin-top:2px} .es .d{font-size:12px;color:var(--mute)}
+
+  /* S3 tier -1 */
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:26px;width:100%;align-items:stretch}
+  .side h2{text-align:left;font-size:38px} .side .sub{text-align:left;margin-top:12px;font-size:16px}
+  .bul{margin-top:16px;display:flex;flex-direction:column;gap:9px}
+  .bul div{font-size:14px;color:#cbd5e1;display:flex;gap:10px;align-items:flex-start;line-height:1.4}
+  .bul div::before{content:"▸";font-family:var(--mono)}
+  .panel{padding:18px;display:flex;flex-direction:column;gap:12px}
+  .phead{display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:12px;border-bottom:1px solid var(--line);padding-bottom:10px}
+  .badge{font-family:var(--mono);font-size:11px;font-weight:700;padding:3px 9px;border-radius:7px;border:1px solid}
+  .q{font-family:var(--mono);font-size:13px;line-height:1.55;color:#e2e8f0;background:rgba(0,0,0,.35);border:1px solid var(--line);padding:12px;border-radius:10px;min-height:96px}
+  .q mark{background:rgba(168,85,247,.35);color:#fff;border-radius:3px;padding:0 2px}
+  .rule{font-family:var(--mono);font-size:12px;padding:8px 11px;border-radius:9px;border:1px solid var(--line);display:flex;justify-content:space-between;gap:10px;transition:.35s;color:var(--dim)}
+  .rule.hit{border-color:var(--tm1);background:rgba(168,85,247,.14);color:#fff;box-shadow:0 0 24px rgba(168,85,247,.25)}
+  .acts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .act{font-family:var(--mono);font-size:11px;text-align:center;padding:8px 4px;border-radius:8px;border:1px solid var(--line);color:var(--mute);transition:.35s}
+  .act.hit{color:#000;background:var(--tm1);border-color:var(--tm1);font-weight:700}
+
+  /* S4 tier 0 */
+  #markov{width:100%;height:270px;display:block}
+  .guards{display:flex;flex-direction:column;gap:7px}
+  .guard{display:flex;justify-content:space-between;font-family:var(--mono);font-size:12px;padding:7px 10px;border-radius:8px;border:1px solid var(--line);color:var(--dim);transition:.35s}
+  .guard.ok{border-color:rgba(16,185,129,.6);background:rgba(16,185,129,.1);color:#d1fae5}
+  .guard .st{font-weight:700}
+  .eq{font-family:var(--mono);font-size:22px;color:#a7f3d0;text-align:left;margin-top:14px}
+
+  /* S5 tier 1 */
+  #vocab{width:520px;height:130px;display:block;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.35)}
+  .k64{display:grid;grid-template-columns:repeat(16,1fr);gap:3px;width:520px}
+  .k64 div{font-family:var(--mono);font-size:10px;height:20px;display:grid;place-items:center;border-radius:4px;background:rgba(0,242,254,.12);color:#a5f3fc;border:1px solid rgba(0,242,254,.25);opacity:0;transform:scale(.4);transition:.4s}
+  .k64 div.pad{background:rgba(255,255,255,.03);color:var(--mute);border-color:var(--line)}
+  .k64 div.show{opacity:1;transform:none}
+  .bigms{font-family:var(--mono);font-size:64px;font-weight:700;line-height:1;color:var(--t1);text-shadow:0 0 30px rgba(0,242,254,.4)}
+  .strike{position:relative;color:var(--mute)} .strike::after{content:"";position:absolute;left:-4px;right:-4px;top:52%;height:3px;background:var(--bad);transform:scaleX(var(--s,0));transform-origin:left;transition:transform .5s}
+  .pbar{display:grid;grid-template-columns:150px 1fr 56px;gap:10px;align-items:center;font-size:13px}
+  .pbar .track{height:9px}
+
+  /* S6 tier 2 */
+  .kv{display:flex;gap:3px;flex-wrap:nowrap}
+  .kv i{width:14px;height:26px;border-radius:3px;background:rgba(255,255,255,.05);border:1px solid var(--line);transition:.25s}
+  .kv i.p{background:rgba(0,242,254,.55);border-color:rgba(0,242,254,.8)}
+  .kv i.c{background:rgba(245,158,11,.65);border-color:rgba(245,158,11,.9)}
+  .kv i.x{background:rgba(244,63,94,.25);border-color:rgba(244,63,94,.5)}
+  .scratch{font-family:var(--mono);font-size:13px;line-height:1.6;color:#fde68a;background:rgba(0,0,0,.4);border:1px solid rgba(245,158,11,.3);border-radius:10px;padding:12px;min-height:118px;white-space:pre-wrap}
+  .cursor{display:inline-block;width:8px;height:14px;background:var(--t2);vertical-align:-2px;animation:blink 1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+  .verdicts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .vd{padding:10px 12px;border-radius:10px;border:1px solid var(--line);font-family:var(--mono);font-size:12px}
+  .vd b{font-size:20px;display:block;margin-top:3px}
+
+  /* S7 demos */
+  .demos{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;width:100%;margin-top:22px}
+  .demo{padding:16px;display:flex;flex-direction:column;gap:10px}
+  .demo h3{font-size:19px;letter-spacing:-.01em}
+  .demo .tg{display:flex;gap:6px;flex-wrap:wrap}
+  .demo p{font-size:13px;color:var(--dim);line-height:1.45}
+  .demo canvas{width:100%;height:150px;border-radius:10px;background:#04060a;border:1px solid var(--line);display:block}
+  .chipx{font-family:var(--mono);font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;color:#000}
+  .stat{display:flex;justify-content:space-between;font-family:var(--mono);font-size:12px;border-top:1px solid var(--line);padding-top:8px}
+
+  /* S8 bench */
+  .bars{display:flex;flex-direction:column;gap:7px}
+  .bar{display:grid;grid-template-columns:230px 1fr 64px;gap:12px;align-items:center;font-size:13px}
+  .bar .track{height:18px;border-radius:6px} .bar .fill{border-radius:6px}
+  .bar .val{font-family:var(--mono);font-weight:700;text-align:right}
+  .vs{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center;text-align:center}
+  .vs .big{font-family:var(--mono);font-size:40px;font-weight:700;line-height:1}
+  .vs small{display:block;color:var(--mute);font-size:12px;margin-top:6px}
+  .fine{font-size:11px;color:var(--mute);line-height:1.45}
+
+  /* S9 cta */
+  .term{font-family:var(--mono);font-size:14px;line-height:1.8;padding:16px 20px;width:640px;text-align:left}
+  .term .p{color:var(--t0)} .term .c{color:var(--mute)}
+  .pills{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:18px}
+  .pill{font-family:var(--mono);font-size:12px;padding:7px 12px;border-radius:99px;border:1px solid var(--line);background:var(--card);color:#cbd5e1}
+
+  /* controls */
+  #ctrl{position:fixed;left:0;right:0;bottom:0;height:64px;display:flex;flex-direction:column;justify-content:center;gap:7px;padding:0 22px;background:rgba(6,8,13,.92);border-top:1px solid var(--line);z-index:20}
+  #bar{position:relative;height:6px;border-radius:99px;background:rgba(255,255,255,.07);cursor:pointer}
+  #prog{position:absolute;inset:0 auto 0 0;width:0;border-radius:99px;background:linear-gradient(90deg,var(--tm1),var(--t0),var(--t1),var(--t2))}
+  .tick{position:absolute;top:-2px;width:2px;height:10px;background:rgba(255,255,255,.25)}
+  .crow{display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:12px;color:var(--dim)}
+  .crow .l,.crow .rr{display:flex;align-items:center;gap:8px}
+  button{font-family:var(--mono);font-size:12px;background:rgba(255,255,255,.04);color:#e2e8f0;border:1px solid var(--line);border-radius:8px;padding:5px 10px;cursor:pointer}
+  button:hover{border-color:rgba(0,242,254,.5);color:#fff}
+  button.on{background:rgba(0,242,254,.15);border-color:rgba(0,242,254,.6);color:var(--t1)}
+  #chap{color:#fff;font-weight:700}
+  #startOverlay{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;background:rgba(3,4,8,.55);backdrop-filter:blur(3px);cursor:pointer}
+  #startOverlay div{font-family:var(--mono);font-size:15px;padding:16px 26px;border-radius:14px;border:1px solid rgba(0,242,254,.5);background:rgba(0,242,254,.1);color:var(--t1)}
+</style>
+</head>
+<body>
+
+<div id="wrap">
+<div id="stage">
+  <canvas id="ambient" width="1280" height="720"></canvas>
+  <div class="brand"><div class="logo">G0</div><b>Gevva0</b><span>· Cascading Decision Engine</span></div>
+  <div class="tierdots" id="tierdots">
+    <span data-c="--tm1">T-1</span><span data-c="--t0">T0</span><span data-c="--t1">T1</span><span data-c="--t2">T2</span>
+  </div>
+
+  <!-- ============ S0 HOOK ============ -->
+  <section class="scene" id="s0">
+    <div class="r kicker c-t1" data-at="0.2" style="border-color:rgba(0,242,254,.4)">Introducing Gevva0</div>
+    <h1 class="r" data-at="0.6">Stop generating tokens.</h1>
+    <h1 class="r grad" data-at="1.4">Start locking verdicts.</h1>
+    <p class="r sub" data-at="2.4">A local <b>4-Tier Cascading Decision Engine</b>. Each request stops at the cheapest tier that can answer it with confidence. Only the hard cases reach the full LLM.</p>
+    <div class="hero-tiers">
+      <div class="ht r zoom" data-at="3.6" style="border-color:rgba(168,85,247,.45)"><div class="n c-tm1">TIER −1 · RULES</div><div class="v">&lt; 50 µs</div><div class="d">Static routing rules</div></div>
+      <div class="ht r zoom" data-at="4.0" style="border-color:rgba(16,185,129,.45)"><div class="n c-t0">TIER 0 · MARKOV</div><div class="v">&lt; 3 ms</div><div class="d">Absorbing chains · 768D</div></div>
+      <div class="ht r zoom" data-at="4.4" style="border-color:rgba(0,242,254,.45)"><div class="n c-t1">TIER 1 · FAST-PATH</div><div class="v">37 ms</div><div class="d">K=64 logit scoring</div></div>
+      <div class="ht r zoom" data-at="4.8" style="border-color:rgba(245,158,11,.45)"><div class="n c-t2">TIER 2 · CoT</div><div class="v">256 tok</div><div class="d">Hot-KV reasoning</div></div>
+    </div>
+  </section>
+
+  <!-- ============ S1 TRILEMMA ============ -->
+  <section class="scene" id="s1">
+    <div class="r kicker c-bad" data-at="0.1" style="border-color:rgba(244,63,94,.4)">The Decision Trilemma</div>
+    <h2 class="r" data-at="0.4">Accurate, fast, or cheap. Until now, pick two.</h2>
+    <div class="card r" data-at="1.2" style="width:100%;margin-top:22px;padding:6px 0">
+      <div class="lane"><div class="nm">Frontier reasoning LLM<small>Claude Opus 4.6 Thinking · JevBench</small></div><div class="track"><div class="fill" id="l1" style="background:linear-gradient(90deg,#f43f5e,#fb7185)"></div></div><div class="ms c-bad" id="l1v">0 ms</div></div>
+      <div class="lane"><div class="nm">Small 4B decider<small>Imajev-4B · JevBench #1 entrant</small></div><div class="track"><div class="fill" id="l2" style="background:linear-gradient(90deg,#64748b,#94a3b8)"></div></div><div class="ms" id="l2v" style="color:#cbd5e1">0 ms</div></div>
+      <div class="lane"><div class="nm">Gevva0 · 4-Tier Cascade<small>Gemma 4 26B-A4B · single local GPU</small></div><div class="track"><div class="fill" id="l3" style="background:linear-gradient(90deg,var(--t0),var(--t1))"></div></div><div class="ms c-t1" id="l3v">0 ms</div></div>
+    </div>
+    <div class="r fine" data-at="1.6" style="align-self:flex-end;margin-top:6px">Median (p50) latency, log scale. Source: JevBench report, Oct 2026.</div>
+    <div class="tri">
+      <div class="card r" data-at="5.2"><h4 class="c-bad">Frontier LLMs</h4><p>Accurate on complex policy, but 1,500–25,000 ms per call and $5–$40 per 1,000 decisions.</p></div>
+      <div class="card r" data-at="5.8"><h4 style="color:#cbd5e1">Small classifiers</h4><p>Answer in 100–350 ms, but break down on multi-hop policy, temporal math, and prompt injection.</p></div>
+      <div class="card r" data-at="6.4" style="border-color:rgba(0,242,254,.4)"><h4 class="c-t1">Gevva0</h4><p>Intelligence 84.62 vs Opus 83.90, at a 44 ms median, on hardware you own, with no API bill.</p></div>
+    </div>
+  </section>
+
+  <!-- ============ S2 CASCADE ============ -->
+  <section class="scene" id="s2">
+    <div class="r kicker c-t0" data-at="0.1" style="border-color:rgba(16,185,129,.4)">The Cascade</div>
+    <h2 class="r" data-at="0.3">Exit at the earliest tier that's sure.</h2>
+    <canvas id="cascadeCanvas" width="1150" height="360" class="r" data-at="0.8"></canvas>
+    <div class="exitstats">
+      <div class="es r" data-at="1.4"><div class="k c-tm1">TIER −1 · ROUTED</div><div class="v" id="cs0">0</div><div class="d">rule matches · 0 direct exits</div></div>
+      <div class="es r" data-at="1.6"><div class="k c-t0">TIER 0 · EXIT_0</div><div class="v" id="cs1">0</div><div class="d">5.0% · 100% accurate · 16.5 ms</div></div>
+      <div class="es r" data-at="1.8"><div class="k c-t1">TIER 1 · FAST-PATH</div><div class="v" id="cs2">0</div><div class="d">77.9% · 91.4% acc · 37 ms</div></div>
+      <div class="es r" data-at="2.0"><div class="k c-t2">TIER 2 · CoT</div><div class="v" id="cs3">0</div><div class="d">17.1% · 75.6% acc · 256 tok</div></div>
+    </div>
+  </section>
+
+  <!-- ============ S3 TIER -1 ============ -->
+  <section class="scene" id="s3">
+    <div class="split">
+      <div class="side">
+        <div class="r kicker c-tm1" data-at="0.1" style="border-color:rgba(168,85,247,.4)">Tier −1 · Static Rules</div>
+        <h2 class="r" data-at="0.3">Routing in microseconds. No GPU involved.</h2>
+        <p class="r sub" data-at="0.9">Pre-compiled regex and keyword rules from <span class="mono c-tm1">RoutingRules/*.json</span> run in under 50 µs and hot-reload without restarting the model.</p>
+        <div class="bul">
+          <div class="r left" data-at="1.6"><span><b class="c-tm1">FORCE_COT</b>: temporal and financial math, probability, stoichiometry go straight to Tier 2</span></div>
+          <div class="r left" data-at="2.0"><span><b class="c-tm1">SKIP_TIER0</b>: boolean logic, API schemas, and long legal text skip the embedding model, which handles them poorly</span></div>
+          <div class="r left" data-at="2.4"><span><b class="c-tm1">0 DIRECT_EXIT</b> rules during benchmarks, so every scored answer comes from a model</span></div>
+        </div>
+      </div>
+      <div class="card panel r zoom" data-at="0.8">
+        <div class="phead"><span class="c-tm1">● Tier −1 Rule Evaluator</span><span class="badge c-tm1" style="border-color:rgba(168,85,247,.5)" id="rtime">0.000 ms</span></div>
+        <div class="q" id="rq"></div>
+        <div class="rule" id="rr0"><span>P1 · Temporal, Rate-Limiting &amp; Financial Arithmetic</span><span>FORCE_COT</span></div>
+        <div class="rule" id="rr1"><span>P2 · Probabilistic &amp; Statistical Reasoning</span><span>FORCE_COT</span></div>
+        <div class="rule" id="rr2"><span>P3 · Nested Boolean &amp; Symbolic Logic</span><span>SKIP_TIER0</span></div>
+        <div class="rule" id="rr3"><span>P6 · Hierarchical Legal &amp; Policy (≥100 words)</span><span>SKIP_TIER0</span></div>
+        <div class="mono" style="font-size:11px;color:var(--mute)" id="rregex">regex: \b(Give probabilities|conditional probability|Bayes|false-positive rate|base rate|…)\b</div>
+        <div class="acts"><div class="act" id="ra0">DIRECT_EXIT</div><div class="act" id="ra1">FORCE_COT</div><div class="act" id="ra2">SKIP_TIER0</div><div class="act" id="ra3">EVALUATE_ALL</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ S4 TIER 0 ============ -->
+  <section class="scene" id="s4">
+    <div class="split" style="grid-template-columns:1fr 1.15fr">
+      <div class="side">
+        <div class="r kicker c-t0" data-at="0.1" style="border-color:rgba(16,185,129,.4)">Tier 0 · Absorbing Markov Chains</div>
+        <h2 class="r" data-at="0.3">Geometry instead of generation.</h2>
+        <p class="r sub" data-at="0.9">The query is embedded with <b>EmbeddingGemma 2</b> (740M params, 768D). It then takes a random walk across domain landmarks until it lands in one of the candidate answers, and the landing probabilities are computed in closed form.</p>
+        <div class="eq r" data-at="1.6">B = (I − Q)<sup>−1</sup> R</div>
+        <div class="r fine" data-at="1.8" style="margin-top:4px">Q: landmark→landmark transitions · R: landmark→answer absorption · final = 0.65·cosine + 0.35·Markov</div>
+        <div class="bul" style="margin-top:14px">
+          <div class="r left" data-at="7.0"><span>JevBench: <b class="c-t0">12 / 12</b> early exits correct, 16.5 ms p50</span></div>
+          <div class="r left" data-at="7.5"><span>Decision Index 0.3: all <b class="c-t0">344 / 344</b> out-of-domain items correctly passed up to Tier 1, <b>zero</b> false exits</span></div>
+        </div>
+      </div>
+      <div class="card panel r zoom" data-at="0.6">
+        <div class="phead"><span class="c-t0">● 768D Domain Manifold</span><span class="badge c-t0" style="border-color:rgba(16,185,129,.5)" id="m0time">embedding…</span></div>
+        <svg id="markov" viewBox="0 0 560 270"></svg>
+        <div class="guards">
+          <div class="guard" id="g0"><span>① Structural option &amp; negation guard</span><span class="st">0.0 ms</span></div>
+          <div class="guard" id="g1"><span>② Landmark proximity d<sub>min</sub> ≤ 0.22</span><span class="st" id="g1v">—</span></div>
+          <div class="guard" id="g2"><span>③ Entropy H ≤ 0.45 · margin Δ ≥ 0.25</span><span class="st" id="g2v">—</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ S5 TIER 1 ============ -->
+  <section class="scene" id="s5">
+    <div class="split" style="grid-template-columns:1fr 1fr">
+      <div class="side">
+        <div class="r kicker c-t1" data-at="0.1" style="border-color:rgba(0,242,254,.4)">Tier 1 · Fast-Path</div>
+        <h2 class="r" data-at="0.3">One forward pass. Zero tokens generated.</h2>
+        <p class="r sub" data-at="0.9">Gemma 4 26B-A4B (MoE, 4B active) reads the answer-letter logits directly from a single forward pass. The scores are auto-calibrated with Platt temperature scaling, so the confidence values can be trusted.</p>
+        <p class="r sub" data-at="2.2" style="font-size:15px">Only 52 tokens matter: <span class="mono c-t1">' A'…' Z'</span> and <span class="mono c-t1">'A'…'Z'</span>. So we patched the output head to project onto a <b class="c-t1">64-row slice</b> instead of the full <b>262,144-token</b> vocabulary.</p>
+        <div class="row r" data-at="6.6" style="margin-top:22px;align-items:flex-end;gap:26px">
+          <div><div class="fine">Pac-Man p50, full vocab</div><div class="mono strike" id="old37" style="font-size:34px;font-weight:700">37.0 ms</div></div>
+          <div><div class="fine">with K=64 micro-head</div><div class="bigms" id="ms315">33.0</div></div>
+        </div>
+      </div>
+      <div class="card panel r zoom" data-at="0.6">
+        <div class="phead"><span class="c-t1">● Output projection z = h·Wᵀ</span><span class="badge c-t1" style="border-color:rgba(0,242,254,.5)" id="vrows">262,144 rows</span></div>
+        <canvas id="vocab" width="520" height="130"></canvas>
+        <div class="fine" style="margin-top:-4px">each cell = 64 vocabulary rows · 4,096 cells</div>
+        <div class="k64" id="k64"></div>
+        <div class="mono r" data-at="5.4" style="font-size:13px;color:#a5f3fc">−99.98% output-head GEMV · ≈5 ms saved per decision</div>
+        <div class="pbar r" data-at="7.2"><span>[A] East · power pellet</span><div class="track"><div class="fill" id="pb0" style="background:linear-gradient(90deg,var(--t1),var(--t0))"></div></div><span class="mono c-t1" id="pv0">0%</span></div>
+        <div class="pbar r" data-at="7.3"><span>[B] North · hallway</span><div class="track"><div class="fill" id="pb1" style="background:rgba(255,255,255,.25)"></div></div><span class="mono" id="pv1">0%</span></div>
+        <div class="pbar r" data-at="7.4"><span>[C] Reverse</span><div class="track"><div class="fill" id="pb2" style="background:rgba(255,255,255,.25)"></div></div><span class="mono" id="pv2">0%</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ S6 TIER 2 ============ -->
+  <section class="scene" id="s6">
+    <div class="split" style="grid-template-columns:1fr 1.1fr">
+      <div class="side">
+        <div class="r kicker c-t2" data-at="0.1" style="border-color:rgba(245,158,11,.4)">Tier 2 · Bounded Chain-of-Thought</div>
+        <h2 class="r" data-at="0.3">Reason only when it pays off.</h2>
+        <p class="r sub" data-at="0.9">When Tier 1 confidence is low, or a rule says <span class="mono c-tm1">FORCE_COT</span>, the full LLM continues from the <b>KV cache Tier 1 already filled</b>. The prompt is never processed twice. It writes up to 256 tokens of reasoning (max_cot_tokens=256), then reads a calibrated answer.</p>
+        <div class="bul">
+          <div class="r left" data-at="2.0"><span>The full vocabulary is restored only for the reasoning step (<span class="mono">full_vocab_scope()</span>)</span></div>
+          <div class="r left" data-at="2.4"><span>Up to <b class="c-t2">30%</b> faster on long-context CoT</span></div>
+          <div class="r left" data-at="2.8"><span>Probability accuracy <b>70% → 80%</b>; 41 hard JevBench items handled</span></div>
+          <div class="r left" data-at="3.2"><span>Asymmetric audit: quotes are extracted <i>after</i> the verdict is locked, so they can't change it</span></div>
+        </div>
+      </div>
+      <div class="card panel r zoom" data-at="0.6">
+        <div class="phead"><span class="c-t2">● Hot-KV continuation</span><span class="badge c-t2" style="border-color:rgba(245,158,11,.5)">reuse_kv=True</span></div>
+        <div class="fine">Gevva0: Tier 1 prefill <span class="c-t1">■</span> → CoT continues in place <span class="c-t2">■</span></div>
+        <div class="kv" id="kvA"></div>
+        <div class="fine">Naive: re-run the whole prompt before reasoning <span class="c-bad">■</span></div>
+        <div class="kv" id="kvB"></div>
+        <div class="mono" style="font-size:11px;color:var(--mute);margin-top:4px">hard-opus-a-temporal_numeric-12 · shift rest-period violations</div>
+        <div class="scratch" id="scr"></div>
+        <div class="verdicts">
+          <div class="vd r" data-at="2.0" style="border-color:rgba(244,63,94,.4)">Tier 1 fast-path<b class="c-bad">C ✗</b></div>
+          <div class="vd r" data-at="10.0" style="border-color:rgba(16,185,129,.5)">Tier 2 verified<b class="c-t0">B ✓</b></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ S7 DEMOS ============ -->
+  <section class="scene" id="s7">
+    <div class="r kicker c-t1" data-at="0.1" style="border-color:rgba(0,242,254,.4)">Three Demos · Try Them Locally</div>
+    <h2 class="r" data-at="0.3">From arcade reflexes to game-theory-optimal play.</h2>
+    <div class="demos">
+      <div class="card demo r zoom" data-at="0.9">
+        <div class="tg"><span class="chipx" style="background:var(--t1)">TIER 1</span><span class="chipx" style="background:var(--t2)">TIER 2</span><span class="chipx" style="background:#cbd5e1">GAME-LOOP BRIDGE</span></div>
+        <h3>Pac-Man</h3>
+        <canvas id="pac" width="360" height="150"></canvas>
+        <p>The rulebook stays pinned in KV cache. The next turn is decided while Pac-Man is still in the hallway, so it's ready by the junction with 0 ms wait.</p>
+        <div class="stat"><span>p50 latency</span><span><span style="color:var(--mute);text-decoration:line-through">37.0</span> <b class="c-t1" id="pacms">33 ms</b></span></div>
+      </div>
+      <div class="card demo r zoom" data-at="1.5">
+        <div class="tg"><span class="chipx" style="background:var(--t0)">TIER 0 ONLY</span><span class="chipx" style="background:#cbd5e1">GTO</span></div>
+        <h3>The Game of Pig</h3>
+        <canvas id="pig" width="360" height="150"></canvas>
+        <p>An exact absorbing Markov decision process (Todd &amp; Fisher). Plays it safe when ahead and takes bigger risks when behind, while "hold at 20" never adapts.</p>
+        <div class="stat"><span>decision time</span><b class="c-t0">&lt; 3 ms</b></div>
+      </div>
+      <div class="card demo r zoom" data-at="2.1">
+        <div class="tg"><span class="chipx" style="background:var(--t0)">TIER 0 ONLY</span><span class="chipx" style="background:#cbd5e1">GTO</span></div>
+        <h3>Vegas Blackjack 21</h3>
+        <canvas id="bj" width="360" height="150"></canvas>
+        <p>Hit, stand, double, and split, plus Hi-Lo Illustrious 18 true-count deviations. Matches GTO basic strategy on every hand.</p>
+        <div class="stat"><span>decision time · parity</span><b class="c-t0">~2 ms · 100%</b></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ S8 BENCHMARKS ============ -->
+  <section class="scene" id="s8">
+    <div class="r kicker c-t1" data-at="0.1" style="border-color:rgba(0,242,254,.4)">Benchmarks · JevBench v1.6.1 &amp; Decision Index 0.3</div>
+    <h2 class="r" data-at="0.3">Frontier-level intelligence at a 44 ms median.</h2>
+    <div class="split" style="margin-top:22px;grid-template-columns:1.25fr 1fr">
+      <div class="card panel r" data-at="0.8">
+        <div class="phead"><span class="c-t1">● JevBench composite (N=240, raw)</span><span class="fine">intelligence · calibration · speed · cost</span></div>
+        <div class="bars" id="jbars"></div>
+        <div class="fine">GPU-adjusted: 81.40 fast-path / 80.71 cascade (raw 87.34 / 86.60). Gevva0 rows scored with official composite scorer.</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div class="card panel r" data-at="4.0">
+          <div class="phead"><span class="c-t0">● Intelligence (chance-corrected)</span></div>
+          <div class="vs">
+            <div><div class="big c-t1" id="iv0">0</div><small>Gevva0 cascade<br><b class="c-t1">44 ms</b> p50 · local</small></div>
+            <div class="mono" style="color:var(--mute)">vs</div>
+            <div><div class="big" style="color:#cbd5e1" id="iv1">0</div><small>Claude Opus 4.6 Thinking<br><b class="c-bad">4,850 ms</b> p50 · cloud</small></div>
+          </div>
+        </div>
+        <div class="card panel r" data-at="6.0">
+          <div class="phead"><span class="c-tm1">● Decision Index 0.3 (N=350)</span><span class="fine">score · p50</span></div>
+          <div class="bars" id="dbars"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ S9 ADOPT ============ -->
+  <section class="scene" id="s9">
+    <div class="logo r zoom" data-at="0.2" style="width:64px;height:64px;font-size:24px;border-radius:16px;margin-bottom:18px">G0</div>
+    <h1 class="r" data-at="0.5" style="font-size:58px">Put a cascade in front of your LLM.</h1>
+    <p class="r sub" data-at="1.2">Apache 2.0. Runs on one local GPU. No API keys, no data leaving the building, no per-token bill. Decisions and streaming chat share a single loaded model, so you don't need a second copy in VRAM.</p>
+    <div class="card term r" data-at="2.2" style="margin-top:24px">
+      <div><span class="p">❯</span> uv sync</div>
+      <div><span class="p">❯</span> uv run gevva0 serve --port 8000 <span class="c">  # decision UI at /ui · chat at /chat</span></div>
+      <div><span class="p">❯</span> uv run python demos/pacman/run.py</div>
+      <div><span class="p">❯</span> uv run python demos/blackjack/run.py --sim</div>
+    </div>
+    <div class="pills">
+      <span class="pill r" data-at="3.2">engine.decide() · stateless REST</span>
+      <span class="pill r" data-at="3.4">DecisionBridge · 60 FPS loops</span>
+      <span class="pill r" data-at="3.6">Tier0DecisionBridge · sub-3 ms</span>
+      <span class="pill r" data-at="3.8">Vision via mmproj</span>
+    </div>
+  </section>
+
+  <div id="caption"></div>
+</div>
+</div>
+
+<div id="ctrl">
+  <div id="bar"><div id="prog"></div></div>
+  <div class="crow">
+    <div class="l">
+      <button id="bPlay">▶ Play</button>
+      <button id="bPrev">◀</button><button id="bNext">▶▶</button>
+      <span style="margin-left:6px">Act <span id="chapN">1</span>/10 · <span id="chap"></span></span>
+    </div>
+    <div class="rr">
+      <span id="tc">00:00 / 00:00</span>
+      <button id="bCap" class="on">CC</button>
+      <button id="bVoice">🔈 Narrate</button>
+      <button data-sp="1" class="sp on">1x</button><button data-sp="1.5" class="sp">1.5x</button><button data-sp="2" class="sp">2x</button>
+      <button id="bFs">⛶</button>
+    </div>
+  </div>
+</div>
+<div id="startOverlay"><div>▶ Click to play · Space pause · ←/→ scenes · F fullscreen · N narrate</div></div>
+
+<script>
+/* ---------- helpers ---------- */
+const $ = id => document.getElementById(id);
+const clamp = (x,a=0,b=1) => Math.max(a,Math.min(b,x));
+const prog = (t,a,b) => clamp((t-a)/(b-a));
+const ease = x => 1 - Math.pow(1-x,3);
+const lerp = (a,b,x) => a + (b-a)*x;
+const fmt = (n,d=0) => n.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+function rng(seed){ return () => (seed = (seed*16807) % 2147483647) / 2147483647; }
+
+/* ---------- scene definitions ---------- */
+const SCENES = [
+  {id:'s0', dur:9,  tier:-9, title:'Stop generating tokens',
+   cap:'Most AI decision systems generate a long answer just to pick one option. Gevva0 routes each decision through four tiers, and most never need to generate a single token.'},
+  {id:'s1', dur:11, tier:-9, title:'The decision trilemma',
+   cap:'Frontier models are accurate but take seconds and cost real money. Small models are quick but miss the hard cases. Gevva0 exceeds frontier intelligence (84.62 vs 83.90) at a 44 millisecond median.'},
+  {id:'s2', dur:12, tier:-9, title:'The 4-tier cascade',
+   cap:'Every request enters the cascade and exits at the first tier that is confident. On JevBench, 78 percent finish in the fast path and only 17 percent need full reasoning.'},
+  {id:'s3', dur:10, tier:-1, title:'Tier −1 · static rules',
+   cap:'Tier minus one runs pre-compiled rules in under 50 microseconds. They only route requests, so every benchmark answer still comes from a model.'},
+  {id:'s4', dur:12, tier:0,  title:'Tier 0 · absorbing Markov chains',
+   cap:'Tier zero embeds the query in 768-dimensional space and solves an absorbing Markov chain in closed form. Three guards make sure it only answers when it is safe to.'},
+  {id:'s5', dur:12, tier:1,  title:'Tier 1 · K=64 fast-path',
+   cap:'Tier one reads calibrated answer logits from one forward pass. Shrinking Gemma 4\'s output head from 262 thousand rows to 64 saves about 5 milliseconds per decision.'},
+  {id:'s6', dur:13, tier:2,  title:'Tier 2 · hot-KV chain-of-thought',
+   cap:'Hard cases escalate to bounded chain-of-thought with up to 256 tokens, continuing from the cache Tier one already built. Multi-step math and policy constraints get solved here.'},
+  {id:'s7', dur:12, tier:-9, title:'Three live demos',
+   cap:'Pac-Man runs on Tier one and two at a 33 millisecond median. Pig and Blackjack run entirely on Tier zero and play game-theory-optimal strategy in a few milliseconds.'},
+  {id:'s8', dur:12, tier:-9, title:'Benchmarks',
+   cap:'On JevBench, Gevva0 exceeds Claude Opus 4.6 Thinking intelligence (84.62 vs 83.90) at a 44 millisecond median. On Decision Index 0.3, a 4-billion-active MoE beats 27-billion dense models at sub-65ms speed.'},
+  {id:'s9', dur:10, tier:-9, title:'Adopt Gevva0',
+   cap:'It is open source, local, and has no per-token cost. Put a cascade in front of your LLM.'},
+];
+let acc = 0; SCENES.forEach(s => { s.start = acc; acc += s.dur; });
+const TOTAL = acc;
+
+/* ---------- per-scene build + tick ---------- */
+const TICK = {};
+
+// S0 – nothing beyond reveals
+TICK.s0 = t => {};
+
+// S1 – latency race (log scale 10 ms .. 10,000 ms)
+const logW = ms => clamp((Math.log10(ms) - 1) / 3) * 100;
+TICK.s1 = t => {
+  const lanes = [['l1',4850],['l2',160],['l3',44.02]];
+  // virtual clock: grows exponentially so the log bar fills linearly
+  const p = prog(t,1.6,4.8);
+  const vms = Math.pow(10, 1 + 3*p) - (p===0?10:0);
+  lanes.forEach(([id,ms]) => {
+    const cur = Math.min(ms, p===0?0:vms);
+    $(id).style.width = (cur<=0?0:logW(cur)) + '%';
+    $(id+'v').textContent = (cur<=0? '0' : fmt(cur, cur<100?1:0)) + ' ms';
+  });
+};
+
+// S2 – cascade particle flow on canvas
+const cc = $('cascadeCanvas'), cx = cc.getContext('2d');
+const TX = [150, 410, 670, 930], TC = ['#a855f7','#10b981','#00f2fe','#f59e0b'];
+const TN = ['TIER −1','TIER 0','TIER 1','TIER 2'], TS = ['Rules · <50 µs','Markov · ~16 ms','K=64 logits · ~37 ms','Hot-KV CoT · 256 tok'];
+// Exact JevBench split (N=240): 12 exit at T0, 187 at T1, 41 at T2; 57 matched a Tier -1 rule.
+const PARTS = (() => { const r = rng(42), ex = [];
+  for (let i=0;i<240;i++) ex.push(i<12?1:(i<199?2:3));
+  const routed = ex.map((_,i)=> i<57);
+  const shuffle = a => { for(let i=a.length-1;i>0;i--){ const j=Math.floor(r()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
+  shuffle(ex); shuffle(routed);
+  return ex.map((e,i)=>({spawn:0.9+i*0.032, ex:e, routed:routed[i], y:r()*28-14})); })();
+const LANE_Y = 158;
+TICK.s2 = t => {
+  cx.clearRect(0,0,1150,360);
+  // lanes
+  cx.strokeStyle='rgba(255,255,255,.08)'; cx.lineWidth=2; cx.beginPath(); cx.moveTo(20,LANE_Y); cx.lineTo(1130,LANE_Y); cx.stroke();
+  TX.forEach((x,i)=>{
+    cx.fillStyle='rgba(16,20,32,.95)'; cx.strokeStyle=TC[i]; cx.lineWidth=1.5;
+    roundRect(cx,x-95,80,190,100,14); cx.fill(); cx.stroke();
+    cx.fillStyle=TC[i]; cx.font='700 13px JetBrains Mono'; cx.textAlign='center'; cx.fillText(TN[i],x,106);
+    cx.fillStyle='#cbd5e1'; cx.font='500 12px Inter'; cx.fillText(TS[i],x,126);
+    if(i>0){ cx.strokeStyle='rgba(255,255,255,.12)'; cx.setLineDash([4,5]); cx.beginPath(); cx.moveTo(x,180); cx.lineTo(x,300); cx.stroke(); cx.setLineDash([]);
+      cx.fillStyle=TC[i]; cx.font='600 11px JetBrains Mono'; cx.fillText(i===3?'cot_verified':'EXIT',x,322); }
+  });
+  cx.fillStyle='#64748b'; cx.font='600 11px JetBrains Mono'; cx.textAlign='left'; cx.fillText('REQUESTS →',20,60);
+  const counts=[0,0,0,0]; const speed=520;
+  PARTS.forEach(p=>{
+    const age=t-p.spawn; if(age<0) return;
+    const targetX=TX[p.ex]; const travel=(targetX-20)/speed; const hold=p.ex===3?0.7:0.1;
+    let x,y=LANE_Y+p.y*0.5,alpha=1,col='#e2e8f0',r=3.2;
+    if(age<travel){ x=20+age*speed; const pass = TX.filter((tx,i)=>tx<=x); col = TC[Math.max(0,pass.length-1)]; if(x<TX[0]) col='#e2e8f0'; }
+    else if(age<travel+hold){ x=targetX+Math.sin(age*30)*(p.ex===3?3:0); col=TC[p.ex]; }
+    else { const d=age-travel-hold; x=targetX+p.y*0.6; y=LANE_Y+ease(clamp(d/0.5))*142; col=TC[p.ex]; alpha=1-clamp((d-0.5)/0.8); }
+    if(age>=(TX[0]-20)/speed && p.routed) counts[0]++;
+    if(age>=travel+hold) counts[p.ex]++;
+    if(alpha<=0) return;
+    cx.globalAlpha=alpha; cx.fillStyle=col; cx.shadowColor=col; cx.shadowBlur=10;
+    cx.beginPath(); cx.arc(x,y,r,0,7); cx.fill(); cx.shadowBlur=0; cx.globalAlpha=1;
+  });
+  $('cs0').textContent=counts[0]; $('cs1').textContent=counts[1]; $('cs2').textContent=counts[2]; $('cs3').textContent=counts[3];
+};
+function roundRect(c,x,y,w,h,r){ c.beginPath(); c.moveTo(x+r,y); c.arcTo(x+w,y,x+w,y+h,r); c.arcTo(x+w,y+h,x,y+h,r); c.arcTo(x,y+h,x,y,r); c.arcTo(x,y,x+w,y,r); c.closePath(); }
+
+// S3 – rule evaluation
+const RQ = 'A production deploy occurred at 09:52 UTC and the LAT-CHK alert fired at 14:07 UTC. Using the historical base rate of post-deploy regressions, Give probabilities for each root cause.';
+TICK.s3 = t => {
+  const n = Math.floor(clamp((t-1.0)/2.2)*RQ.length);
+  let s = RQ.slice(0,n);
+  if (t>4.0) s = s.replace('base rate','<mark>base rate</mark>').replace('Give probabilities','<mark>Give probabilities</mark>');
+  $('rq').innerHTML = s + (n<RQ.length?'<span class="cursor" style="background:var(--tm1)"></span>':'');
+  const scan = t>3.4 ? Math.min(3, Math.floor((t-3.4)/0.18)) : -1;
+  ['rr0','rr1','rr2','rr3'].forEach((id,i)=> $(id).classList.toggle('hit', t>4.0 ? i===1 : i===scan));
+  $('rregex').style.opacity = t>4.0?1:.35;
+  ['ra0','ra1','ra2','ra3'].forEach((id,i)=> $(id).classList.toggle('hit', t>4.6 && i===1));
+  $('rtime').textContent = (t<3.4?0:Math.min(0.031,(t-3.4)*0.05)).toFixed(3) + ' ms';
+};
+
+// S4 – Markov walk (SVG)
+const svgNS='http://www.w3.org/2000/svg', MK=$('markov');
+const MN = { q:[50,135], L1:[170,60], L2:[170,210], L3:[290,105], L4:[290,200], L5:[390,55] };
+const SINKS = [['A · Billing',500,60,.86],['B · Technical',500,135,.09],['C · Sales',500,210,.05]];
+const EDGES = [['q','L1'],['q','L2'],['L1','L3'],['L2','L3'],['L2','L4'],['L3','L5'],['L1','L5'],['L3','sB'],['L4','sC'],['L5','sA'],['L3','sA'],['L4','sB']];
+const pos = k => k[0]==='s' ? (k==='sA'?[470,60]:k==='sB'?[470,135]:[470,210]) : MN[k];
+const PATHS = [['q','L1','L5','sA'],['q','L2','L3','sA'],['q','L1','L3','sA'],['q','L2','L4','sB'],['q','L1','L5','sA'],['q','L2','L3','sB'],['q','L1','L3','sA'],['q','L2','L4','sC']];
+(function buildMarkov(){
+  EDGES.forEach(([a,b])=>{ const [x1,y1]=pos(a),[x2,y2]=pos(b); const l=document.createElementNS(svgNS,'line');
+    Object.entries({x1,y1,x2,y2,stroke:'rgba(16,185,129,.28)','stroke-width':1.4,'stroke-dasharray':'3 4'}).forEach(([k,v])=>l.setAttribute(k,v)); MK.appendChild(l); });
+  Object.entries(MN).forEach(([k,[x,y]])=>{ const c=document.createElementNS(svgNS,'circle');
+    Object.entries({cx:x,cy:y,r:k==='q'?16:11,fill:'#0b111a',stroke:k==='q'?'#00f2fe':'#10b981','stroke-width':1.6}).forEach(([a,v])=>c.setAttribute(a,v)); MK.appendChild(c);
+    const tx=document.createElementNS(svgNS,'text'); Object.entries({x,y:y+4,'text-anchor':'middle','font-size':k==='q'?10:9,fill:k==='q'?'#00f2fe':'#6ee7b7','font-family':'JetBrains Mono'}).forEach(([a,v])=>tx.setAttribute(a,v));
+    tx.textContent = k==='q'?'q':k; MK.appendChild(tx); });
+  SINKS.forEach(([lab,x,y],i)=>{ const g=document.createElementNS(svgNS,'g');
+    g.innerHTML=`<rect x="${x-32}" y="${y-15}" width="96" height="30" rx="7" fill="#0b111a" stroke="#10b981" stroke-width="1.2" id="sk${i}"/>
+      <rect x="${x-32}" y="${y+11}" width="0" height="4" rx="2" fill="#10b981" id="skb${i}"/>
+      <text x="${x+16}" y="${y+3}" text-anchor="middle" font-size="10" fill="#d1fae5" font-family="JetBrains Mono">${lab}</text>`; MK.appendChild(g); });
+  for(let i=0;i<PATHS.length;i++){ const c=document.createElementNS(svgNS,'circle'); c.setAttribute('r',3.5); c.setAttribute('fill','#00f2fe'); c.setAttribute('id','w'+i); c.style.filter='drop-shadow(0 0 5px #00f2fe)'; MK.appendChild(c); }
+})();
+TICK.s4 = t => {
+  PATHS.forEach((p,i)=>{
+    const c=$('w'+i); const local = t-2.2-i*0.35; if(local<0){c.setAttribute('opacity',0);return;}
+    const f = (local % 2.4)/2.4; const seg = f*(p.length-1); const si=Math.min(p.length-2,Math.floor(seg)); const sf=seg-si;
+    const [x1,y1]=pos(p[si]),[x2,y2]=pos(p[si+1]);
+    c.setAttribute('cx',lerp(x1,x2,sf)); c.setAttribute('cy',lerp(y1,y2,sf)); c.setAttribute('opacity', t>6.4?0.25:0.95);
+  });
+  SINKS.forEach(([,,,pv],i)=>{ const w=96*pv*ease(prog(t,2.6,6.0)); $('skb'+i).setAttribute('width',w);
+    $('sk'+i).setAttribute('stroke', t>6.4&&i===0?'#34d399':'#10b981'); $('sk'+i).setAttribute('stroke-width', t>6.4&&i===0?2.6:1.2); });
+  $('g0').classList.toggle('ok', t>2.0);
+  $('g1').classList.toggle('ok', t>3.4); $('g1v').textContent = t>3.4 ? '0.14 ✓' : '—';
+  $('g2').classList.toggle('ok', t>6.0); $('g2v').textContent = t>6.0 ? 'H 0.31 · Δ 0.77 ✓' : '—';
+  $('m0time').textContent = t<2.2 ? 'embedding…' : t<6.4 ? 'solving B=(I−Q)⁻¹R' : 'EXIT_0 → A';
+};
+
+// S5 – vocab collapse
+const vc=$('vocab'), vx=vc.getContext('2d'); const K64=$('k64');
+(function buildK64(){ const L=[]; for(let i=0;i<26;i++) L.push('␣'+String.fromCharCode(65+i)); for(let i=0;i<26;i++) L.push(String.fromCharCode(65+i));
+  for(let i=0;i<64;i++){ const d=document.createElement('div'); if(i<52) d.textContent=L[i]; else { d.textContent='·'; d.className='pad'; } K64.appendChild(d); } })();
+TICK.s5 = t => {
+  vx.clearRect(0,0,520,130); const cols=128, rows=32, cw=520/cols, ch=130/rows; const fade=prog(t,3.0,5.0);
+  for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){ const keep = (r===12 && c===40);
+    const a = keep ? 1 : (0.55*(1-fade) + 0.04); vx.fillStyle = keep ? `rgba(0,242,254,${0.4+0.6*fade})` : `rgba(148,163,184,${a*((r*7+c*13)%5===0?1:0.55)})`;
+    vx.fillRect(c*cw+0.5,r*ch+0.5,cw-1,ch-1); }
+  if(fade>0.5){ vx.strokeStyle='#00f2fe'; vx.lineWidth=2; vx.strokeRect(40*cw-3,12*ch-3,cw+6,ch+6); }
+  const rowsNow = Math.round(lerp(262144,64,ease(fade)));
+  $('vrows').textContent = fmt(rowsNow)+' rows';
+  [...K64.children].forEach((d,i)=> d.classList.toggle('show', t>4.6+i*0.012));
+  const lp = ease(prog(t,7.0,9.0)); $('ms315').textContent = lerp(37.0,33,lp).toFixed(1);
+  $('old37').style.setProperty('--s', t>9.0?1:0);
+  const P=[0.91,0.07,0.02]; P.forEach((p,i)=>{ const v=p*ease(prog(t,7.4,9.0)); $('pb'+i).style.width=(v*100)+'%'; $('pv'+i).textContent=Math.round(v*100)+'%'; });
+};
+
+// S6 – hot KV + scratchpad
+const kvA=$('kvA'), kvB=$('kvB'); for(let i=0;i<30;i++){ kvA.appendChild(document.createElement('i')); kvB.appendChild(document.createElement('i')); }
+const SCR = '1. S1 -> S2: End 21:00 (Wed) to Start 07:30 (Thu).\n   Elapsed: 10h 30m. (Violation 1)\n2. S2 -> S3: End 15:30 (Thu) to Start 06:00 (Fri).\n   Elapsed: 14h 30m. (OK) ...\nTherefore, the best option letter is: B';
+TICK.s6 = t => {
+  const pre = Math.floor(clamp((t-1.0)/1.0)*16);           // Tier 1 prefill blocks
+  const cot = Math.floor(clamp((t-3.6)/6.0)*12);           // CoT blocks appended in place
+  [...kvA.children].forEach((b,i)=> b.className = i<pre?'p': (i<16+cot?'c':''));
+  const reB = Math.floor(clamp((t-3.6)/2.6)*16), cotB = Math.floor(clamp((t-6.2)/6.0)*12);
+  [...kvB.children].forEach((b,i)=> b.className = i<pre?'p': (i<16+reB?'x': (i<32&&i<16+16+cotB?'c':'')));
+  const n = Math.floor(clamp((t-3.6)/6.2)*SCR.length);
+  $('scr').innerHTML = SCR.slice(0,n).replace(/\n/g,'<br>') + (n<SCR.length && t>3.6 ? '<span class="cursor"></span>' : '');
+};
+
+// S7 – demos (canvas mini-animations)
+const pc=$('pac').getContext('2d'), gc=$('pig').getContext('2d'), bc=$('bj').getContext('2d');
+TICK.s7 = t => {
+  // Pac-Man: loop corridor
+  pc.clearRect(0,0,360,150); pc.strokeStyle='#1d4ed8'; pc.lineWidth=3; roundRect(pc,20,18,320,114,12); pc.stroke(); roundRect(pc,62,52,236,46,8); pc.stroke();
+  const per=2*(280+80), u=((t*140)%per); const pt = u<280?[40+u,35]: u<360?[320,35+(u-280)]: u<640?[320-(u-360),115]:[40,115-(u-640)];
+  for(let i=0;i<24;i++){ const d=(i/24)*per; const ahead=((d-u)%per+per)%per; if(ahead<per*0.75){ const p2 = d<280?[40+d,35]: d<360?[320,35+(d-280)]: d<640?[320-(d-360),115]:[40,115-(d-640)]; pc.fillStyle='#fde68a'; pc.fillRect(p2[0]-1.5,p2[1]-1.5,3,3);} }
+  const ang = u<280?0: u<360?Math.PI/2: u<640?Math.PI:-Math.PI/2; const m = Math.abs(Math.sin(t*12))*0.6+0.05;
+  pc.fillStyle='#facc15'; pc.beginPath(); pc.moveTo(pt[0],pt[1]); pc.arc(pt[0],pt[1],9,ang+m,ang+2*Math.PI-m); pc.fill();
+  const gu=(u+per*0.55)%per, gp = gu<280?[40+gu,35]: gu<360?[320,35+(gu-280)]: gu<640?[320-(gu-360),115]:[40,115-(gu-640)];
+  pc.fillStyle='#f43f5e'; pc.beginPath(); pc.arc(gp[0],gp[1]-2,8,Math.PI,0); pc.lineTo(gp[0]+8,gp[1]+7); pc.lineTo(gp[0]-8,gp[1]+7); pc.fill();
+  if((u%180)<60){ pc.fillStyle='rgba(0,242,254,.9)'; pc.font='700 10px JetBrains Mono'; pc.textAlign='center'; pc.fillText('T1 · 33 ms · latched',180,80); }
+  // Pig
+  gc.clearRect(0,0,360,150); const face = 1+Math.floor((t*5)%6); const rolling = (t%3)<1.6;
+  gc.fillStyle='#f8fafc'; roundRect(gc,30,35,72,72,12); gc.fill(); gc.fillStyle='#0f172a';
+  const pips={1:[[0,0]],2:[[-1,-1],[1,1]],3:[[-1,-1],[0,0],[1,1]],4:[[-1,-1],[1,-1],[-1,1],[1,1]],5:[[-1,-1],[1,-1],[0,0],[-1,1],[1,1]],6:[[-1,-1],[1,-1],[-1,0],[1,0],[-1,1],[1,1]]};
+  const f = rolling?face:4; pips[f].forEach(([a,b])=>{ gc.beginPath(); gc.arc(66+a*20,71+b*20,6,0,7); gc.fill(); });
+  gc.textAlign='left'; gc.font='600 12px JetBrains Mono'; gc.fillStyle='#94a3b8'; gc.fillText('Score  40 vs 82  (behind)',125,48);
+  gc.fillText('Turn pot  k = 24',125,72); gc.fillStyle='#10b981'; gc.font='700 15px JetBrains Mono'; gc.fillText(rolling?'evaluating…':'ROLL  (k* > 32)',125,102);
+  gc.fillStyle='#64748b'; gc.font='500 11px JetBrains Mono'; gc.fillText('"Hold at 20" would bank here',125,124);
+  // Blackjack
+  bc.clearRect(0,0,360,150); const card=(x,y,txt,red)=>{ bc.fillStyle='#f8fafc'; roundRect(bc,x,y,44,62,6); bc.fill(); bc.fillStyle=red?'#e11d48':'#0f172a'; bc.font='700 16px Inter'; bc.textAlign='center'; bc.fillText(txt,x+22,y+38); };
+  card(24,22,'10♠'); card(74,22,'6♥',true); card(24,92-6,'',false); bc.fillStyle='#1e3a8a'; roundRect(bc,24,86,44,50,6); bc.fill();
+  bc.textAlign='left'; bc.font='600 12px JetBrains Mono'; bc.fillStyle='#94a3b8'; bc.fillText('Hard 16  vs  dealer 10',135,40); bc.fillText('Hi-Lo true count  +1',135,62);
+  const show = (t%4)>1.2; bc.fillStyle='#10b981'; bc.font='700 15px JetBrains Mono'; bc.fillText(show?'STAND · I18 deviation':'evaluating…',135,92);
+  bc.fillStyle='#64748b'; bc.font='500 11px JetBrains Mono'; bc.fillText('basic strategy says HIT at TC ≤ 0',135,116);
+};
+
+// S8 – benchmark bars
+const JB = [['Gevva0 · Tier 1 fast-path',87.34,'t1'],['Gevva0 · 4-tier cascade',86.60,'t1'],['Imajev-4B (official #1)',67.37],['Plumb-4B',65.84],['decider-4b v2',64.13],['Jev 1.13.0 (27B)',63.29],['Claude Opus 4.6 Thinking',42.10,'bad']];
+const DB = [['Torchcast Decision 27B',65.10,'~420 ms'],['Gevva0 · cascade (4B active)',57.13,'60 ms','t1'],['Kev 27B',56.69,'~430 ms'],['JPT-9B',46.96,'~180 ms']];
+function buildBars(el,data,max,extra){ data.forEach((d,i)=>{ const row=document.createElement('div'); row.className='bar';
+  const col = d[d.length-1]==='t1'?'linear-gradient(90deg,var(--t0),var(--t1))': d[d.length-1]==='bad'?'rgba(244,63,94,.6)':'rgba(148,163,184,.45)';
+  row.innerHTML=`<span style="${d[d.length-1]==='t1'?'color:#fff;font-weight:700':'color:#cbd5e1'}">${d[0]}${extra?` <span class="mono" style="color:var(--mute);font-size:11px">${d[2]}</span>`:''}</span><div class="track"><div class="fill" style="background:${col}"></div></div><span class="val">0</span>`;
+  row.dataset.v=d[1]; el.appendChild(row); }); el.dataset.max=max; }
+buildBars($('jbars'),JB,100,false); buildBars($('dbars'),DB,70,true);
+function tickBars(el,t,t0){ const max=+el.dataset.max; [...el.children].forEach((r,i)=>{ const p=ease(prog(t,t0+i*0.14,t0+i*0.14+0.7)); const v=+r.dataset.v*p;
+  r.querySelector('.fill').style.width=(v/max*100)+'%'; r.querySelector('.val').textContent=v.toFixed(2); }); }
+TICK.s8 = t => { tickBars($('jbars'),t,1.0); tickBars($('dbars'),t,5.5);
+  const p=ease(prog(t,3.8,5.2)); $('iv0').textContent=(84.62*p).toFixed(2); $('iv1').textContent=(83.90*p).toFixed(2); };
+TICK.s9 = t => {};
+
+/* ---------- ambient particles ---------- */
+const am=$('ambient').getContext('2d'); const AP=(()=>{const r=rng(7),a=[];for(let i=0;i<60;i++)a.push([r()*1280,r()*720,r()*0.6+0.2,r()]);return a;})();
+function drawAmbient(T){ am.clearRect(0,0,1280,720); AP.forEach(([x,y,s,c])=>{ const yy=(y - T*12*s + 720*10)%720; am.fillStyle=c<.33?'rgba(0,242,254,.35)':c<.66?'rgba(16,185,129,.3)':'rgba(168,85,247,.3)'; am.beginPath(); am.arc(x+Math.sin(T*.3+c*9)*12,yy,s*1.8,0,7); am.fill(); }); }
+
+/* ---------- timeline engine ---------- */
+let T=0, playing=false, speed=1, last=performance.now(), curIdx=-1, voice=false, caps=true;
+const sceneEls = SCENES.map(s=>$(s.id));
+const revealEls = sceneEls.map(el=>[...el.querySelectorAll('[data-at]')]);
+function idxAt(T){ for(let i=SCENES.length-1;i>=0;i--) if(T>=SCENES[i].start) return i; return 0; }
+function render(){
+  const i=idxAt(T), s=SCENES[i], t=T-s.start;
+  if(i!==curIdx){ sceneEls.forEach((el,k)=>el.classList.toggle('active',k===i)); curIdx=i;
+    $('chap').textContent=s.title; $('chapN').textContent=i+1; $('caption').textContent=s.cap; speak(s.cap);
+    document.querySelectorAll('#tierdots span').forEach((d,k)=>{ const on = (k-1)===s.tier; d.classList.toggle('on',on); d.style.background = on?`var(${d.dataset.c})`:''; d.style.borderColor = on?`var(${d.dataset.c})`:''; }); }
+  revealEls[i].forEach(el=>el.classList.toggle('show', t>=+el.dataset.at));
+  TICK[s.id](t); drawAmbient(T);
+  $('prog').style.width=(T/TOTAL*100)+'%';
+  const mm=x=>String(Math.floor(x/60)).padStart(2,'0')+':'+String(Math.floor(x%60)).padStart(2,'0');
+  $('tc').textContent=mm(T)+' / '+mm(TOTAL);
+}
+function loop(now){ const dt=(now-last)/1000; last=now;
+  if(playing){ T+=dt*speed; if(T>=TOTAL){ T=TOTAL-0.001; setPlaying(false); } }
+  render(); requestAnimationFrame(loop); }
+function setPlaying(p){ playing=p; $('bPlay').textContent = p?'❚❚ Pause':'▶ Play'; if(!p && window.speechSynthesis) speechSynthesis.pause(); else if(p && window.speechSynthesis) speechSynthesis.resume(); }
+function seek(x){ T=clamp(x,0,TOTAL-0.001); curIdx=-1; }
+function jump(d){ const i=clamp(idxAt(T)+d,0,SCENES.length-1); seek(SCENES[i].start); }
+function speak(text){ if(!voice||!window.speechSynthesis) return; speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(text); u.rate=1.05*Math.min(speed,1.6); speechSynthesis.speak(u); }
+
+/* ---------- controls ---------- */
+SCENES.forEach(s=>{ const k=document.createElement('div'); k.className='tick'; k.style.left=(s.start/TOTAL*100)+'%'; $('bar').appendChild(k); });
+$('bar').addEventListener('click',e=>{ const r=e.currentTarget.getBoundingClientRect(); seek((e.clientX-r.left)/r.width*TOTAL); });
+$('bPlay').onclick=()=>{ if(T>=TOTAL-0.01) seek(0); setPlaying(!playing); };
+$('bPrev').onclick=()=>jump(-1); $('bNext').onclick=()=>jump(1);
+$('bCap').onclick=e=>{ caps=!caps; e.currentTarget.classList.toggle('on',caps); $('caption').classList.toggle('hide',!caps); };
+$('bVoice').onclick=e=>{ voice=!voice; e.currentTarget.classList.toggle('on',voice); e.currentTarget.textContent=voice?'🔊 Narrate':'🔈 Narrate'; if(voice) speak(SCENES[idxAt(T)].cap); else if(window.speechSynthesis) speechSynthesis.cancel(); };
+document.querySelectorAll('.sp').forEach(b=>b.onclick=()=>{ speed=+b.dataset.sp; document.querySelectorAll('.sp').forEach(x=>x.classList.toggle('on',x===b)); });
+$('bFs').onclick=()=>{ document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen(); };
+$('startOverlay').onclick=()=>{ $('startOverlay').remove(); seek(0); setPlaying(true); };
+document.addEventListener('keydown',e=>{
+  if(e.code==='Space'){ e.preventDefault(); $('startOverlay')?.remove(); setPlaying(!playing); }
+  else if(e.code==='ArrowRight') jump(1); else if(e.code==='ArrowLeft') jump(-1);
+  else if(e.key==='f'||e.key==='F') $('bFs').click(); else if(e.key==='n'||e.key==='N') $('bVoice').click();
+  else if(e.key==='c'||e.key==='C') $('bCap').click();
+});
+
+/* ---------- fit 1280x720 stage to window ---------- */
+function fit(){ const w=window.innerWidth, h=window.innerHeight-64; const s=Math.min(w/1280,h/720)*0.97; $('stage').style.transform=`scale(${s})`; }
+window.addEventListener('resize',fit); fit();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

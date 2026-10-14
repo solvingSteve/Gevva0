@@ -9,6 +9,7 @@ verbatim quotes and human-readable operational justifications.
 
 from __future__ import annotations
 import base64
+import difflib
 import json
 import re
 import time
@@ -28,6 +29,70 @@ class DecisionEvidence(BaseModel):
         description="One to two sentences explaining why the evidence supports the verdict."
     )
     generation_latency_ms: float
+
+    @property
+    def verbatim_quote(self) -> str:
+        return self.quote
+
+
+def align_verbatim_quote(context: str, quote: str, threshold: float = 0.70) -> str:
+    """Ensure an extracted quote matches the source context verbatim.
+    
+    Corrects LLM generation quirks, BPE token boundary artifacts, and hallucinated
+    punctuation/digits (e.g. restoring '$10,000' if the model output '$1,0,0,000').
+    """
+    if not context or not quote:
+        return quote
+    if quote in context:
+        return quote
+
+    quote_clean = quote.strip().strip('"\'“”')
+    if not quote_clean:
+        return quote
+    if quote_clean in context:
+        return quote_clean
+
+    # Try case-insensitive exact match
+    lower_context = context.lower()
+    lower_quote = quote_clean.lower()
+    idx = lower_context.find(lower_quote)
+    if idx != -1:
+        return context[idx : idx + len(quote_clean)]
+
+    # Word-level phrase anchoring: locate matching starting and ending word sequences
+    words = quote_clean.split()
+    if len(words) >= 3:
+        s_idx = -1
+        for n_start in (6, 5, 4, 3, 2):
+            if n_start > len(words):
+                continue
+            start_phrase = " ".join(words[:n_start])
+            s_idx = context.find(start_phrase)
+            if s_idx == -1:
+                s_idx = lower_context.find(start_phrase.lower())
+            if s_idx != -1:
+                break
+
+        e_idx = -1
+        search_start = s_idx if s_idx != -1 else 0
+        for n_end in (6, 5, 4, 3, 2):
+            if n_end > len(words):
+                continue
+            end_phrase = " ".join(words[-n_end:])
+            e_idx = context.find(end_phrase, search_start)
+            if e_idx == -1:
+                e_idx = lower_context.find(end_phrase.lower(), search_start)
+            if e_idx != -1:
+                e_idx += len(end_phrase)
+                break
+
+        if s_idx != -1 and e_idx != -1 and e_idx > s_idx:
+            candidate = context[s_idx:e_idx]
+            ratio = difflib.SequenceMatcher(None, candidate, quote_clean).ratio()
+            if ratio >= threshold:
+                return candidate
+
+    return quote
 
 
 def explain_decision(
@@ -82,40 +147,47 @@ def explain_decision(
             raw_text = response["choices"][0]["message"]["content"].strip()
 
         else:
-            # Text-only isolated audit prompt
+            # Text-only isolated audit prompt (model-agnostic for Gemma, Qwen, Llama, etc.)
             clean_context = context.strip() if context else "No context text provided."
             audit_prompt = (
-                f"<|turn>user\n"
                 f"Context:\n{clean_context}\n\n"
                 f"The system rendered the following verdict:\n"
                 f"Verdict: [{verdict_letter}] {verdict_text}\n\n"
                 f"Your Task:\n"
-                f"1. Extract the exact, verbatim quote from the Context that directly supports this verdict.\n"
+                f"1. Locate and extract the exact, verbatim quote from the Context that directly supports this verdict. Copy the excerpt character-for-character, byte-for-byte from the context text (do not modify numbers, currency symbols, or punctuation; e.g. copy '$10,000' exactly as written in the context).\n"
                 f"2. Provide a 1-2 sentence rationale explaining why this excerpt justifies the choice.\n\n"
                 f"Respond strictly in JSON format matching this schema:\n"
                 f"{{\n"
-                f'  "verbatim_quote": "<verbatim excerpt from Context>",\n'
+                f'  "verbatim_quote": "<verbatim excerpt copied exactly from Context>",\n'
                 f'  "rationale": "<1-2 sentence explanation>"\n'
-                f"}}\n<turn|>\n"
-                f"<|turn>model\n"
-                f"<|channel>thought\n<channel|>"
-                f"```json\n"
+                f"}}"
             )
 
-            engine.llm.reset()
-            engine.llm._ctx.kv_cache_clear()
-            tokens = engine.llm.tokenize(audit_prompt.encode("utf-8"), add_bos=True)
-            engine.llm.eval(tokens)
-
-            generated = []
-            for _ in range(max_tokens):
-                tok = engine.llm.sample(temp=temperature)
-                if tok in (int(engine.llm.token_eos()), int(engine.llm.tokenize(b"<turn|>")[0])):
-                    break
-                generated.append(tok)
-                engine.llm.eval([tok])
-
-            raw_text = engine.llm.detokenize(generated).decode("utf-8", errors="ignore")
+            messages = [{"role": "user", "content": audit_prompt}]
+            try:
+                response = engine.llm.create_chat_completion(
+                    messages=messages,
+                    max_tokens=max_tokens,
+                    temperature=temperature,
+                )
+                raw_text = response["choices"][0]["message"]["content"].strip()
+            except Exception:
+                # Fallback to direct raw completion if model chat template fails
+                engine.llm.reset()
+                engine.llm._ctx.kv_cache_clear()
+                res = engine.llm(
+                    prompt=f"{audit_prompt}\n\n```json\n",
+                    max_tokens=max_tokens,
+                    temperature=temperature,
+                    stop=["```", "<turn|>", "<|im_end|>", "\n\n\n"],
+                )
+                raw_text = res["choices"][0]["text"].strip()
+            finally:
+                try:
+                    engine.llm.reset()
+                    engine.llm._ctx.kv_cache_clear()
+                except Exception:
+                    pass
 
         # Parse JSON
         quote = ""
@@ -133,6 +205,10 @@ def explain_decision(
             clean = raw_text.replace("```json", "").replace("```", "").strip()
             rationale = clean[:250]
             quote = f"Derived from verdict [{verdict_letter}]"
+
+        # Align quote to exact verbatim substring in context to eliminate token drift / extra commas (e.g. $1,0,0,000 -> $10,000)
+        if context and quote:
+            quote = align_verbatim_quote(context, quote)
 
         latency_ms = (time.perf_counter() - start_t) * 1000.0
 
