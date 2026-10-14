@@ -185,19 +185,6 @@ sequenceDiagram
   - **Latency Optimization**: Shaved median latency from **37.0 ms down to 31.5 ms p50** on RTX 5090 by reducing the Gemma 4 output projection tensor to $K=64$.
   - **Dual-Viewport Mission Control HUD (`renderer.py`)**: 60 FPS arcade rendering alongside live probability telemetry, Platt calibration meters, and CoT derivations.
 
-### Demo 2: The Game of Pig (`demos/pig`)
-- **Backbone**: Tier 0 (`Tier0Engine` + `Tier0DecisionBridge`)
-- **Key Mechanics**:
-  - Exact Absorbing Markov Decision Process (Todd & Fisher, 2007) solved in closed form over a 104-node Pig domain manifold.
-  - Solves the dynamic risk threshold $k^*(i, j)$ across the 3D game state $(i, j, k)$: conservative holds ($k^* \le 15$) when leading, aggressive risk taking ($k^* > 32$) when trailing.
-  - **Flawless GTO Strategy**: Operates at **sub-3 ms execution** entirely within Tier 0 ONNX embedding space, demonstrating zero false escalations and beating human gut heuristics ("Hold at 20") consistently.
-
-### Demo 3: Vegas Blackjack 21 (`demos/blackjack`)
-- **Backbone**: Tier 0 (`Tier0Engine` + `Tier0DecisionBridge`)
-- **Key Mechanics**:
-  - Exact Absorbing Markov Decision Process (Baldwin et al., 1956; Edward O. Thorp, 1962) over transient hand totals (Hard 4–20, Soft 12–20, Pairs) terminating in absorbing dealer sinks.
-  - Resolves all 4 casino actions (`HIT`, `STAND`, `DOUBLE DOWN`, `SPLIT PAIR`) plus **Hi-Lo Illustrious 18 True Count Index Warps** (e.g. standing on Hard 16 vs 10 when $\text{TC} > 0$).
-  - **Flawless GTO Strategy**: Evaluates in **~2 ms** with **100% GTO parity**, crushing amateur bot heuristics (`Timid Tourist`, `Dealer Mimic`, `Vegas Hunch`) in live head-to-head simulations.
 
 ---
 
