@@ -118,8 +118,7 @@ Gevva0 includes three full-featured interactive applications demonstrating high-
 ```
 ├── /demos/
 │   └── pacman/        # Real-time arcade loop using DecisionBridge (Tier 1 + Tier 2) -> 31.5ms p50
-│   └── pig/           # Game of Pig 1v1 battle using Tier0DecisionBridge (Tier 0) -> sub-3ms
-│   └── blackjack/     # Vegas Blackjack 21 table using Tier0DecisionBridge (Tier 0) -> sub-3ms
+
 ```
 <img width="1802" height="1188" alt="pacman-debiased" src="https://github.com/user-attachments/assets/cf40eaa6-4f64-4f3d-ab90-93fd003f2300" />
 
@@ -136,34 +135,6 @@ Gevva0 includes three full-featured interactive applications demonstrating high-
   # Simulated mode (instant review without GPU)
   uv run python demos/pacman/run.py --simulate
   ```
-
-### 2. The Game of Pig (`demos/pig`)
-- **Tiers Employed**: **Tier 0** (`Tier0Engine` + `Tier0DecisionBridge`).
-- **Absorbing Markov Decision Process**: Solves the exact Absorbing Markov Chain for Pig (Todd & Fisher, 2007) in closed form across a 104-node domain manifold in **sub-3 ms**.
-- **76% GTO Strategy**
-- **Launch Command**:
-  ```powershell
-  # Interactive 1v1 battle against Gevva0 Tier 0
-  uv run python demos/pig/run.py
-  
-  # High-speed Monte Carlo simulation tournament (200+ games)
-  uv run python demos/pig/headless.py --games 200
-  ```
-
-### 3. Vegas Blackjack 21 (`demos/blackjack`)
-- **Tiers Employed**: **Tier 0** (`Tier0Engine` + `Tier0DecisionBridge`).
-- **Absorbing Markov Decision Process**: Solves the exact Absorbing Markov Chain for 6-deck Blackjack (Baldwin et al., 1956; Thorp, 1962) over transient hand totals terminating in absorbing dealer sinks.
-- **15-29% GTO Strategy**
-
-- **Launch Command**:
-  ```powershell
-  # Interactive Vegas Blackjack table alongside Tier 0
-  uv run python demos/blackjack/run.py
-  
-  # Automated 400-hand tournament benchmark
-  uv run python demos/blackjack/headless.py --hands 400
-  ```
-
 ---
 
 ## Quickstart
@@ -312,8 +283,6 @@ uv run python -u benchmarks/benchmark_latest_suites.py
 │   └── routing_rules.json    # Pre-compiled Tier -1 domain routing predicates
 ├── demos/
 │   ├── pacman/               # Arcade Pac-Man: Game Loop Bridge (T1 + T2, 31.5ms p50)
-│   ├── pig/                  # The Game of Pig: Exact Absorbing Markov Chain GTO (T0, sub-3ms)
-│   └── blackjack/            # Vegas Blackjack 21: Exact Absorbing Markov Chain GTO (T0, sub-3ms)
 ├── docs/
 │   ├── ARCHITECTURE.md       # Master systems architecture & mathematical foundations
 │   └── benchmarks/
