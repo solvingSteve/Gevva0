@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gevva0 Tier 0 — Absorbing Markov Chain & Tripwire Visualizer</title>
+  <style>
+    :root {
+      --bg-dark: #0b0f19;
+      --bg-panel: #111827;
+      --bg-card: #1f2937;
+      --border: #374151;
+      --text-main: #f9fafb;
+      --text-muted: #9ca3af;
+      --cyan: #06b6d4;
+      --green: #10b981;
+      --amber: #f59e0b;
+      --red: #ef4444;
+      --purple: #8b5cf6;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      line-height: 1.5;
+      padding: 20px;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1440px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    /* Header */
+    header {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 4px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .title-group h1 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .badge-t0 {
+      background: rgba(6, 182, 212, 0.15);
+      color: var(--cyan);
+      border: 1px solid var(--cyan);
+      font-size: 0.75rem;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    }
+
+    .title-group p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-top: 4px;
+    }
+
+    .mode-switch {
+      display: flex;
+      background: var(--bg-dark);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 4px;
+      gap: 4px;
+    }
+
+    .mode-btn {
+      background: transparent;
+      color: var(--text-muted);
+      border: none;
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .mode-btn.active {
+      background: var(--cyan);
+      color: #000;
+    }
+
+    /* Main Grid */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 320px 1fr 370px;
+      gap: 4px;
+      align-items: start;
+    }
+
+    @media (max-width: 1200px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+    }
+
+    .panel-title {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      font-weight: 700;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Scenario Buttons */
+    .scenario-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .scenario-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      text-align: left;
+      color: var(--text-main);
+      cursor: pointer;
+      transition: all 0.18s ease;
+      position: relative;
+    }
+
+    .scenario-btn:hover {
+      border-color: var(--cyan);
+      transform: translateY(-1px);
+    }
+
+    .scenario-btn.active {
+      border-color: var(--cyan);
+      background: rgba(6, 182, 212, 0.1);
+      box-shadow: 0 0 0 1px var(--cyan);
+    }
+
+    .scenario-tag {
+      display: inline-block;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-bottom: 6px;
+      font-family: ui-monospace, monospace;
+    }
+
+    .tag-win { background: rgba(16, 185, 129, 0.2); color: var(--green); }
+    .tag-guard { background: rgba(245, 158, 11, 0.2); color: var(--amber); }
+
+    .scenario-btn h3 {
+      font-size: 0.92rem;
+      margin-bottom: 4px;
+    }
+
+    .scenario-btn p {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      line-height: 1.35;
+    }
+
+    /* Center Canvas Area */
+    .canvas-container {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .query-banner {
+      background: var(--bg-card);
+      border-left: 4px solid var(--cyan);
+      padding: 12px 16px;
+      border-radius: 6px;
+      font-size: 0.92rem;
+    }
+
+    .query-banner span {
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      font-weight: 700;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .canvas-wrapper {
+      position: relative;
+      background: #070a12;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      height: 500px;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .legend-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      padding: 4px 8px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .line-sample {
+      width: 20px;
+      height: 3px;
+      display: inline-block;
+    }
+
+    /* Right Telemetry Panel */
+    .tripwire-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 10px;
+      transition: all 0.2s;
+    }
+
+    .tripwire-card.pass {
+      border-left: 4px solid var(--green);
+    }
+
+    .tripwire-card.tripped {
+      border-left: 4px solid var(--red);
+      background: rgba(239, 68, 68, 0.08);
+    }
+
+    .tripwire-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.84rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .status-pill {
+      font-size: 0.68rem;
+      font-family: ui-monospace, monospace;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 700;
+    }
+
+    .pill-pass { background: rgba(16, 185, 129, 0.2); color: var(--green); }
+    .pill-trip { background: rgba(239, 68, 68, 0.25); color: var(--red); }
+    .pill-skip { background: rgba(156, 163, 175, 0.15); color: var(--text-muted); }
+
+    .tripwire-desc {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      font-family: ui-monospace, monospace;
+    }
+
+    /* Probability Comparison Bars */
+    .prob-section {
+      margin-top: 16px;
+      border-top: 1px solid var(--border);
+      padding-top: 14px;
+    }
+
+    .prob-group {
+      margin-bottom: 14px;
+    }
+
+    .prob-group-title {
+      font-size: 0.78rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .bar-row {
+      display: grid;
+      grid-template-columns: 95px 1fr 42px;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.75rem;
+      margin-bottom: 5px;
+    }
+
+    .bar-label {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: var(--text-muted);
+    }
+
+    .bar-track {
+      background: #090d16;
+      height: 8px;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.4s ease;
+    }
+
+    .bar-val {
+      font-family: ui-monospace, monospace;
+      text-align: right;
+      font-size: 0.73rem;
+    }
+
+    /* Verdict Box */
+    .verdict-box {
+      margin-top: 14px;
+      padding: 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    .verdict-box.exit0 {
+      background: rgba(16, 185, 129, 0.12);
+      border-color: var(--green);
+    }
+
+    .verdict-box.escalate {
+      background: rgba(245, 158, 11, 0.12);
+      border-color: var(--amber);
+    }
+
+    .verdict-title {
+      font-size: 0.9rem;
+      font-weight: 800;
+      margin-bottom: 4px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .verdict-explain {
+      font-size: 0.8rem;
+      color: #e5e7eb;
+      line-height: 1.4;
+    }
+
+    .math-footer {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    .formula-pill {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-family: ui-monospace, monospace;
+      color: var(--cyan);
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <!-- Header -->
+  <header>
+    <div class="title-group">
+      <h1>
+        <span class="badge-t0">TIER 0</span>
+        Topological Absorbing Markov Router & Triple-Guard Visualizer
+      </h1>
+      <p>
+        EmbeddingGemma-2 maps your input onto a concept maze. Candidate answers (A, B, C, D) are absorbing exits.
+      </p>
+    </div>
+    <div class="mode-switch">
+      <button class="mode-btn active" id="btn-mode-walk" onclick="setRenderMode('walk')">
+        🎲 Intuition: 1,000 Random Walks
+      </button>
+      <button class="mode-btn" id="btn-mode-matrix" onclick="setRenderMode('matrix')">
+        ⚡ Production: Closed-Form B = (I - Q)⁻¹R (&lt;3 ms)
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Interactive Grid -->
+  <div class="main-grid">
+    <!-- Left Column: Scenarios -->
+    <div class="panel">
+      <div class="panel-title">
+        <span>1. Pick a Test Scenario</span>
+        <span>5 Cases</span>
+      </div>
+      <div class="scenario-list" id="scenario-list"></div>
+    </div>
+
+    <!-- Center Column: Concept Maze Canvas -->
+    <div class="panel canvas-container">
+      <div class="query-banner">
+        <span>Incoming Natural Language Query</span>
+        <div id="query-text">Loading...</div>
+      </div>
+
+      <div class="canvas-wrapper">
+        <canvas id="mazeCanvas"></canvas>
+      </div>
+
+      <div class="legend-bar">
+        <div class="legend-item">
+          <span class="dot" style="background: #f43f5e;"></span> Input Spot on Map
+        </div>
+        <div class="legend-item">
+          <span class="dot" style="background: #60a5fa;"></span> Intermediate Landmarks (Q)
+        </div>
+        <div class="legend-item">
+          <span class="dot" style="background: #10b981;"></span> Candidate Exits (R: Sinks A–D)
+        </div>
+        <div class="legend-item">
+          <span class="line-sample" style="background: #ef4444; border-bottom: 2px dashed #ef4444;"></span> Naive Cosine Trap (Straight Line)
+        </div>
+        <div class="legend-item">
+          <span class="line-sample" style="background: #06b6d4;"></span> Markov Flow Path
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Tripwires & Telemetry -->
+    <div class="panel">
+      <div class="panel-title">
+        <span>2. Triple-Guard Tripwires</span>
+        <span id="latency-badge" style="color: var(--cyan); font-family: monospace;">2.1 ms</span>
+      </div>
+
+      <!-- Guard 1 -->
+      <div class="tripwire-card" id="guard-1">
+        <div class="tripwire-header">
+          <span>Guard 1: Negation & Syntax</span>
+          <span class="status-pill" id="guard-1-pill">PASS</span>
+        </div>
+        <div class="tripwire-desc" id="guard-1-desc">
+          0.0 ms check for "do not", "instead of", binary yes/no
+        </div>
+      </div>
+
+      <!-- Guard 2 -->
+      <div class="tripwire-card" id="guard-2">
+        <div class="tripwire-header">
+          <span>Guard 2: Manifold Proximity (OOD)</span>
+          <span class="status-pill" id="guard-2-pill">PASS</span>
+        </div>
+        <div class="tripwire-desc" id="guard-2-desc">
+          Requires d_min ≤ 0.22 to nearest landmark
+        </div>
+      </div>
+
+      <!-- Guard 3 -->
+      <div class="tripwire-card" id="guard-3">
+        <div class="tripwire-header">
+          <span>Guard 3: Entropy & Margin Gate</span>
+          <span class="status-pill" id="guard-3-pill">PASS</span>
+        </div>
+        <div class="tripwire-desc" id="guard-3-desc">
+          Requires Entropy H ≤ 0.45 & Margin Δ ≥ 0.25
+        </div>
+      </div>
+
+      <!-- Probability Bars -->
+      <div class="prob-section">
+        <div class="prob-group">
+          <div class="prob-group-title">
+            <span style="color: #f87171;">❌ Naive Cosine Similarity (Direct Line)</span>
+            <span id="cos-status" style="font-size: 0.72rem; color: var(--text-muted);">Fooled by keywords</span>
+          </div>
+          <div id="cosine-bars"></div>
+        </div>
+
+        <div class="prob-group">
+          <div class="prob-group-title">
+            <span style="color: var(--cyan);">✅ Tier 0 Hybrid AMC (Maze Absorption)</span>
+            <span id="amc-status" style="font-size: 0.72rem; color: var(--text-muted);">65% Cos + 35% AMC</span>
+          </div>
+          <div id="amc-bars"></div>
+        </div>
+      </div>
+
+      <!-- Final Verdict Box -->
+      <div class="verdict-box" id="verdict-box">
+        <div class="verdict-title">
+          <span id="verdict-headline">EXIT_0: LOCKED VERDICT</span>
+          <span id="verdict-time">1.9 ms</span>
+        </div>
+        <div class="verdict-explain" id="verdict-explain"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer Explanation -->
+  <div class="math-footer">
+    <div>
+      <strong>Tier 0:</strong> Instead of trusting a blind straight-line keyword match (Cosine), Tier 0 measures how probability flows through connected concept corridors into the candidate exits—and locks the answer in &lt;3 ms only if all 3 safety tripwires pass.
+    </div>
+    <div class="formula-pill">
+      P_final = 0.65 · P_cosine + 0.35 · [ x₀ᵀ (I - Q)⁻¹ R ]
+    </div>
+  </div>
+</div>
+
+<script>
+const SCENARIOS = [
+  {
+    id: "cloud-outage",
+    tag: "AMC BEATS COSINE · EXIT_0",
+    tagClass: "tag-win",
+    title: "1. The Keyword Trap (Cloud Triage)",
+    shortDesc: "Query says 'Checkout payment failed', but root cause is DB lock contention.",
+    query: "\"Checkout payment webhook failed with HTTP 500 while persisting idempotency keys to primary replica.\"",
+    latency: "2.1 ms",
+    queryPos: { x: 0.16, y: 0.48 },
+    inManifold: true,
+    cosineTrapSink: 1, // Points falsely to Billing (Sink B)
+    activeCorridors: [
+      [0, 2], [2, 3], [3, 0] // Flow through Idempotency -> WAL Lock -> Exit A (Database)
+    ],
+    winningSink: 0,
+    landmarks: [
+      { id: 0, label: "Idempotency Key", x: 0.34, y: 0.36, active: true },
+      { id: 1, label: "Stripe / Invoice", x: 0.35, y: 0.68, active: false },
+      { id: 2, label: "Replica Write", x: 0.54, y: 0.26, active: true },
+      { id: 3, label: "WAL Lock / Pool", x: 0.68, y: 0.36, active: true },
+      { id: 4, label: "Card Declined", x: 0.58, y: 0.66, active: false },
+      { id: 5, label: "TLS / Ingress", x: 0.50, y: 0.84, active: false }
+    ],
+    sinks: [
+      { label: "A: Core Database", y: 0.24 },
+      { label: "B: Billing & Stripe", y: 0.46 },
+      { label: "C: Network Edge", y: 0.68 },
+      { label: "D: Auth / IAM", y: 0.88 }
+    ],
+    cosineProbs: [0.34, 0.46, 0.12, 0.08],
+    amcProbs:    [0.86, 0.09, 0.03, 0.02],
+    guards: {
+      g1: { status: "PASS", text: "0.0 ms · No negation or binary traps detected" },
+      g2: { status: "PASS", text: "d_min = 0.11 ≤ 0.22 (Inside known manifold)" },
+      g3: { status: "PASS", text: "H = 0.29 ≤ 0.45 · Margin Δ = 0.77 ≥ 0.25" }
+    },
+    verdictType: "exit0",
+    verdictHeadline: "EXIT_0 → [A] Core Database",
+    verdictExplain: "Naive Cosine saw the words 'Checkout payment' and guessed Billing (46%). Tier 0's Markov walk followed 'idempotency keys → Replica Write → WAL Lock' into Exit A (86%), locking the true answer in 2.1 ms without waking the LLM."
+  },
+  {
+    id: "cyber-soc",
+    tag: "AMC BEATS COSINE · EXIT_0",
+    tagClass: "tag-win",
+    title: "2. Cyber Attack Graph (MITRE ATT&CK)",
+    shortDesc: "Alert mentions 'invoice spreadsheet', masking a PowerShell credential dump.",
+    query: "\"Employee opened macro-enabled Q3 invoice spreadsheet that spawned hidden PowerShell reading LSASS memory.\"",
+    latency: "1.8 ms",
+    queryPos: { x: 0.16, y: 0.52 },
+    inManifold: true,
+    cosineTrapSink: 2, // Points falsely to Finance/Phishing Queue (Sink C)
+    activeCorridors: [
+      [0, 2], [2, 3], [3, 0]
+    ],
+    winningSink: 0,
+    landmarks: [
+      { id: 0, label: "VBA Macro Exec", x: 0.34, y: 0.38, active: true },
+      { id: 1, label: "Vendor Invoice", x: 0.36, y: 0.70, active: false },
+      { id: 2, label: "Hidden PowerShell", x: 0.52, y: 0.26, active: true },
+      { id: 3, label: "LSASS Dump", x: 0.68, y: 0.32, active: true },
+      { id: 4, label: "Payroll Portal", x: 0.58, y: 0.64, active: false },
+      { id: 5, label: "Firewall Rule", x: 0.52, y: 0.84, active: false }
+    ],
+    sinks: [
+      { label: "A: Isolate Host", y: 0.24 },
+      { label: "B: Block WAF IP", y: 0.46 },
+      { label: "C: Finance Queue", y: 0.68 },
+      { label: "D: Ignore / Low", y: 0.88 }
+    ],
+    cosineProbs: [0.36, 0.11, 0.44, 0.09],
+    amcProbs:    [0.89, 0.05, 0.04, 0.02],
+    guards: {
+      g1: { status: "PASS", text: "0.0 ms · Clean semantic action candidates" },
+      g2: { status: "PASS", text: "d_min = 0.09 ≤ 0.22 (Strong landmark lock)" },
+      g3: { status: "PASS", text: "H = 0.24 ≤ 0.45 · Margin Δ = 0.84 ≥ 0.25" }
+    },
+    verdictType: "exit0",
+    verdictHeadline: "EXIT_0 → [A] Isolate Host",
+    verdictExplain: "Surface keywords ('invoice spreadsheet') pulled Cosine toward Finance Queue (44%). The Markov chain propagated along the MITRE attack chain (Macro → PowerShell → LSASS) into Exit A in 1.8 ms."
+  },
+  {
+    id: "tripwire-negation",
+    tag: "TRIPWIRE #1 · 0.0 ms BYPASS",
+    tagClass: "tag-guard",
+    title: "3. Guard 1: The Negation Trap",
+    shortDesc: "Embeddings are blind to 'do NOT' and 'instead of'. Guard 1 blocks it in 0.0 ms.",
+    query: "\"Do NOT cancel our enterprise subscription—instead of terminating, upgrade us to the annual plan.\"",
+    latency: "0.0 ms",
+    queryPos: { x: 0.16, y: 0.50 },
+    inManifold: true,
+    blockedAtEntrance: true,
+    cosineTrapSink: 0,
+    activeCorridors: [],
+    winningSink: -1,
+    landmarks: [
+      { id: 0, label: "Cancel Account", x: 0.36, y: 0.30, active: false },
+      { id: 1, label: "Termination", x: 0.58, y: 0.28, active: false },
+      { id: 2, label: "Annual Upgrade", x: 0.46, y: 0.56, active: false },
+      { id: 3, label: "Seat Expansion", x: 0.64, y: 0.54, active: false },
+      { id: 4, label: "Refund Policy", x: 0.48, y: 0.80, active: false }
+    ],
+    sinks: [
+      { label: "A: Cancel Account", y: 0.24 },
+      { label: "B: Plan Upgrade", y: 0.46 },
+      { label: "C: Issue Refund", y: 0.68 },
+      { label: "D: Tech Support", y: 0.88 }
+    ],
+    cosineProbs: [0.62, 0.24, 0.09, 0.05],
+    amcProbs:    [0.00, 0.00, 0.00, 0.00],
+    guards: {
+      g1: { status: "TRIPPED", text: "TRIPPED (0.0 ms): Detected 'Do NOT' & 'instead of'" },
+      g2: { status: "SKIP", text: "Bypassed prior to ONNX embedding execution" },
+      g3: { status: "SKIP", text: "Bypassed prior to Markov matrix solve" }
+    },
+    verdictType: "escalate",
+    verdictHeadline: "ESCALATE → TIER 1 (Gemma 4 MoE)",
+    verdictExplain: "Embedding models ignore negation words like 'Do NOT' and would have dangerously canceled the customer's account (62% Cosine). Guard 1 caught the syntax at 0.0 ms and routed directly to Tier 1."
+  },
+  {
+    id: "tripwire-ood",
+    tag: "TRIPWIRE #2 · OOD GATE",
+    tagClass: "tag-guard",
+    title: "4. Guard 2: Out-of-Domain (OOD)",
+    shortDesc: "Query lands far outside the concept maze (d_min > 0.22). Refuses to guess.",
+    query: "\"What hydration percentage and fermentation temp gives sourdough pizza crust the best leopard spotting?\"",
+    latency: "1.6 ms",
+    queryPos: { x: 0.14, y: 0.88 }, // Outside the manifold zone!
+    inManifold: false,
+    cosineTrapSink: 2,
+    activeCorridors: [],
+    winningSink: -1,
+    landmarks: [
+      { id: 0, label: "API Gateway", x: 0.36, y: 0.28, active: false },
+      { id: 1, label: "Database Pool", x: 0.56, y: 0.26, active: false },
+      { id: 2, label: "OAuth Token", x: 0.44, y: 0.50, active: false },
+      { id: 3, label: "TLS Handshake", x: 0.64, y: 0.52, active: false },
+      { id: 4, label: "Billing Webhook", x: 0.48, y: 0.70, active: false }
+    ],
+    sinks: [
+      { label: "A: Core Database", y: 0.24 },
+      { label: "B: Auth Service", y: 0.46 },
+      { label: "C: Network Edge", y: 0.68 },
+      { label: "D: Billing Team", y: 0.88 }
+    ],
+    cosineProbs: [0.28, 0.22, 0.31, 0.19],
+    amcProbs:    [0.00, 0.00, 0.00, 0.00],
+    guards: {
+      g1: { status: "PASS", text: "0.0 ms · Syntax check passed" },
+      g2: { status: "TRIPPED", text: "TRIPPED: d_min = 0.64 > 0.22 (Outside Manifold!)" },
+      g3: { status: "SKIP", text: "Aborted: Query is Out-of-Distribution" }
+    },
+    verdictType: "escalate",
+    verdictHeadline: "ESCALATE → TIER 1 (OOD_MANIFOLD_BYPASS)",
+    verdictExplain: "The input landed miles outside the known concept map (distance 0.64 vs max allowed 0.22). This is how Tier 0 rejected 344/344 out-of-domain traps on Decision Index 0.3 with zero false exits."
+  },
+  {
+    id: "tripwire-entropy",
+    tag: "TRIPWIRE #3 · HIGH ENTROPY",
+    tagClass: "tag-guard",
+    title: "5. Guard 3: High Entropy (Split Paths)",
+    shortDesc: "Walks split evenly into 3 exits. High chaos (H > 0.45) triggers safe escalation.",
+    query: "\"Production app is experiencing intermittent latency spikes and occasional errors across services.\"",
+    latency: "2.2 ms",
+    queryPos: { x: 0.16, y: 0.50 },
+    inManifold: true,
+    highEntropySplit: true,
+    cosineTrapSink: 0,
+    activeCorridors: [
+      [0, 1], [2, 3], [4, 4]
+    ],
+    winningSink: -1,
+    landmarks: [
+      { id: 0, label: "Slow Queries", x: 0.36, y: 0.28, active: true },
+      { id: 1, label: "DB Connection", x: 0.60, y: 0.26, active: true },
+      { id: 2, label: "Packet Loss", x: 0.38, y: 0.52, active: true },
+      { id: 3, label: "Ingress Timeout", x: 0.62, y: 0.50, active: true },
+      { id: 4, label: "Token Check", x: 0.48, y: 0.76, active: true }
+    ],
+    sinks: [
+      { label: "A: Core Database", y: 0.24 },
+      { label: "B: Network Edge", y: 0.46 },
+      { label: "C: Auth Service", y: 0.68 },
+      { label: "D: Billing Team", y: 0.88 }
+    ],
+    cosineProbs: [0.33, 0.31, 0.24, 0.12],
+    amcProbs:    [0.35, 0.33, 0.22, 0.10],
+    guards: {
+      g1: { status: "PASS", text: "0.0 ms · Syntax check passed" },
+      g2: { status: "PASS", text: "d_min = 0.15 ≤ 0.22 (Inside manifold)" },
+      g3: { status: "TRIPPED", text: "TRIPPED: Entropy H = 1.84 > 0.45 · Margin Δ = 0.02" }
+    },
+    verdictType: "escalate",
+    verdictHeadline: "ESCALATE → TIER 1 (LOW CONFIDENCE)",
+    verdictExplain: "Remember: High Entropy = Chaos! Because the walks split almost evenly between Database (35%) and Network (33%), entropy is way above 0.45. Tier 0 refuses to guess and hands off to Tier 1."
+  }
+];
+
+let currentScenario = SCENARIOS[0];
+let renderMode = "walk"; // 'walk' or 'matrix'
+let particles = [];
+let animFrameId = null;
+
+const canvas = document.getElementById("mazeCanvas");
+const ctx = canvas.getContext("2d");
+
+function init() {
+  const listEl = document.getElementById("scenario-list");
+  SCENARIOS.forEach((sc, idx) => {
+    const btn = document.createElement("button");
+    btn.className = "scenario-btn" + (idx === 0 ? " active" : "");
+    btn.id = "sc-btn-" + sc.id;
+    btn.onclick = () => selectScenario(sc.id);
+    btn.innerHTML = `
+      <span class="scenario-tag ${sc.tagClass}">${sc.tag}</span>
+      <h3>${sc.title}</h3>
+      <p>${sc.shortDesc}</p>
+    `;
+    listEl.appendChild(btn);
+  });
+
+  window.addEventListener("resize", resizeCanvas);
+  resizeCanvas();
+  selectScenario(SCENARIOS[0].id);
+  animate();
+}
+
+function setRenderMode(mode) {
+  renderMode = mode;
+  document.getElementById("btn-mode-walk").classList.toggle("active", mode === "walk");
+  document.getElementById("btn-mode-matrix").classList.toggle("active", mode === "matrix");
+  spawnParticles();
+}
+
+function selectScenario(id) {
+  currentScenario = SCENARIOS.find(s => s.id === id);
+  document.querySelectorAll(".scenario-btn").forEach(b => b.classList.remove("active"));
+  document.getElementById("sc-btn-" + id).classList.add("active");
+
+  // Update Text & Telemetry
+  document.getElementById("query-text").textContent = currentScenario.query;
+  document.getElementById("latency-badge").textContent = currentScenario.latency;
+
+  updateGuardCard("guard-1", currentScenario.guards.g1);
+  updateGuardCard("guard-2", currentScenario.guards.g2);
+  updateGuardCard("guard-3", currentScenario.guards.g3);
+
+  renderBars("cosine-bars", currentScenario.sinks, currentScenario.cosineProbs, "#ef4444");
+  renderBars("amc-bars", currentScenario.sinks, currentScenario.amcProbs, "#06b6d4");
+
+  const vBox = document.getElementById("verdict-box");
+  vBox.className = "verdict-box " + currentScenario.verdictType;
+  document.getElementById("verdict-headline").textContent = currentScenario.verdictHeadline;
+  document.getElementById("verdict-time").textContent = currentScenario.latency;
+  document.getElementById("verdict-explain").textContent = currentScenario.verdictExplain;
+
+  spawnParticles();
+}
+
+function updateGuardCard(prefix, data) {
+  const card = document.getElementById(prefix);
+  const pill = document.getElementById(prefix + "-pill");
+  const desc = document.getElementById(prefix + "-desc");
+
+  card.className = "tripwire-card " + (data.status === "PASS" ? "pass" : data.status === "TRIPPED" ? "tripped" : "");
+  pill.className = "status-pill " + (data.status === "PASS" ? "pill-pass" : data.status === "TRIPPED" ? "pill-trip" : "pill-skip");
+  pill.textContent = data.status;
+  desc.textContent = data.text;
+}
+
+function renderBars(containerId, sinks, probs, color) {
+  const el = document.getElementById(containerId);
+  const maxP = Math.max(...probs);
+  el.innerHTML = sinks.map((s, idx) => {
+    const p = probs[idx];
+    const pct = Math.round(p * 100);
+    const barColor = (p === maxP && p > 0) ? color : "#4b5563";
+    return `
+      <div class="bar-row">
+        <div class="bar-label" title="${s.label}">${s.label}</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width: ${pct}%; background: ${barColor};"></div>
+        </div>
+        <div class="bar-val">${pct}%</div>
+      </div>
+    `;
+  }).join("");
+}
+
+function resizeCanvas() {
+  const rect = canvas.parentElement.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+function spawnParticles() {
+  particles = [];
+  if (currentScenario.blockedAtEntrance || !currentScenario.inManifold) return;
+
+  // In 'walk' mode, spawn 80 particles distributed across sinks by amcProbs.
+  // In 'matrix' mode, spawn 24 particles along the primary solved flow.
+  const count = renderMode === "walk" ? 80 : 24;
+  for (let i = 0; i < count; i++) {
+    const sinkIdx = pickSinkByProbability(currentScenario.amcProbs, i, count);
+    particles.push(createParticle(i / count, sinkIdx));
+  }
+}
+
+// Deterministically + stochastically sample sink index according to amcProbs
+function pickSinkByProbability(probs, index, total) {
+  // In closed-form matrix mode on a low-entropy winner, highlight the dominant flow
+  if (renderMode === "matrix" && !currentScenario.highEntropySplit) {
+    return index % 8 === 0 ? 1 : currentScenario.winningSink;
+  }
+
+  // Use stratified sampling across 'total' particles so even 2%-9% sinks
+  // are guaranteed to show a couple of stray random walkers on screen
+  const u = (index + Math.random()) / total;
+  let cumulative = 0;
+  for (let s = 0; s < probs.length; s++) {
+    cumulative += probs[s];
+    if (u <= cumulative) return s;
+  }
+  return 0;
+}
+
+function createParticle(offsetProgress = 0, targetSinkIdx = 0) {
+  const sc = currentScenario;
+  const w = canvas.parentElement.clientWidth;
+  const h = canvas.parentElement.clientHeight;
+
+  const start = { x: sc.queryPos.x * w, y: sc.queryPos.y * h };
+  const sink = sc.sinks[targetSinkIdx];
+  const sinkPos = { x: 0.86 * w, y: sink.y * h };
+  let waypoints = [start];
+
+  // If this particle is heading to the winning sink, use the primary active landmarks
+  if (targetSinkIdx === sc.winningSink) {
+    const activeLms = sc.landmarks.filter(l => l.active);
+    activeLms.forEach(l => waypoints.push({ x: l.x * w, y: l.y * h }));
+  } else {
+    // Route stray walkers (or high-entropy split walkers) through the landmarks
+    // geographically closest to that sink's vertical corridor
+    const sortedByProximity = [...sc.landmarks]
+      .sort((a, b) => Math.abs(a.y - sink.y) - Math.abs(b.y - sink.y))
+      .slice(0, 2)
+      .sort((a, b) => a.x - b.x);
+
+    sortedByProximity.forEach(l => waypoints.push({ x: l.x * w, y: l.y * h }));
+  }
+
+  waypoints.push(sinkPos);
+
+  const isStray = sc.winningSink !== -1 && targetSinkIdx !== sc.winningSink;
+
+  return {
+    waypoints,
+    targetSinkIdx,
+    isStray,
+    progress: offsetProgress,
+    speed: renderMode === "walk" ? (0.0035 + Math.random() * 0.0035) : 0.011,
+    jitter: renderMode === "walk" ? (Math.random() - 0.5) * 9 : 0
+  };
+}
+
+function animate() {
+  const w = canvas.parentElement.clientWidth;
+  const h = canvas.parentElement.clientHeight;
+  ctx.clearRect(0, 0, w, h);
+
+  const sc = currentScenario;
+
+  // 1. Draw Subtle Grid
+  ctx.strokeStyle = "rgba(55, 65, 81, 0.25)";
+  ctx.lineWidth = 1;
+  for (let x = 0; x < w; x += 40) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+  }
+  for (let y = 0; y < h; y += 40) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+  }
+
+  // 2. Draw Manifold Proximity Boundary Zone (Guard 2: d_min <= 0.22)
+  ctx.save();
+  ctx.beginPath();
+  ctx.roundRect(w * 0.26, h * 0.12, w * 0.49, h * 0.76, 18);
+  ctx.fillStyle = sc.inManifold ? "rgba(6, 182, 212, 0.04)" : "rgba(239, 68, 68, 0.05)";
+  ctx.fill();
+  ctx.setLineDash([6, 6]);
+  ctx.strokeStyle = sc.inManifold ? "rgba(6, 182, 212, 0.35)" : "#ef4444";
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  ctx.restore();
+
+  ctx.fillStyle = sc.inManifold ? "rgba(6, 182, 212, 0.7)" : "#ef4444";
+  ctx.font = "600 11px ui-monospace, monospace";
+  ctx.fillText("MANIFOLD SAFE ZONE (Guard 2: d_min ≤ 0.22)", w * 0.28, h * 0.16);
+
+  const qPos = { x: sc.queryPos.x * w, y: sc.queryPos.y * h };
+
+  // 3. Draw Background Maze Corridors (Q transitions)
+  ctx.strokeStyle = "rgba(75, 85, 99, 0.35)";
+  ctx.lineWidth = 2;
+  sc.landmarks.forEach((l1, i) => {
+    sc.landmarks.forEach((l2, j) => {
+      if (i < j && Math.hypot(l1.x - l2.x, l1.y - l2.y) < 0.34) {
+        ctx.beginPath();
+        ctx.moveTo(l1.x * w, l1.y * h);
+        ctx.lineTo(l2.x * w, l2.y * h);
+        ctx.stroke();
+      }
+    });
+  });
+
+  // 4. Draw Naive Cosine Straight Line ("As the Crow Flies" Trap)
+  if (sc.cosineTrapSink !== undefined) {
+    const trapSink = sc.sinks[sc.cosineTrapSink];
+    const sinkPos = { x: w * 0.86, y: trapSink.y * h };
+    ctx.save();
+    ctx.beginPath();
+    ctx.setLineDash([5, 5]);
+    ctx.moveTo(qPos.x, qPos.y);
+    ctx.lineTo(sinkPos.x, sinkPos.y);
+    ctx.strokeStyle = "rgba(239, 68, 68, 0.65)";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Label on the line
+    const midX = (qPos.x + sinkPos.x) * 0.5;
+    const midY = (qPos.y + sinkPos.y) * 0.5 + 14;
+    ctx.fillStyle = "#f87171";
+    ctx.font = "600 11px sans-serif";
+    ctx.fillText("Naive Cosine (Keyword Trap)", midX - 60, midY);
+    ctx.restore();
+  }
+
+  // 5. Draw Active Markov Flow Pipes (if not blocked)
+  if (!sc.blockedAtEntrance && sc.inManifold) {
+    const activeLms = sc.landmarks.filter(l => l.active);
+    if (sc.highEntropySplit) {
+      // Draw split pipes
+      drawGlowPipe(qPos, { x: sc.landmarks[0].x * w, y: sc.landmarks[0].y * h }, "#f59e0b", 3);
+      drawGlowPipe({ x: sc.landmarks[0].x * w, y: sc.landmarks[0].y * h }, { x: sc.landmarks[1].x * w, y: sc.landmarks[1].y * h }, "#f59e0b", 3);
+      drawGlowPipe({ x: sc.landmarks[1].x * w, y: sc.landmarks[1].y * h }, { x: w * 0.86, y: sc.sinks[0].y * h }, "#f59e0b", 3);
+
+      drawGlowPipe(qPos, { x: sc.landmarks[2].x * w, y: sc.landmarks[2].y * h }, "#f59e0b", 3);
+      drawGlowPipe({ x: sc.landmarks[2].x * w, y: sc.landmarks[2].y * h }, { x: sc.landmarks[3].x * w, y: sc.landmarks[3].y * h }, "#f59e0b", 3);
+      drawGlowPipe({ x: sc.landmarks[3].x * w, y: sc.landmarks[3].y * h }, { x: w * 0.86, y: sc.sinks[1].y * h }, "#f59e0b", 3);
+
+      drawGlowPipe(qPos, { x: sc.landmarks[4].x * w, y: sc.landmarks[4].y * h }, "#f59e0b", 2);
+      drawGlowPipe({ x: sc.landmarks[4].x * w, y: sc.landmarks[4].y * h }, { x: w * 0.86, y: sc.sinks[2].y * h }, "#f59e0b", 2);
+    } else if (activeLms.length > 0) {
+      const pipeWidth = renderMode === "matrix" ? 7 : 4;
+      drawGlowPipe(qPos, { x: activeLms[0].x * w, y: activeLms[0].y * h }, "#06b6d4", pipeWidth);
+      for (let i = 0; i < activeLms.length - 1; i++) {
+        drawGlowPipe(
+          { x: activeLms[i].x * w, y: activeLms[i].y * h },
+          { x: activeLms[i + 1].x * w, y: activeLms[i + 1].y * h },
+          "#06b6d4",
+          pipeWidth
+        );
+      }
+      const lastLm = activeLms[activeLms.length - 1];
+      const winSink = sc.sinks[sc.winningSink];
+      drawGlowPipe(
+        { x: lastLm.x * w, y: lastLm.y * h },
+        { x: w * 0.86, y: winSink.y * h },
+        "#10b981",
+        pipeWidth + 1
+      );
+    }
+  }
+
+  // 6. Update & Draw Flowing Walk Particles
+  particles.forEach(p => {
+    p.progress += p.speed;
+    if (p.progress >= 1) p.progress = 0;
+
+    const totalSegments = p.waypoints.length - 1;
+    const segFloat = p.progress * totalSegments;
+    const segIdx = Math.min(Math.floor(segFloat), totalSegments - 1);
+    const segT = segFloat - segIdx;
+
+    const p1 = p.waypoints[segIdx];
+    const p2 = p.waypoints[segIdx + 1];
+    const curX = p1.x + (p2.x - p1.x) * segT;
+    const curY = p1.y + (p2.y - p1.y) * segT + p.jitter;
+
+    ctx.beginPath();
+    const radius = p.isStray ? 2.8 : (renderMode === "walk" ? 3.8 : 5);
+    ctx.arc(curX, curY, radius, 0, Math.PI * 2);
+
+    if (sc.highEntropySplit) {
+      ctx.fillStyle = "#fbbf24"; // Amber chaos for high entropy
+    } else if (p.isStray) {
+      ctx.fillStyle = "rgba(248, 113, 113, 0.75)"; // Stray keyword-trapped walkers (9%, 3%, 2%)
+    } else {
+      ctx.fillStyle = "#22d3ee"; // Dominant Markov flow (86%)
+    }
+
+    ctx.shadowColor = p.isStray ? "#ef4444" : "#06b6d4";
+    ctx.shadowBlur = p.isStray ? 4 : 8;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  });
+
+  // 7. Draw Intermediate Landmarks (Q Nodes)
+  sc.landmarks.forEach(lm => {
+    const lx = lm.x * w;
+    const ly = lm.y * h;
+    ctx.beginPath();
+    ctx.arc(lx, ly, lm.active ? 11 : 8, 0, Math.PI * 2);
+    ctx.fillStyle = lm.active ? "#0284c7" : "#1f2937";
+    ctx.strokeStyle = lm.active ? "#38bdf8" : "#4b5563";
+    ctx.lineWidth = 2;
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = lm.active ? "#f9fafb" : "#9ca3af";
+    ctx.font = (lm.active ? "700 " : "500 ") + "11px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(lm.label, lx, ly - 15);
+  });
+
+  // 8. Draw Absorbing Sink Exits (R Pockets A, B, C, D)
+  sc.sinks.forEach((sink, idx) => {
+    const sx = w * 0.86;
+    const sy = sink.y * h;
+    const isWin = idx === sc.winningSink;
+
+    ctx.beginPath();
+    ctx.roundRect(sx - 55, sy - 22, 125, 44, 8);
+    ctx.fillStyle = isWin ? "rgba(16, 185, 129, 0.22)" : "#111827";
+    ctx.strokeStyle = isWin ? "#10b981" : "#374151";
+    ctx.lineWidth = isWin ? 2.5 : 1.5;
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = isWin ? "#10b981" : "#e5e7eb";
+    ctx.font = "700 12px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(sink.label, sx + 7, sy - 2);
+
+    const probPct = Math.round(sc.amcProbs[idx] * 100);
+    ctx.fillStyle = isWin ? "#6ee7b7" : "#9ca3af";
+    ctx.font = "600 11px ui-monospace, monospace";
+    ctx.fillText(probPct > 0 ? `AMC: ${probPct}%` : "Blocked", sx + 7, sy + 14);
+  });
+
+  // 9. Draw Query Entry Node
+  ctx.beginPath();
+  ctx.arc(qPos.x, qPos.y, 13, 0, Math.PI * 2);
+  ctx.fillStyle = "#f43f5e";
+  ctx.strokeStyle = "#fda4af";
+  ctx.lineWidth = 3;
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = "#fff";
+  ctx.font = "700 12px sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText("INPUT SPOT", qPos.x, qPos.y - 20);
+
+  // 10. Draw Tripwire Visual Shield if Guard 1 or Guard 2 Tripped
+  if (sc.blockedAtEntrance) {
+    drawShieldBadge(qPos.x + 85, qPos.y, "🛑 GUARD 1: NEGATION BLOCKED (0.0 ms)");
+  } else if (!sc.inManifold) {
+    drawShieldBadge(qPos.x + 125, qPos.y - 30, "🛑 GUARD 2: OUTSIDE MANIFOLD (d_min = 0.64)");
+  } else if (sc.highEntropySplit) {
+    drawShieldBadge(w * 0.72, h * 0.50, "🛑 GUARD 3: HIGH ENTROPY (H = 1.84)");
+  }
+
+  animFrameId = requestAnimationFrame(animate);
+}
+
+function drawGlowPipe(p1, p2, color, width) {
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(p1.x, p1.y);
+  ctx.lineTo(p2.x, p2.y);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = width;
+  ctx.shadowColor = color;
+  ctx.shadowBlur = 10;
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawShieldBadge(x, y, text) {
+  ctx.save();
+  ctx.font = "700 11px ui-monospace, monospace";
+  const pad = 10;
+  const tw = ctx.measureText(text).width;
+  ctx.beginPath();
+  ctx.roundRect(x - tw / 2 - pad, y - 14, tw + pad * 2, 28, 6);
+  ctx.fillStyle = "rgba(127, 29, 29, 0.92)";
+  ctx.strokeStyle = "#ef4444";
+  ctx.lineWidth = 2;
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = "#fecaca";
+  ctx.textAlign = "center";
+  ctx.fillText(text, x, y + 4);
+  ctx.restore();
+}
+
+init();
+</script>
+</body>
+</html>
