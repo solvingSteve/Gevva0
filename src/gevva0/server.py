@@ -212,14 +212,17 @@ def build_app(engine: GemmaDecisionEngine | None = None) -> FastAPI:
     @app.get("/health")
     def health() -> dict[str, Any]:
         eng = _engine()
-        from .tier0 import is_tier0_loaded
+        from .tier0 import is_tier0_loaded, get_tier0_engine
         emb_loaded = is_tier0_loaded()
+        t0 = get_tier0_engine() if emb_loaded else None
+        m_count = int(getattr(t0, "M", 0)) if t0 else 0
 
         if eng is None:
             return {
                 "status": "ok" if emb_loaded else "no_model_loaded",
                 "llm_loaded": False,
                 "embedding_loaded": emb_loaded,
+                "landmarks_count": m_count,
                 "model": None,
                 "has_vision": False,
                 "mmproj": None,
@@ -247,6 +250,7 @@ def build_app(engine: GemmaDecisionEngine | None = None) -> FastAPI:
             "status": "ok",
             "llm_loaded": True,
             "embedding_loaded": emb_loaded,
+            "landmarks_count": m_count,
             "model": eng.model_path,
             "has_vision": eng.has_vision,
             "mmproj": eng.mmproj_path,

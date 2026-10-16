@@ -27,54 +27,81 @@ DEFAULT_TIER0_ENTROPY_THRESHOLD = 0.65
 DEFAULT_TIER0_MARGIN_THRESHOLD = 0.25
 DEFAULT_TIER0_OOD_THRESHOLD = 0.40
 DEFAULT_TIER0_LANDMARK_DISTANCE_THRESHOLD = 0.22
+DEFAULT_TIER0_RAW_MARGIN_THRESHOLD = 0.065
 DEFAULT_MIN_MANIFOLD_LANDMARKS = 50
 
-# Built-in representative domain corpus covering core classification clusters
+# Built-in universal domain corpus covering core classification clusters across 10 macro-domains
 DEFAULT_CORPUS = [
-    # Billing & Financial
-    "Where is my monthly invoice?",
-    "Can I get a refund for my order?",
-    "Charge on my credit card is incorrect",
-    "I need a billing receipt for tax purposes",
-    "Dispute fraudulent credit card transaction",
-    "Why was my account billed twice this month?",
-    "Subscription invoice and payment receipt request",
-    "Refund status for cancelled service renewal",
-    "Account collections and trailing subscription fee statement",
-    "Credit card chargeback and payment discrepancy",
-    # Technical & Infrastructure
-    "My screen went black and won't turn on",
-    "The server is overheating and CPU throttled",
-    "Application crashed with segmentation fault",
-    "Hardware buttons are stuck on the physical gateway",
-    "Network connection timed out with 504 Gateway Timeout error",
-    "Device firmware update failed and corrupted flash memory",
-    "Unresolved technical outage and server error log",
-    "Kernel panic crash dump analysis and driver failure",
-    "Kubernetes pod crash loop backoff memory saturation",
-    "Database disk utilization reached 100% read-only lock",
-    # Sales & Commercial
-    "How much does the enterprise plan cost?",
-    "I want to talk to sales about pricing tiers",
-    "Requesting a formal enterprise demo for our team",
-    "Need contract upgrade quote for 500 enterprise seats",
-    "Volume licensing discount schedule and commercial contract",
-    "Sales representative consultation for corporate onboarding",
-    "Commercial sales routing to complete Enterprise cluster upgrade",
-    "Annual enterprise license pricing agreement review",
-    "Talk to sales executive regarding corporate package tier",
-    "Quote for upgrading from Starter subscription to Enterprise",
-    # Security & Incident Response
-    "Hostile indirect injection attempt seeking credential exfiltration",
-    "System security maintenance override penetration testing token",
-    "Adversarial intent masking prompt injection attack detected",
-    "Account security breach unauthorized access credentials leaked",
-    "Malicious payload attempting API key exfiltration",
-    # Legal & Compliance
-    "Legal compliance audit report SOC 2 Type II counter-signature",
-    "Mutual NDA agreement legal counsel review before contract",
-    "Uncapped contractual liability gross negligence data disclosure",
-    "Regulatory GDPR compliance inquiry and legal terms",
+    # 1. Cloud Infrastructure & Distributed Systems
+    "Kubernetes pod crash loop backoff and container memory OOM saturation",
+    "Network connection timed out with HTTP 504 Gateway Timeout at ingress proxy",
+    "Primary relational database disk utilization reached 100% triggering read-only lock",
+    "TLS handshake failure and expired SSL certificate on edge load balancer",
+    "Distributed cache eviction storm causing database connection pool exhaustion",
+    "Microservice deadlock and high p99 latency spike across gRPC worker nodes",
+    # 2. Software Engineering & Code Execution
+    "Application crashed with segmentation fault and null pointer dereference",
+    "Asynchronous race condition and unhandled promise rejection in event loop",
+    "Memory leak in background worker thread causing gradual heap exhaustion",
+    "Compiler syntax error and unresolved dependency version conflict in build pipeline",
+    "API schema validation failure due to malformed JSON payload structure",
+    "Database schema migration failure and foreign key constraint violation",
+    # 3. Cybersecurity, IAM & Threat Triage
+    "Hostile indirect prompt injection attempt seeking system instruction override",
+    "Adversarial payload attempting unauthorized API key and credential exfiltration",
+    "Suspicious privilege escalation and lateral movement detected on internal host",
+    "Brute-force authentication failure and anomalous OAuth token refresh activity",
+    "Cross-site scripting XSS and SQL injection signature blocked by WAF rule",
+    "Compromised service account session requiring immediate token revocation",
+    # 4. Billing, Payments & Financial Operations
+    "Duplicate monthly subscription charge and credit card billing discrepancy",
+    "Customer refund request for cancelled annual service renewal",
+    "Failed payment webhook delivery and declined credit card transaction",
+    "Tax invoice receipt request and enterprise accounts payable statement",
+    "Fraudulent chargeback dispute and unauthorized payment investigation",
+    "Wire transfer reconciliation and overdue invoice collections notice",
+    # 5. Enterprise Sales, Licensing & Commercial
+    "Enterprise volume licensing discount quote for multi-year seat expansion",
+    "Commercial sales consultation and custom enterprise architecture demo request",
+    "Subscription tier upgrade from starter plan to dedicated enterprise cluster",
+    "Channel partner reseller agreement and custom pricing schedule inquiry",
+    "Contract renewal negotiation and service level agreement SLA credit terms",
+    "Procurement vendor onboarding and commercial purchase order approval",
+    # 6. Legal, Privacy & Regulatory Compliance
+    "SOC 2 Type II compliance audit report and security questionnaire review",
+    "Mutual non-disclosure agreement NDA redline and legal counsel counter-signature",
+    "GDPR data subject erasure request and personally identifiable information PII handling",
+    "Uncapped contractual indemnification and limitation of liability clause review",
+    "Intellectual property licensing terms and open-source software compliance audit",
+    "HIPAA business associate agreement BAA and protected health information governance",
+    # 7. Hardware, IoT & Physical Systems
+    "Server thermal sensor alert indicating CPU overheating and fan failure",
+    "Embedded firmware update interrupted causing corrupted flash bootloader",
+    "Physical gateway display screen blank and hardware power relay unresponsive",
+    "Battery voltage drop and intermittent sensor telemetry loss on edge device",
+    "Storage array RAID controller degraded due to physical NVMe drive fault",
+    "Industrial PLC controller communication timeout over local serial bus",
+    # 8. Clinical, Healthcare & Triage
+    "Acute patient symptom escalation requiring immediate emergency clinical evaluation",
+    "Routine prescription refill request and outpatient medication dosage inquiry",
+    "Adverse drug reaction report and clinical trial pharmacovigilance flagging",
+    "Diagnostic laboratory test result interpretation and specialist referral scheduling",
+    "Post-operative recovery monitoring and standard patient discharge instructions",
+    "Medical insurance prior authorization and clinical procedure coding review",
+    # 9. Data Science, ML & Analytics
+    "Data pipeline ETL job failure due to upstream schema drift and missing partitions",
+    "Machine learning model inference drift and out-of-distribution feature skew",
+    "Vector index recall degradation and high-dimensional embedding latency spike",
+    "Business intelligence dashboard metric discrepancy and SQL aggregation error",
+    "Training job GPU out-of-memory error and gradient explosion during backpropagation",
+    "A/B test statistical significance calculation and sample ratio mismatch alert",
+    # 10. Corporate Operations, HR & Logistics
+    "Supply chain shipment delay and customs clearance hold at port of entry",
+    "Warehouse inventory stockout and automated reorder threshold trigger",
+    "Employee onboarding identity provisioning and role-based access control setup",
+    "Workplace facilities maintenance request and physical badge access issue",
+    "Corporate travel expense reimbursement policy and receipt audit verification",
+    "Internal IT helpdesk password reset and multi-factor authentication enrollment",
 ]
 
 DEFAULT_CLASS_ANCHORS = {
@@ -308,6 +335,8 @@ class Tier0Engine:
         self.Q_raw: sp.csr_matrix | None = None
         self.lu_factor: spla.SuperLU | None = None
         self.I_sparse: sp.csc_matrix | None = None
+        self.N_matrix: torch.Tensor | None = None  # [M, M] dense fundamental matrix on device
+        self.q_internal_weight: float = 0.50
         self._dynamic_cache: dict[tuple, tuple[torch.Tensor, torch.Tensor]] = {}
 
         # Candidate Cache keyed by tuple of candidate strings (keeps tensors directly on GPU)
@@ -551,6 +580,11 @@ class Tier0Engine:
         self.I_sparse = sp.eye(self.M, format="csc")
         A_csc = self.I_sparse - self.Q_raw.tocsc()
         self.lu_factor = spla.splu(A_csc)
+        self.q_internal_weight = float(q_internal_weight)
+
+        # Precompute dense Fundamental Matrix N = (I - Q)^(-1) directly on device (< 4 MB for M <= 1000)
+        N_dense = self.lu_factor.solve(np.eye(self.M, dtype=np.float32))
+        self.N_matrix = torch.tensor(N_dense, dtype=torch.float32, device=self.device)
 
         # 3. Wire absorbing boundary R if class anchors provided
         if class_anchors:
@@ -605,22 +639,25 @@ class Tier0Engine:
         query: str | None,
         candidates: dict[str, str] | list[str] | None,
     ) -> bool:
-        """Returns True if candidates or query structure cannot be resolved by bi-encoder cosine similarity.
-
-        Specifically guards against:
-        1. Binary polarity / truth-value options (yes/no, true/false, valid/invalid)
-        2. Ordinal scales (Level 0, Level 1, ...) or bare 1-2 character enum codes (S, M, L, XL)
-        3. Syntactic negation or superseded state transitions in the query text
-        """
+        """Returns True if query/candidates require causal, temporal, arithmetic, or polarity reasoning."""
         import re
 
         if query:
             q_head = query.split("\n\nQuestion:")[0]
+            # 1. Negation, override, or state-reversal syntax
             if re.search(
-                r"\b(do not|don't|not asking|cancelled|superseded|instead of|ignore|except|unless|unknown if)\b",
-                 query,
+                r"\b(do not|don't|not asking|cancelled|superseded|instead of|ignore|except|unless|unknown if|carve-out|void if)\b",
+                query,
                 re.IGNORECASE,
             ) or re.search(r"\bno\s+\w+\s+(needed|requested|selected|confirmed)\b", q_head, re.IGNORECASE):
+                return True
+
+            # 2. Causal Root-Cause / Multi-Timestamp Log Chains (bi-encoders cannot order timestamps or causality)
+            if re.search(
+                r"\b(root cause|underlying cause|primary cause|happened first|chronological|downstream|alert storm)\b",
+                query,
+                re.IGNORECASE,
+            ) or len(re.findall(r"\[\d{1,2}:\d{2}(?::\d{2})?\]", query)) >= 2:
                 return True
 
         if not candidates:
@@ -630,50 +667,74 @@ class Tier0Engine:
         if not texts:
             return False
 
-        heads = [t.split(":", 1)[0].strip().lower() for t in texts]
-        polarity_tokens = {"yes", "no", "true", "false", "valid", "invalid", "unknown", "other", "none"}
-        if any(h in polarity_tokens for h in heads):
+        # 3. Extract clean first word (handles "True (Compliant...)", "Rejected (HTTP 429)...", "Yes: ...")
+        first_words = [
+            re.split(r"[\s:(\-—]+", t.strip().lower(), maxsplit=1)[0]
+            for t in texts if t.strip()
+        ]
+        polarity_tokens = {
+            "yes", "no", "true", "false", "valid", "invalid",
+            "unknown", "other", "none", "approved", "rejected", "prohibited", "permitted"
+        }
+        if any(w in polarity_tokens for w in first_words):
             return True
 
+        heads = [t.split(":", 1)[0].strip().lower() for t in texts]
         if all(h.startswith("level ") or h.isdigit() or len(h) <= 2 for h in heads):
             return True
 
         return False
 
+    @torch.inference_mode()
     def _resolve_absorption_for_candidates(
         self,
         candidate_labels: list[str],
         candidate_texts: list[str],
         tau_sink: float = 0.04,
     ) -> tuple[torch.Tensor, torch.Tensor]:
-        """Computes or retrieves absorbing fundamental matrix B and candidate embedding vectors."""
+        """Computes absorbing fundamental matrix B = N @ R entirely on GPU in <0.05ms."""
         cache_key = tuple(candidate_texts)
         if cache_key in self._dynamic_cache:
             return self._dynamic_cache[cache_key]
 
         K = len(candidate_texts)
-        cand_tensors = self.embed(candidate_texts)
-        cand_vecs = cand_tensors.float().cpu().numpy()
-        affinities = np.dot(self.landmarks_np, cand_vecs.T)  # [M, K]
+        cand_tensors = self.get_candidate_embeddings(candidate_texts).float()  # [K, D] on GPU
+        lms_f = self.landmarks.float()  # [M, D] on GPU
 
-        R_raw = np.zeros((self.M, K))
-        num_anchors = max(1, int(self.M * 0.10))
-        for k in range(K):
-            top_anchors = np.argsort(affinities[:, k])[-num_anchors:]
-            top_affs = affinities[top_anchors, k]
-            w_sink = np.exp((top_affs - np.max(top_affs)) / tau_sink)
-            w_sink = (w_sink / np.max(w_sink)) * 0.50
-            R_raw[top_anchors, k] = w_sink
+        # Backward-compatibility fallback: if N_matrix was not precomputed via build_scaffold (e.g. mock unit tests)
+        if getattr(self, "N_matrix", None) is None:
+            if getattr(self, "lu_factor", None) is not None:
+                N_dense = self.lu_factor.solve(np.eye(self.M, dtype=np.float32))
+                self.N_matrix = torch.tensor(N_dense, dtype=torch.float32, device=self.device)
+            else:
+                raise RuntimeError("Tier0Engine has neither N_matrix nor lu_factor initialized.")
 
-        row_sums = np.maximum(self.Q_raw.sum(axis=1).A1 + R_raw.sum(axis=1), 1e-9)
-        for i in range(self.M):
-            R_raw[i, :] /= row_sums[i]
+        # Contrastive mean-centering to strip shared boilerplate across options A, B, C, D
+        if K > 1:
+            cand_mean = cand_tensors.mean(dim=0, keepdim=True)
+            cand_diff = F.normalize(cand_tensors - 0.5 * cand_mean, p=2, dim=1)
+        else:
+            cand_diff = cand_tensors
 
-        B_solved = self.lu_factor.solve(R_raw)
-        b_sums = np.maximum(B_solved.sum(axis=1, keepdims=True), 1e-9)
-        B_solved = B_solved / b_sums
+        affinities = torch.matmul(lms_f, cand_diff.T)  # [M, K] on GPU
+        R_raw = torch.zeros((self.M, K), dtype=torch.float32, device=self.device)
+        num_anchors = max(1, min(self.M, int(self.M * 0.12)))
 
-        B_tensor = torch.tensor(B_solved, dtype=torch.float32, device=self.device)
+        top_affs, top_anchors = torch.topk(affinities, num_anchors, dim=0)  # [num_anchors, K]
+        max_affs = top_affs[0:1, :]
+        w_sink = torch.exp((top_affs - max_affs) / tau_sink) * 0.50
+        R_raw.scatter_(0, top_anchors, w_sink)
+
+        # Row-normalize transition probabilities with Q internal weight
+        q_weight = getattr(self, "q_internal_weight", 0.50)
+        row_sums = torch.clamp(q_weight + R_raw.sum(dim=1, keepdim=True), min=1e-9)
+        R_norm = R_raw / row_sums
+
+        # Instant GPU matrix multiply: B = (I - Q)^(-1) @ R
+        B_solved = torch.matmul(self.N_matrix, R_norm)
+        b_sums = torch.clamp(B_solved.sum(dim=1, keepdim=True), min=1e-9)
+        B_tensor = B_solved / b_sums
+
         self._dynamic_cache[cache_key] = (B_tensor, cand_tensors)
         return B_tensor, cand_tensors
 
@@ -715,6 +776,8 @@ class Tier0Engine:
         min_landmarks: int = DEFAULT_MIN_MANIFOLD_LANDMARKS,
         markov_weight: float = 0.35,
         vision_markov_weight: float = 0.0,
+        cand_dispersion_threshold: float = 0.94,
+        tau_raw_margin: float = DEFAULT_TIER0_RAW_MARGIN_THRESHOLD,
     ) -> dict[str, Any]:
         """Runs online batch-1 embedding, GPU landmark projection, and tripwire gating.
         
@@ -857,6 +920,21 @@ class Tier0Engine:
             cand_sims = torch.matmul(q.float(), cand_tensors.float().T).squeeze(0)
             max_cand_sim = cand_sims.max().item()
 
+            # Guard against near-identical candidate options (e.g., "Approve 30 days" vs "Approve 60 days")
+            if K > 1 and not force_tier0:
+                cand_gram = torch.matmul(cand_tensors.float(), cand_tensors.float().T)
+                cand_gram.fill_diagonal_(-1.0)
+                if cand_gram.max().item() > cand_dispersion_threshold:
+                    total_lat = (time.perf_counter() - t0) * 1000.0
+                    return {
+                        "action": "ESCALATE",
+                        "tier": 0,
+                        "reason": "HIGH_CANDIDATE_OVERLAP_BYPASS",
+                        "landmarks_count": m_count,
+                        "latency_ms": round(total_lat, 2),
+                        "embed_latency_ms": round(t_embed, 2),
+                    }
+
             if max(max_sim, max_cand_sim) < tau_ood and not force_tier0:
                 total_lat = (time.perf_counter() - t0) * 1000.0
                 return {
@@ -929,6 +1007,16 @@ class Tier0Engine:
         top2_prob = sorted_probs[1].item() if K > 1 else 0.0
         margin = top1_prob - top2_prob
 
+        # Check raw unscaled cosine margin if multiple candidates exist:
+        # Prevents tau_temp (0.05) from turning a tiny 0.02 raw cosine tie into a 95% confident false exit
+        raw_sim_margin_ok = True
+        raw_sim_gap: float | None = None
+        if candidates is not None and K > 1:
+            sorted_raw_sims, _ = torch.sort(cand_sims, descending=True)
+            raw_sim_gap = (sorted_raw_sims[0] - sorted_raw_sims[1]).item()
+            if raw_sim_gap < tau_raw_margin:
+                raw_sim_margin_ok = False
+
         entropy = -torch.sum(probs * torch.log(probs + 1e-9)).item()
         max_entropy = np.log(K) if K > 1 else 1.0
         norm_entropy = entropy / max_entropy
@@ -944,7 +1032,7 @@ class Tier0Engine:
 
         # Gating Tripwires
         is_ambiguous = norm_entropy > tau_entropy
-        is_low_margin = margin < tau_margin
+        is_low_margin = (margin < tau_margin) or (not raw_sim_margin_ok)
 
         if is_ambiguous or is_low_margin:
             escalate_reason = "HIGH_AMBIGUITY" if is_ambiguous else "LOW_MARGIN"
@@ -956,9 +1044,11 @@ class Tier0Engine:
                 "decision_text": decision_text,
                 "confidence": round(top1_prob, 4),
                 "margin": round(margin, 4),
+                "raw_margin": round(raw_sim_gap, 4) if raw_sim_gap is not None else None,
                 "entropy": round(norm_entropy, 4),
                 "tau_entropy": tau_entropy,
                 "tau_margin": tau_margin,
+                "tau_raw_margin": tau_raw_margin,
                 "probabilities": probs_dict,
                 "letter_probabilities": letter_probs,
                 "cosine_probabilities": cosine_probs_dict,
@@ -981,9 +1071,11 @@ class Tier0Engine:
             "decision_text": decision_text,
             "confidence": round(top1_prob, 4),
             "margin": round(margin, 4),
+            "raw_margin": round(raw_sim_gap, 4) if raw_sim_gap is not None else None,
             "entropy": round(norm_entropy, 4),
             "tau_entropy": tau_entropy,
             "tau_margin": tau_margin,
+            "tau_raw_margin": tau_raw_margin,
             "probabilities": probs_dict,
             "letter_probabilities": letter_probs,
             "cosine_probabilities": cosine_probs_dict,
@@ -1034,6 +1126,8 @@ def unload_tier0_engine() -> None:
                 del _GLOBAL_TIER0_ENGINE.landmarks
             if hasattr(_GLOBAL_TIER0_ENGINE, "B_matrix"):
                 del _GLOBAL_TIER0_ENGINE.B_matrix
+            if hasattr(_GLOBAL_TIER0_ENGINE, "N_matrix"):
+                del _GLOBAL_TIER0_ENGINE.N_matrix
         except Exception:
             pass
         _GLOBAL_TIER0_ENGINE = None

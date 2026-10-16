@@ -1,0 +1,249 @@
+{
+  "presets": [
+    {
+      "id": "binary_yes_no",
+      "name": "Yes / No",
+      "category": "Binary Decisions",
+      "description": "Standard binary confirmation or verification",
+      "options": [
+        "A: Yes",
+        "B: No"
+      ]
+    },
+    {
+      "id": "binary_true_false",
+      "name": "True / False",
+      "category": "Binary Decisions",
+      "description": "Fact-checking or factual verification",
+      "options": [
+        "A: True / Accurate",
+        "B: False / Inaccurate"
+      ]
+    },
+    {
+      "id": "binary_accept_reject",
+      "name": "Accept / Reject",
+      "category": "Binary Decisions",
+      "description": "Approval or policy compliance decision",
+      "options": [
+        "A: Accept / Approve Request",
+        "B: Reject / Deny Request"
+      ]
+    },
+    {
+      "id": "binary_pass_fail_review",
+      "name": "Pass / Fail / Needs Review",
+      "category": "Binary Decisions",
+      "description": "Quality assurance or automated test assessment",
+      "options": [
+        "A: Pass / Fully Compliant",
+        "B: Fail / Non-compliant",
+        "C: Inconclusive / Needs Manual Review"
+      ]
+    },
+    {
+      "id": "threat_triage",
+      "name": "Threat & Security Classification",
+      "category": "Safety & Security",
+      "description": "Incoming query safety and risk classification",
+      "options": [
+        "A: Safe Informational Query",
+        "B: Suspicious / Phishing Threat",
+        "C: Adversarial Injection / Harmful Request"
+      ]
+    },
+    {
+      "id": "prompt_injection_defense",
+      "name": "Prompt Injection Defense",
+      "category": "Safety & Security",
+      "description": "Jailbreak and prompt injection detection",
+      "options": [
+        "A: Benign User Query",
+        "B: System Prompt Extraction / Roleplay Override",
+        "C: Malicious Command / Exfiltration Payload"
+      ]
+    },
+    {
+      "id": "content_moderation",
+      "name": "Content Moderation Policy",
+      "category": "Safety & Security",
+      "description": "Community guidelines and trust & safety filtering",
+      "options": [
+        "A: Safe & Compliant Content",
+        "B: Harassment & Toxic Language",
+        "C: Hate Speech & Identity Attacks",
+        "D: Self-Harm or Violence Depiction",
+        "E: Spam & Deceptive Commercial Content"
+      ]
+    },
+    {
+      "id": "data_sensitivity_pii",
+      "name": "Data Sensitivity & PII Classification",
+      "category": "Safety & Security",
+      "description": "Confidentiality and privacy compliance grading",
+      "options": [
+        "A: Public / Non-Confidential",
+        "B: Internal / Business Proprietary",
+        "C: Confidential / Restricted Access",
+        "D: High-Risk PII / Secret Credentials"
+      ]
+    },
+    {
+      "id": "customer_support_intent",
+      "name": "Customer Support Intent",
+      "category": "Customer Operations",
+      "description": "Inbound customer service intent categorization",
+      "options": [
+        "A: Technical Bug / Defect",
+        "B: Billing / Fee Reversal Inquiry",
+        "C: Churn Risk / Account Cancellation",
+        "D: Product Feature Request"
+      ]
+    },
+    {
+      "id": "sentiment_analysis",
+      "name": "Sentiment Analysis",
+      "category": "Customer Operations",
+      "description": "Customer message sentiment classification",
+      "options": [
+        "A: Positive / Enthusiastic",
+        "B: Neutral / Informational",
+        "C: Negative / Dissatisfied"
+      ]
+    },
+    {
+      "id": "urgency_assessment",
+      "name": "Ticket Urgency Level",
+      "category": "Customer Operations",
+      "description": "Operational turnaround priority triage",
+      "options": [
+        "A: Low / Routine Inquiry (SLA 48h)",
+        "B: Medium / Account Impaired (SLA 12h)",
+        "C: High / Critical Blocker (SLA 1h)"
+      ]
+    },
+    {
+      "id": "product_feedback",
+      "name": "Product Feedback Classification",
+      "category": "Customer Operations",
+      "description": "User feedback and review categorization",
+      "options": [
+        "A: Bug Report / Functional Defect",
+        "B: Performance / Latency Complaint",
+        "C: UI & UX Usability Friction",
+        "D: Feature Request / Enhancement",
+        "E: Positive Feedback / Praise",
+        "F: Documentation / How-to Question"
+      ]
+    },
+    {
+      "id": "incident_severity",
+      "name": "Incident Severity (SEV1 - SEV4)",
+      "category": "Engineering & DevOps",
+      "description": "Production incident grading and on-call escalation",
+      "options": [
+        "A: SEV1 - Critical Production Outage",
+        "B: SEV2 - Major Service Degradation",
+        "C: SEV3 - Minor Component Defect",
+        "D: SEV4 - Low Impact / Cosmetic Issue"
+      ]
+    },
+    {
+      "id": "code_review_verdict",
+      "name": "Code Review Verdict",
+      "category": "Engineering & DevOps",
+      "description": "Automated code pull request audit decision",
+      "options": [
+        "A: Approve / Ship without Changes",
+        "B: Approve with Minor Suggestions",
+        "C: Request Changes / Requires Rework",
+        "D: Reject / Architectural Redesign Required"
+      ]
+    },
+    {
+      "id": "system_health_status",
+      "name": "System Health Status",
+      "category": "Engineering & DevOps",
+      "description": "Infrastructure and microservice health state",
+      "options": [
+        "A: Fully Healthy / Nominal",
+        "B: Degraded Latency / Elevated Error Rate",
+        "C: Partial Service Outage",
+        "D: Total Service Failure / Unresponsive"
+      ]
+    },
+    {
+      "id": "routing_tier_selection",
+      "name": "Gevva0 Routing Tier Selection",
+      "category": "Engineering & DevOps",
+      "description": "Architecture routing decision across compute tiers",
+      "options": [
+        "A: Tier -1: Direct Heuristic Rule Bypass (0ms)",
+        "B: Tier 0: Embedding Fast-Path (<50ms)",
+        "C: Tier 1: Small SLM Logit Classifier (<150ms)",
+        "D: Tier 2: Deep CoT Large Reasoning Model"
+      ]
+    },
+    {
+      "id": "document_classification",
+      "name": "Document Classification",
+      "category": "Business & Legal",
+      "description": "Inbound corporate document type triage",
+      "options": [
+        "A: Invoice / Financial Statement",
+        "B: Legal Contract / NDA / Agreement",
+        "C: Technical Architecture / RFC Specification",
+        "D: HR Policy / Corporate Notice",
+        "E: General Correspondence / Meeting Notes"
+      ]
+    },
+    {
+      "id": "priority_matrix",
+      "name": "Eisenhower Priority Matrix",
+      "category": "Business & Legal",
+      "description": "Action matrix triage for task scheduling",
+      "options": [
+        "A: Urgent & Important (Do Immediately)",
+        "B: Important & Not Urgent (Schedule / Plan)",
+        "C: Urgent & Not Important (Delegate)",
+        "D: Neither Urgent nor Important (Eliminate)"
+      ]
+    },
+    {
+      "id": "likert_scale_5pt",
+      "name": "5-Point Likert Agreement",
+      "category": "Business & Legal",
+      "description": "Standardized survey response scale",
+      "options": [
+        "A: Strongly Disagree",
+        "B: Disagree",
+        "C: Neutral / Neither Agree nor Disagree",
+        "D: Agree",
+        "E: Strongly Agree"
+      ]
+    },
+    {
+      "id": "confidence_rating",
+      "name": "Confidence & Hallucination Risk",
+      "category": "Business & Legal",
+      "description": "Model output factual verification assessment",
+      "options": [
+        "A: Definite / Verified Ground Truth",
+        "B: Probable / Strong Corroborating Evidence",
+        "C: Plausible / Ambiguous or Inconclusive",
+        "D: High Hallucination Risk / Factually Incorrect"
+      ]
+    },
+    {
+      "id": "task_complexity_tier",
+      "name": "Task Complexity Level",
+      "category": "Business & Legal",
+      "description": "Work breakdown complexity evaluation",
+      "options": [
+        "A: Simple / Single-Step Direct Answer",
+        "B: Intermediate / Multi-Step Workflow",
+        "C: Complex / Multi-Agent Orchestration Required"
+      ]
+    }
+  ]
+}
