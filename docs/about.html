@@ -337,20 +337,6 @@
         <p>The rulebook stays pinned in KV cache. The next turn is decided while Pac-Man is still in the hallway, so it's ready by the junction with 0 ms wait.</p>
         <div class="stat"><span>p50 latency</span><span><span style="color:var(--mute);text-decoration:line-through">37.0</span> <b class="c-t1" id="pacms">33 ms</b></span></div>
       </div>
-      <div class="card demo r zoom" data-at="1.5">
-        <div class="tg"><span class="chipx" style="background:var(--t0)">TIER 0 ONLY</span><span class="chipx" style="background:#cbd5e1">GTO</span></div>
-        <h3>The Game of Pig</h3>
-        <canvas id="pig" width="360" height="150"></canvas>
-        <p>An exact absorbing Markov decision process (Todd &amp; Fisher). Plays it safe when ahead and takes bigger risks when behind, while "hold at 20" never adapts.</p>
-        <div class="stat"><span>decision time</span><b class="c-t0">&lt; 3 ms</b></div>
-      </div>
-      <div class="card demo r zoom" data-at="2.1">
-        <div class="tg"><span class="chipx" style="background:var(--t0)">TIER 0 ONLY</span><span class="chipx" style="background:#cbd5e1">GTO</span></div>
-        <h3>Vegas Blackjack 21</h3>
-        <canvas id="bj" width="360" height="150"></canvas>
-        <p>Hit, stand, double, and split, plus Hi-Lo Illustrious 18 true-count deviations. Matches GTO basic strategy on every hand.</p>
-        <div class="stat"><span>decision time · parity</span><b class="c-t0">~2 ms · 100%</b></div>
-      </div>
     </div>
   </section>
 
@@ -390,7 +376,6 @@
       <div><span class="p">❯</span> uv sync</div>
       <div><span class="p">❯</span> uv run gevva0 serve --port 8000 <span class="c">  # decision UI at /ui · chat at /chat</span></div>
       <div><span class="p">❯</span> uv run python demos/pacman/run.py</div>
-      <div><span class="p">❯</span> uv run python demos/blackjack/run.py --sim</div>
     </div>
     <div class="pills">
       <span class="pill r" data-at="3.2">engine.decide() · stateless REST</span>
@@ -450,7 +435,7 @@ const SCENES = [
   {id:'s6', dur:13, tier:2,  title:'Tier 2 · hot-KV chain-of-thought',
    cap:'Hard cases escalate to bounded chain-of-thought with up to 256 tokens, continuing from the cache Tier one already built. Multi-step math and policy constraints get solved here.'},
   {id:'s7', dur:12, tier:-9, title:'Three live demos',
-   cap:'Pac-Man runs on Tier one and two at a 33 millisecond median. Pig and Blackjack run entirely on Tier zero and play game-theory-optimal strategy in a few milliseconds.'},
+   cap:'Pac-Man runs on Tier one and two at a 33 millisecond median.'},
   {id:'s8', dur:12, tier:-9, title:'Benchmarks',
    cap:'On JevBench, Gevva0 exceeds Claude Opus 4.6 Thinking intelligence (84.62 vs 83.90) at a 44 millisecond median. On Decision Index 0.3, a 4-billion-active MoE beats 27-billion dense models at sub-65ms speed.'},
   {id:'s9', dur:10, tier:-9, title:'Adopt Gevva0',
@@ -603,7 +588,7 @@ TICK.s6 = t => {
 };
 
 // S7 – demos (canvas mini-animations)
-const pc=$('pac').getContext('2d'), gc=$('pig').getContext('2d'), bc=$('bj').getContext('2d');
+const pc=$('pac').getContext('2d');
 TICK.s7 = t => {
   // Pac-Man: loop corridor
   pc.clearRect(0,0,360,150); pc.strokeStyle='#1d4ed8'; pc.lineWidth=3; roundRect(pc,20,18,320,114,12); pc.stroke(); roundRect(pc,62,52,236,46,8); pc.stroke();
@@ -614,20 +599,7 @@ TICK.s7 = t => {
   const gu=(u+per*0.55)%per, gp = gu<280?[40+gu,35]: gu<360?[320,35+(gu-280)]: gu<640?[320-(gu-360),115]:[40,115-(gu-640)];
   pc.fillStyle='#f43f5e'; pc.beginPath(); pc.arc(gp[0],gp[1]-2,8,Math.PI,0); pc.lineTo(gp[0]+8,gp[1]+7); pc.lineTo(gp[0]-8,gp[1]+7); pc.fill();
   if((u%180)<60){ pc.fillStyle='rgba(0,242,254,.9)'; pc.font='700 10px JetBrains Mono'; pc.textAlign='center'; pc.fillText('T1 · 33 ms · latched',180,80); }
-  // Pig
-  gc.clearRect(0,0,360,150); const face = 1+Math.floor((t*5)%6); const rolling = (t%3)<1.6;
-  gc.fillStyle='#f8fafc'; roundRect(gc,30,35,72,72,12); gc.fill(); gc.fillStyle='#0f172a';
-  const pips={1:[[0,0]],2:[[-1,-1],[1,1]],3:[[-1,-1],[0,0],[1,1]],4:[[-1,-1],[1,-1],[-1,1],[1,1]],5:[[-1,-1],[1,-1],[0,0],[-1,1],[1,1]],6:[[-1,-1],[1,-1],[-1,0],[1,0],[-1,1],[1,1]]};
-  const f = rolling?face:4; pips[f].forEach(([a,b])=>{ gc.beginPath(); gc.arc(66+a*20,71+b*20,6,0,7); gc.fill(); });
-  gc.textAlign='left'; gc.font='600 12px JetBrains Mono'; gc.fillStyle='#94a3b8'; gc.fillText('Score  40 vs 82  (behind)',125,48);
-  gc.fillText('Turn pot  k = 24',125,72); gc.fillStyle='#10b981'; gc.font='700 15px JetBrains Mono'; gc.fillText(rolling?'evaluating…':'ROLL  (k* > 32)',125,102);
-  gc.fillStyle='#64748b'; gc.font='500 11px JetBrains Mono'; gc.fillText('"Hold at 20" would bank here',125,124);
-  // Blackjack
-  bc.clearRect(0,0,360,150); const card=(x,y,txt,red)=>{ bc.fillStyle='#f8fafc'; roundRect(bc,x,y,44,62,6); bc.fill(); bc.fillStyle=red?'#e11d48':'#0f172a'; bc.font='700 16px Inter'; bc.textAlign='center'; bc.fillText(txt,x+22,y+38); };
-  card(24,22,'10♠'); card(74,22,'6♥',true); card(24,92-6,'',false); bc.fillStyle='#1e3a8a'; roundRect(bc,24,86,44,50,6); bc.fill();
-  bc.textAlign='left'; bc.font='600 12px JetBrains Mono'; bc.fillStyle='#94a3b8'; bc.fillText('Hard 16  vs  dealer 10',135,40); bc.fillText('Hi-Lo true count  +1',135,62);
-  const show = (t%4)>1.2; bc.fillStyle='#10b981'; bc.font='700 15px JetBrains Mono'; bc.fillText(show?'STAND · I18 deviation':'evaluating…',135,92);
-  bc.fillStyle='#64748b'; bc.font='500 11px JetBrains Mono'; bc.fillText('basic strategy says HIT at TC ≤ 0',135,116);
+  
 };
 
 // S8 – benchmark bars
